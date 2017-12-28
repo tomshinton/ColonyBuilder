@@ -54,6 +54,7 @@ public:
 
 	//Getters//
 	EMovementType GetCurrMovementType() { return CurrMovementType; }
+	URTSMovementComponent* GetRTSMovementComponent() { return MovementComp; }
 
 	//Setters//
 	void SetCurrMovementType(EMovementType NewMovemementType) { CurrMovementType = NewMovemementType; }
@@ -62,6 +63,7 @@ private:
 	void MoveForward(float InAxis);
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
+	void MouseMoved(float InAxis);
 
 	EMovementType CurrMovementType;
 

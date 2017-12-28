@@ -5,8 +5,51 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/HUD.h"
 
 #include "RTSMovementComponent.generated.h"
+
+
+USTRUCT(BlueprintType)
+struct FScreenEdge
+{
+	GENERATED_USTRUCT_BODY()
+
+	float XLoc;
+	float YLoc;
+
+	float Width;
+	float Height;
+
+	float Strength;
+
+	void DrawBand(UWorld* WorldContext)
+	{
+		FLinearColor BandColour = FLinearColor(1, 0, 0, Strength);
+		AHUD* DebugHud = Cast<AHUD>((WorldContext)->GetFirstPlayerController()->GetHUD());;
+		DebugHud->DrawRect(BandColour, XLoc, YLoc, Width, Height);
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FEdgeBands
+{
+	GENERATED_BODY()
+
+	FScreenEdge TopBand;
+	FScreenEdge BottomBand;
+	FScreenEdge RightBand;
+	FScreenEdge LeftBand;
+
+	void DrawBands(UWorld* WorldContext)
+	{
+		TopBand.DrawBand(WorldContext);
+		BottomBand.DrawBand(WorldContext);
+		RightBand.DrawBand(WorldContext);
+		LeftBand.DrawBand(WorldContext);
+	}
+
+};
 
 DECLARE_LOG_CATEGORY_EXTERN(MovementLog, Log, All);
 
@@ -22,6 +65,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void BuildEdgeBands();
 	float GetAppropriateZ(FVector InLocation);
 
 	//Delta time, useful for printing
@@ -31,17 +75,30 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	//Getters//
+	FEdgeBands GetEdgeBands() {	return EdgeBands; }
+
 	void MoveForwards(float InAxis);
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
+	void MouseMoved(float InAxis);
 
 	float RotateSpeed;
 	float MoveSpeed;
 	float HeightOffset;
 	
+	float EdgePadding;
+
 private:
 
 	void RotateCamera();
+
 	float TargetYaw;
+
+	APawn* OwningPawn;
+	APlayerController* OwningController;
+
+	FVector2D CurrMousePos;
+	FEdgeBands EdgeBands;
 
 };

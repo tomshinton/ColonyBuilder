@@ -58,6 +58,8 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &APlayerPawn::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &APlayerPawn::MoveRight);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &APlayerPawn::Turn);
+
+	PlayerInputComponent->BindAxis(TEXT("MouseMoved"), this, &APlayerPawn::MouseMoved);
 }
 
 void APlayerPawn::MoveForward(float InAxis)
@@ -76,5 +78,10 @@ void APlayerPawn::Turn(float InAxis)
 	{
 		MovementComp->Turn(InAxis);
 	}
+}
+
+void APlayerPawn::MouseMoved(float InAxis)
+{
+	MovementComp->MouseMoved(InAxis);
 }
 

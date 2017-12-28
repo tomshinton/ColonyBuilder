@@ -20,6 +20,24 @@ void URTSMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	OwningPawn = Cast<APawn>(GetOwner());
+	OwningController = Cast<APlayerController>(OwningPawn->GetController());
+
+	BuildEdgeBands();
+}
+
+void URTSMovementComponent::BuildEdgeBands()
+{
+	const FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+	EdgeBands.TopBand.XLoc = 0;
+	EdgeBands.TopBand.YLoc = 0;
+
+	EdgeBands.TopBand.Height = EdgePadding;
+	EdgeBands.TopBand.Width = VPSize.X;
+	EdgeBands.TopBand.XLoc = 0;
+	EdgeBands.TopBand.YLoc = 0;
+
 }
 
 void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -28,6 +46,10 @@ void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	CDT = DeltaTime;
 
 	RotateCamera();
+
+	/*DEBUG*/
+
+	EdgeBands.DrawBands(GetWorld());
 }
 
 void URTSMovementComponent::RotateCamera()
@@ -60,6 +82,18 @@ void URTSMovementComponent::MoveRight(float InAxis)
 void URTSMovementComponent::Turn(float InAxis)
 {
 	TargetYaw = GetOwner()->GetActorRotation().Yaw + RotateSpeed*InAxis;
+}
+
+void URTSMovementComponent::MouseMoved(float InAxis)
+{
+	float MouseX;
+	float MouseY;
+	OwningController->GetMousePosition(MouseX, MouseY);
+
+	CurrMousePos.X = MouseX;
+	CurrMousePos.Y = MouseY;
+
+	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::Blue, CurrMousePos.ToString());
 }
 
 float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
