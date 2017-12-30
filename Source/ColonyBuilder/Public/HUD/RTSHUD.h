@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "RTSMovementComponent.h"
 #include "RTSHUD.generated.h"
 
 /**
@@ -15,18 +16,11 @@ class COLONYBUILDER_API ARTSHUD : public AHUD
 {
 	GENERATED_BODY()
 
-	void DrawHUD();
-public:
+	void DrawHUD() override;
 
-	void DrawDebugHUD();
-
-	//Getters//
-	bool GetDebugHUD() { return DebugHUD;  }
-	//Setters//
-	void SetDebugHUD(bool newDebugHUD) { DebugHUD = newDebugHUD; }
+public:	
+	void SetEdgeBands(FEdgeBands InBands) { EdgeBanding = InBands; }
 
 private:
-	bool DebugHUD = true;
-	
-	
+	FEdgeBands EdgeBanding;
 };

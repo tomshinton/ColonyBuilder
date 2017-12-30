@@ -3,11 +3,11 @@
 #include "RTSHUD.h"
 #include "PlayerPawn.h"
 
+
 void ARTSHUD::DrawHUD()
 {
-}
+	Super::DrawHUD();
 
-void ARTSHUD::DrawDebugHUD()
-{
+	EdgeBanding.DrawBands(GetWorld());
 }
 

@@ -2,6 +2,9 @@
 
 #include "RTSMovementComponent.h"
 
+//Forward Dec
+#include "HUD/RTSHUD.h"
+
 
 DEFINE_LOG_CATEGORY(MovementLog);
 
@@ -22,22 +25,41 @@ void URTSMovementComponent::BeginPlay()
 	
 	OwningPawn = Cast<APawn>(GetOwner());
 	OwningController = Cast<APlayerController>(OwningPawn->GetController());
-
-	BuildEdgeBands();
 }
 
 void URTSMovementComponent::BuildEdgeBands()
 {
-	const FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+	FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
-	EdgeBands.TopBand.XLoc = 0;
-	EdgeBands.TopBand.YLoc = 0;
-
-	EdgeBands.TopBand.Height = EdgePadding;
+	EdgeBands.TopBand.Height = EdgePadding_Major;
 	EdgeBands.TopBand.Width = VPSize.X;
 	EdgeBands.TopBand.XLoc = 0;
 	EdgeBands.TopBand.YLoc = 0;
+	
+	EdgeBands.BottomBand.Height = EdgePadding_Bottom;
+	EdgeBands.BottomBand.Width = VPSize.X;
+	EdgeBands.BottomBand.XLoc = 0;
+	EdgeBands.BottomBand.YLoc = VPSize.Y - EdgePadding_Bottom;
 
+	EdgeBands.RightBand.Height = VPSize.Y;
+	EdgeBands.RightBand.Width = EdgePadding_Major;
+	EdgeBands.RightBand.XLoc = VPSize.X - EdgePadding_Major;
+	EdgeBands.RightBand.YLoc = 0;
+
+	EdgeBands.LeftBand.Height = VPSize.Y;
+	EdgeBands.LeftBand.Width = EdgePadding_Major;
+	EdgeBands.LeftBand.XLoc = 0;
+	EdgeBands.LeftBand.YLoc = 0;
+
+	EdgeBands.TopBand.Strength = MaxEdgeMoveStrength * FMath::Clamp((1 - (CurrMousePos.Y / EdgePadding_Major)), 0.f, 1.f);
+	EdgeBands.BottomBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.Y - (VPSize.Y - EdgePadding_Bottom)) / EdgePadding_Bottom), 0.f, 1.f);
+	EdgeBands.RightBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.X - (VPSize.X - EdgePadding_Major)) / EdgePadding_Major), 0.f, 1.f);;
+	EdgeBands.LeftBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(1 - (CurrMousePos.X / EdgePadding_Major), 0.f, 1.f);
+
+	MoveForwards(EdgeBands.TopBand.Strength);
+	MoveForwards(-EdgeBands.BottomBand.Strength);
+	MoveRight(EdgeBands.RightBand.Strength);
+	MoveRight(-EdgeBands.LeftBand.Strength);
 }
 
 void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -45,11 +67,13 @@ void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CDT = DeltaTime;
 
+	BuildEdgeBands();
 	RotateCamera();
 
 	/*DEBUG*/
 
-	EdgeBands.DrawBands(GetWorld());
+	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
+	DebugHud->SetEdgeBands(EdgeBands);
 }
 
 void URTSMovementComponent::RotateCamera()
@@ -92,8 +116,6 @@ void URTSMovementComponent::MouseMoved(float InAxis)
 
 	CurrMousePos.X = MouseX;
 	CurrMousePos.Y = MouseY;
-
-	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::Blue, CurrMousePos.ToString());
 }
 
 float URTSMovementComponent::GetAppropriateZ(FVector InLocation)

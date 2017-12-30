@@ -48,7 +48,6 @@ struct FEdgeBands
 		RightBand.DrawBand(WorldContext);
 		LeftBand.DrawBand(WorldContext);
 	}
-
 };
 
 DECLARE_LOG_CATEGORY_EXTERN(MovementLog, Log, All);
@@ -87,7 +86,10 @@ public:
 	float MoveSpeed;
 	float HeightOffset;
 	
-	float EdgePadding;
+	float EdgePadding_Major = 100;
+	float EdgePadding_Bottom = 100;
+
+	float MaxEdgeMoveStrength = 1.f;
 
 private:
 
