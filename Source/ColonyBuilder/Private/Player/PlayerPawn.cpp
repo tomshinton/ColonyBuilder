@@ -23,9 +23,11 @@ APlayerPawn::APlayerPawn()
 	PlayerCamera->SetupAttachment(SpringArm);
 
 	MovementComp = CreateDefaultSubobject<URTSMovementComponent>(TEXT("RTS Movement Component"));
-	MovementComp->MoveSpeed = 10;
-	MovementComp->RotateSpeed = 5;
+	MovementComp->MoveSpeed = 35;
+	MovementComp->RotateSpeed = 12;
 	MovementComp->HeightOffset = PawnRoot->GetScaledSphereRadius();
+
+	MovementComp->CameraArm = SpringArm;
 
 	BuildComponent = CreateDefaultSubobject<UBuildComponent>(TEXT("Build Component"));
 
@@ -60,6 +62,13 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &APlayerPawn::Turn);
 
 	PlayerInputComponent->BindAxis(TEXT("MouseMoved"), this, &APlayerPawn::MouseMoved);
+	
+	PlayerInputComponent->BindAction(TEXT("StoreMouseCoords"), IE_Pressed, this, &APlayerPawn::StoreMouseCoords);
+	PlayerInputComponent->BindAction(TEXT("StoreMouseCoords"), IE_Released, this, &APlayerPawn::ClearMouseCoords);
+
+	PlayerInputComponent->BindAction(TEXT("ScrollUp"), IE_Pressed, this, &APlayerPawn::ScrollUp);
+	PlayerInputComponent->BindAction(TEXT("ScrollDown"), IE_Pressed, this, &APlayerPawn::ScrollDown);
+
 }
 
 void APlayerPawn::MoveForward(float InAxis)
@@ -83,5 +92,31 @@ void APlayerPawn::Turn(float InAxis)
 void APlayerPawn::MouseMoved(float InAxis)
 {
 	MovementComp->MouseMoved(InAxis);
+}
+
+void APlayerPawn::StoreMouseCoords()
+{
+	MovementComp->StoreMouseCoords();
+}
+
+void APlayerPawn::ClearMouseCoords()
+{
+	MovementComp->ClearMouseCoords();
+}
+
+void APlayerPawn::ScrollUp()
+{
+	if (!BuildComponent->GetEnabled())
+	{
+		MovementComp->ZoomOut();
+	}
+}
+
+void APlayerPawn::ScrollDown()
+{
+	if (!BuildComponent->GetEnabled())
+	{
+		MovementComp->ZoomIn();
+	}
 }
 

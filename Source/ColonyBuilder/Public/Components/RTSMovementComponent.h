@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/HUD.h"
+#include "GameFramework/SpringArmComponent.h"
 
 #include "RTSMovementComponent.generated.h"
 
@@ -81,19 +82,35 @@ public:
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
 	void MouseMoved(float InAxis);
+	USpringArmComponent* CameraArm;
 
 	float RotateSpeed;
 	float MoveSpeed;
 	float HeightOffset;
 	
 	float EdgePadding_Major = 100;
-	float EdgePadding_Bottom = 100;
+	float EdgePadding_Bottom = 20;
 
 	float MaxEdgeMoveStrength = 1.f;
+	float MiddleMouseButtonMoveStrength = 1.f;
+
+	float MaxArmLength = 5000;
+	float MinArmLength = 1000;
+	float ArmZoomRate = 1000;
+	float CameraZoomSpeed = 2;
+	float TargetArmLength;
+
+	void StoreMouseCoords();
+	void ClearMouseCoords();
+
+	void ZoomIn();
+	void ZoomOut();
 
 private:
 
 	void RotateCamera();
+	void MiddleMouseButtonMove();
+	void BlendCameraZoom();
 
 	float TargetYaw;
 
@@ -101,6 +118,13 @@ private:
 	APlayerController* OwningController;
 
 	FVector2D CurrMousePos;
+	FVector2D StoredMousePos;
+	bool UsingMiddleMouseMovement;
+
 	FEdgeBands EdgeBands;
+
+	FTimerHandle MiddleMouseMoveTimer;
+	FTimerHandle BlendCameraZoomTimer;
+
 
 };

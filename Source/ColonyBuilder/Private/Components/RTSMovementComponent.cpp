@@ -11,11 +11,9 @@ DEFINE_LOG_CATEGORY(MovementLog);
 // Sets default values for this component's properties
 URTSMovementComponent::URTSMovementComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
+
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
@@ -56,10 +54,14 @@ void URTSMovementComponent::BuildEdgeBands()
 	EdgeBands.RightBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.X - (VPSize.X - EdgePadding_Major)) / EdgePadding_Major), 0.f, 1.f);;
 	EdgeBands.LeftBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(1 - (CurrMousePos.X / EdgePadding_Major), 0.f, 1.f);
 
-	MoveForwards(EdgeBands.TopBand.Strength);
-	MoveForwards(-EdgeBands.BottomBand.Strength);
-	MoveRight(EdgeBands.RightBand.Strength);
-	MoveRight(-EdgeBands.LeftBand.Strength);
+	if (!UsingMiddleMouseMovement)
+	{
+		MoveForwards(EdgeBands.TopBand.Strength);
+		MoveForwards(-EdgeBands.BottomBand.Strength);
+		MoveRight(EdgeBands.RightBand.Strength);
+		MoveRight(-EdgeBands.LeftBand.Strength);
+	}
+	
 }
 
 void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -85,6 +87,40 @@ void URTSMovementComponent::RotateCamera()
 	NewRot.Yaw = NewYaw;
 
 	GetOwner()->SetActorRotation(NewRot);
+}
+
+void URTSMovementComponent::StoreMouseCoords()
+{
+	StoredMousePos = CurrMousePos;
+	UsingMiddleMouseMovement = true;
+	GetWorld()->GetTimerManager().SetTimer(MiddleMouseMoveTimer, this, &URTSMovementComponent::MiddleMouseButtonMove, CDT, true);
+}
+
+void URTSMovementComponent::ClearMouseCoords()
+{
+	UsingMiddleMouseMovement = false;
+	GetWorld()->GetTimerManager().ClearTimer(MiddleMouseMoveTimer);
+
+	//DEBUG
+	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
+	DebugHud->SetStoredMousePos(StoredMousePos, false);
+}
+
+void URTSMovementComponent::MiddleMouseButtonMove()
+{
+	FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+	float XDelta;
+	float YDelta;
+
+	XDelta = ((StoredMousePos.X - CurrMousePos.X) / VPSize.X) * MiddleMouseButtonMoveStrength;
+	YDelta = ((StoredMousePos.Y - CurrMousePos.Y) / VPSize.Y) * MiddleMouseButtonMoveStrength;
+
+	MoveForwards(YDelta);
+	MoveRight(-XDelta);
+
+	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
+	DebugHud->SetStoredMousePos(StoredMousePos, true);
 }
 
 void URTSMovementComponent::MoveForwards(float InAxis)
@@ -163,3 +199,50 @@ float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
 
 }
 
+void URTSMovementComponent::ZoomIn()
+{
+	float CurrSpringArmLength = TargetArmLength;
+
+	if ((CurrSpringArmLength - ArmZoomRate) >= MinArmLength)
+	{
+		TargetArmLength = CurrSpringArmLength - ArmZoomRate;
+		GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CDT, true);
+	}
+}
+
+void URTSMovementComponent::ZoomOut()
+{
+	float CurrSpringArmLength = TargetArmLength;
+
+	if ((CurrSpringArmLength + ArmZoomRate) <= MaxArmLength)
+	{
+		TargetArmLength = CurrSpringArmLength + ArmZoomRate;
+		
+		GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CDT, true);
+	}
+}
+
+void URTSMovementComponent::BlendCameraZoom()
+{
+	GEngine->ClearOnScreenDebugMessages();
+
+	float NewArmLength;
+	float CurrentLength = CameraArm->TargetArmLength;
+
+	NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, CDT, CameraZoomSpeed);
+	CameraArm->TargetArmLength = NewArmLength;
+
+	FString CurrArmCallback = "Curr Arm Length: " + FString::SanitizeFloat(CurrentLength);
+	FString TargetArmCallback = "Target Arm Length: " + FString::SanitizeFloat(TargetArmLength);
+	FString BlendedArmCallback = "Blended Arm Length: " + FString::SanitizeFloat(NewArmLength);
+
+	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, CurrArmCallback);
+	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, TargetArmCallback);
+	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, BlendedArmCallback);
+
+	
+	if (FMath::IsNearlyEqual(NewArmLength, TargetArmLength, ArmZoomRate/10))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(BlendCameraZoomTimer);
+	}
+}

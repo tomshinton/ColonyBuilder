@@ -65,6 +65,12 @@ private:
 	void Turn(float InAxis);
 	void MouseMoved(float InAxis);
 
+	void StoreMouseCoords();
+	void ClearMouseCoords();
+
+	void ScrollUp();
+	void ScrollDown();
+
 	EMovementType CurrMovementType;
 
 };

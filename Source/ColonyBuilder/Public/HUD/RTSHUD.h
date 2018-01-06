@@ -20,7 +20,11 @@ class COLONYBUILDER_API ARTSHUD : public AHUD
 
 public:	
 	void SetEdgeBands(FEdgeBands InBands) { EdgeBanding = InBands; }
+	void SetStoredMousePos(FVector2D InMousePos, bool InDrawDebugPos) { StoredMousePos = InMousePos; DrawStoredMousePos = InDrawDebugPos; }
 
 private:
 	FEdgeBands EdgeBanding;
+
+	FVector2D StoredMousePos;
+	bool DrawStoredMousePos;
 };
