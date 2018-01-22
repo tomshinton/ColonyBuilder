@@ -98,7 +98,7 @@ public:
 	float MinArmLength = 1000;
 	float ArmZoomRate = 1000;
 	float CameraZoomSpeed = 2;
-	float TargetArmLength;
+	float TargetArmLength = MaxArmLength;
 
 	void StoreMouseCoords();
 	void ClearMouseCoords();
