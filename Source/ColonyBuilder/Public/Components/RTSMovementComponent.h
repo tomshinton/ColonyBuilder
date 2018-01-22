@@ -62,6 +62,8 @@ public:
 	// Sets default values for this component's properties
 	URTSMovementComponent();
 
+static const FName FloorTag;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

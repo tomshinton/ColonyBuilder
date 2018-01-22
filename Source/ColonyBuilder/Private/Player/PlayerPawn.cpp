@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PlayerPawn.h"
+#include "RTSPlayerController.h"
+
 
 // Sets default values
 APlayerPawn::APlayerPawn()
@@ -43,6 +45,7 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	RTSController = Cast<ARTSPlayerController>(GetController());
 	
 }
 
@@ -71,6 +74,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 }
 
+#pragma region Binds
 void APlayerPawn::MoveForward(float InAxis)
 {
 	MovementComp->MoveForwards(InAxis);
@@ -92,6 +96,11 @@ void APlayerPawn::Turn(float InAxis)
 void APlayerPawn::MouseMoved(float InAxis)
 {
 	MovementComp->MouseMoved(InAxis);
+
+	if (RTSController)
+	{
+		RTSController->UpdateMousePositions();
+	}
 }
 
 void APlayerPawn::StoreMouseCoords()
@@ -120,3 +129,4 @@ void APlayerPawn::ScrollDown()
 	}
 }
 
+#pragma endregion Binds

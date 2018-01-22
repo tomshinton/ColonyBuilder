@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+class AColonyBuilderGameModeBase;
+
 UCLASS()
 class COLONYBUILDER_API ARTSPlayerController : public APlayerController
 {
@@ -17,4 +20,25 @@ class COLONYBUILDER_API ARTSPlayerController : public APlayerController
 	ARTSPlayerController();
 
 	void BeginPlay();
+
+public:
+	void UpdateMousePositions();
+
+#pragma region Utils
+	//Getters
+	FVector GetPositionUnderMouse() { return PosUnderMouse; }
+	FVector GetPositionUnderMouseRounded() { return PosUnderMouseRounded; }
+	//Setters
+
+#pragma endregion Utils
+
+private:
+
+	FVector PosUnderMouse;
+	FVector DirUnderMouse;
+	FVector PosUnderMouseRounded;
+
+	AActor* ReferenceActor;
+	AColonyBuilderGameModeBase* GM;
+
 };

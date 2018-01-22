@@ -12,6 +12,8 @@
 #include "GameFramework/Pawn.h"
 #include "PlayerPawn.generated.h"
 
+class ARTSPlayerController;
+
 UENUM(BlueprintType)
 enum class EMovementType : uint8 {
 
@@ -42,15 +44,16 @@ public:
 	UBuildComponent* BuildComponent;
 
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
+
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	ARTSPlayerController* RTSController;
 
 	//Getters//
 	EMovementType GetCurrMovementType() { return CurrMovementType; }
@@ -63,6 +66,7 @@ private:
 	void MoveForward(float InAxis);
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
+
 	void MouseMoved(float InAxis);
 
 	void StoreMouseCoords();
@@ -72,5 +76,6 @@ private:
 	void ScrollDown();
 
 	EMovementType CurrMovementType;
+
 
 };

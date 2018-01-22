@@ -8,14 +8,13 @@
 
 DEFINE_LOG_CATEGORY(MovementLog);
 
+const FName URTSMovementComponent::FloorTag("Floor");
+
 // Sets default values for this component's properties
 URTSMovementComponent::URTSMovementComponent()
 {
-
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
-
 
 void URTSMovementComponent::BeginPlay()
 {
@@ -183,7 +182,7 @@ float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
 	for (FHitResult result : HitRes)
 	{
 		ReferenceActor = result.Actor.Get();
-		if (result.Actor->ActorHasTag("Floor"))
+		if (result.Actor->ActorHasTag(URTSMovementComponent::FloorTag))
 		{
 			if (result.ImpactPoint.Z + HeightOffset > 0)
 			{

@@ -18,6 +18,9 @@ class COLONYBUILDER_API AColonyBuilderGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 	AColonyBuilderGameModeBase();
+
+public:
+	static const int32 GridSize;
 	
 	
 };
