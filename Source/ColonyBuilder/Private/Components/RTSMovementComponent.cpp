@@ -23,6 +23,8 @@ void URTSMovementComponent::BeginPlay()
 	
 	OwningPawn = Cast<APawn>(GetOwner());
 	OwningController = Cast<APlayerController>(OwningPawn->GetController());
+
+	GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, 0.02, true);
 }
 
 void URTSMovementComponent::BuildEdgeBands()
@@ -183,8 +185,15 @@ float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
 		ReferenceActor = result.Actor.Get();
 		if (result.Actor->ActorHasTag("Floor"))
 		{
-			OutZ = result.ImpactPoint.Z + HeightOffset;
-			break;
+			if (result.ImpactPoint.Z + HeightOffset > 0)
+			{
+				OutZ = result.ImpactPoint.Z + HeightOffset;
+				break;
+			}
+			else
+			{
+				OutZ = 0;
+			}
 		}
 	}
 
@@ -194,7 +203,7 @@ float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
 	}
 	else
 	{
-		return CurrZ;
+		return 0;
 	}
 
 }
@@ -206,7 +215,6 @@ void URTSMovementComponent::ZoomIn()
 	if ((CurrSpringArmLength - ArmZoomRate) >= MinArmLength)
 	{
 		TargetArmLength = CurrSpringArmLength - ArmZoomRate;
-		GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CDT, true);
 	}
 }
 
@@ -217,32 +225,14 @@ void URTSMovementComponent::ZoomOut()
 	if ((CurrSpringArmLength + ArmZoomRate) <= MaxArmLength)
 	{
 		TargetArmLength = CurrSpringArmLength + ArmZoomRate;
-		
-		GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CDT, true);
 	}
 }
 
 void URTSMovementComponent::BlendCameraZoom()
 {
-	GEngine->ClearOnScreenDebugMessages();
-
 	float NewArmLength;
 	float CurrentLength = CameraArm->TargetArmLength;
 
 	NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, CDT, CameraZoomSpeed);
 	CameraArm->TargetArmLength = NewArmLength;
-
-	FString CurrArmCallback = "Curr Arm Length: " + FString::SanitizeFloat(CurrentLength);
-	FString TargetArmCallback = "Target Arm Length: " + FString::SanitizeFloat(TargetArmLength);
-	FString BlendedArmCallback = "Blended Arm Length: " + FString::SanitizeFloat(NewArmLength);
-
-	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, CurrArmCallback);
-	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, TargetArmCallback);
-	GEngine->AddOnScreenDebugMessage(-1, CDT, FColor::White, BlendedArmCallback);
-
-	
-	if (FMath::IsNearlyEqual(NewArmLength, TargetArmLength, ArmZoomRate/10))
-	{
-		GetWorld()->GetTimerManager().ClearTimer(BlendCameraZoomTimer);
-	}
 }
