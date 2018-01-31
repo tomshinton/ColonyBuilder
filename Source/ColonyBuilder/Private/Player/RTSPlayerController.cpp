@@ -38,8 +38,6 @@ void ARTSPlayerController::BeginPlay()
 
 void ARTSPlayerController::UpdateMousePositions()
 {
-	GEngine->ClearOnScreenDebugMessages();
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, "Updating mouse world projection");
 	FVector PosUnderMouseRaw;
 	DeprojectMousePositionToWorld(PosUnderMouseRaw, DirUnderMouse);
 
@@ -102,11 +100,7 @@ void ARTSPlayerController::UpdateMousePositions()
 		ZOut = HitRes.Location.Z;
 	}
 
-	FVector PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
-	FString RoundedCallbackX = "Raw X : " + FString::SanitizeFloat(PosUnderMouse.X) + " Rounded X: " + FString::SanitizeFloat(PosUnderMouseRounded.X);
-	FString RoundedCallbackY = "Raw Y : " + FString::SanitizeFloat(PosUnderMouse.Y) + " Rounded X: " + FString::SanitizeFloat(PosUnderMouseRounded.Y);
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, RoundedCallbackX);
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, RoundedCallbackY);
+	PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
 	DrawDebugSphere(GetWorld(), PosUnderMouseRounded, 20, 6, FColor::Blue);
 
 }

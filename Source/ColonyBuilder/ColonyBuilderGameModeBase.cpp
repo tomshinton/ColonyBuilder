@@ -4,7 +4,7 @@
 #include "RTSPlayerController.h"
 #include "HUD/RTSHUD.h"
 
-const int32 AColonyBuilderGameModeBase::GridSize(512);
+const int32 AColonyBuilderGameModeBase::GridSize(256);
 
 AColonyBuilderGameModeBase::AColonyBuilderGameModeBase()
 {

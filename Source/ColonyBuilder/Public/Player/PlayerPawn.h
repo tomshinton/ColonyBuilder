@@ -58,6 +58,7 @@ public:
 	//Getters//
 	EMovementType GetCurrMovementType() { return CurrMovementType; }
 	URTSMovementComponent* GetRTSMovementComponent() { return MovementComp; }
+	UBuildComponent* GetBuildComponent() { return BuildComponent; }
 
 	//Setters//
 	void SetCurrMovementType(EMovementType NewMovemementType) { CurrMovementType = NewMovemementType; }

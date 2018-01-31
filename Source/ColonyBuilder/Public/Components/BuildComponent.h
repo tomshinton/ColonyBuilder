@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+#include "Buildables/BuildableBase.h"
+
 #include "BuildComponent.generated.h"
 
 
@@ -21,18 +24,10 @@ public:
 	//Setters//
 	void SetEnabled(bool NewEnabled) { IsEnabled = NewEnabled; }
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	void StartBuildingFromClass(TSubclassOf<ABuildableBase> InClass);
 
 private:
 	
 	bool IsEnabled;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
 	
 };

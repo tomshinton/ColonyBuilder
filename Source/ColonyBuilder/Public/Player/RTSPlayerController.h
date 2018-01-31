@@ -28,6 +28,7 @@ public:
 	//Getters
 	FVector GetPositionUnderMouse() { return PosUnderMouse; }
 	FVector GetPositionUnderMouseRounded() { return PosUnderMouseRounded; }
+
 	//Setters
 
 #pragma endregion Utils
