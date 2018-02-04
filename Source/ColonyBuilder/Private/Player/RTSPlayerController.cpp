@@ -103,4 +103,6 @@ void ARTSPlayerController::UpdateMousePositions()
 	PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
 	DrawDebugSphere(GetWorld(), PosUnderMouseRounded, 20, 6, FColor::Blue);
 
+	OnMouseMoved.Broadcast(PosUnderMouse, PosUnderMouseRounded);
+
 }

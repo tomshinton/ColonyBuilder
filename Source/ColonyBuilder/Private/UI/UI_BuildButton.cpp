@@ -1,7 +1,10 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
 #include "UI_BuildButton.h"
+
 #include "BuildComponent.h"
+#include "BuildingData.h"
+
 #include "PlayerPawn.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -23,12 +26,12 @@ void UUI_BuildButton::BeginBuild()
 
 	if (BuildComponentRef)
 	{
-		if (ClassToBuild)
+		if (BuildingData)
 		{
-			FString StartingBuildmodeCallback = "Beginning building of " + ClassToBuild->GetName();
+			FString StartingBuildmodeCallback = "Beginning building of " + BuildingData->GetName();
 			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, StartingBuildmodeCallback);
 
-			BuildComponentRef->StartBuildingFromClass(ClassToBuild);
+			BuildComponentRef->StartBuildingFromClass(BuildingData);
 		}
 	}
 }

@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/Button.h"
-#include "Buildables/BuildableBase.h"
+#include "BuildComponent.h"
 
 #include "UI_BuildButton.generated.h"
 
 class UBuildComponent;
+class UBuildingData;
 
 /**
  * 
@@ -21,8 +22,9 @@ class COLONYBUILDER_API UUI_BuildButton : public UButton
 	UUI_BuildButton();
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building")
-	TSubclassOf<ABuildableBase> ClassToBuild;
+	UBuildingData* BuildingData;
 
 	UBuildComponent* BuildComponentRef;
 	

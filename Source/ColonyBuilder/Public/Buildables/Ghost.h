@@ -4,23 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
-#include "BuildableBase.generated.h"
-
-class UBuildingData;
-
+#include "Ghost.generated.h"
 
 UCLASS()
-class COLONYBUILDER_API ABuildableBase : public AActor
+class COLONYBUILDER_API AGhost : public AActor
 {
 	GENERATED_BODY()
+
+	UStaticMeshComponent* MeshComp;
 	
 public:	
 	// Sets default values for this actor's properties
-	ABuildableBase();
-
-	UBuildingData* BuildingData;
-
+	AGhost();
+	
+	void SetGhost(UStaticMesh* GhostMesh);
 	
 	
 };
