@@ -10,6 +10,7 @@
 
 class UBuildComponent;
 class UBuildingData;
+class ARTSPlayerController;
 
 /**
  * 
@@ -27,7 +28,7 @@ public:
 	UBuildingData* BuildingData;
 
 	UBuildComponent* BuildComponentRef;
-	
+	ARTSPlayerController* ControllerRef;
 	UFUNCTION()
 	void BeginBuild();
 

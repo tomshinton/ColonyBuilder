@@ -6,6 +6,7 @@
 
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
+#include "PlayerPawn.h"
 
 
 ARTSPlayerController::ARTSPlayerController()
@@ -34,9 +35,14 @@ void ARTSPlayerController::BeginPlay()
 	}
 
 	GM = Cast<AColonyBuilderGameModeBase>(GetWorld()->GetAuthGameMode());
+
+	if (APlayerPawn* OwningPawn = Cast<APlayerPawn>(GetPawn()))
+	{
+		OwningPawn->OnMouseMoved.AddDynamic(this, &ARTSPlayerController::UpdateMousePositions);
+	}
 }
 
-void ARTSPlayerController::UpdateMousePositions()
+void ARTSPlayerController::UpdateMousePositions(float InAxis)
 {
 	FVector PosUnderMouseRaw;
 	DeprojectMousePositionToWorld(PosUnderMouseRaw, DirUnderMouse);

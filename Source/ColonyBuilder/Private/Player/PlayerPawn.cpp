@@ -11,9 +11,8 @@ APlayerPawn::APlayerPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	PawnRoot = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Root Component"));
-	PawnRoot->SetCollisionProfileName("OverlapAllDynamic");
+	PawnRoot->SetCollisionProfileName("NoCollision");
 	RootComponent = PawnRoot;
-	
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArm->SetupAttachment(PawnRoot);
@@ -25,6 +24,7 @@ APlayerPawn::APlayerPawn()
 	PlayerCamera->SetupAttachment(SpringArm);
 
 	MovementComp = CreateDefaultSubobject<URTSMovementComponent>(TEXT("RTS Movement Component"));
+	MovementComp->SetOwningPlayer(this);
 	MovementComp->MoveSpeed = 35;
 	MovementComp->RotateSpeed = 12;
 	MovementComp->HeightOffset = PawnRoot->GetScaledSphereRadius();
@@ -32,20 +32,16 @@ APlayerPawn::APlayerPawn()
 	MovementComp->CameraArm = SpringArm;
 
 	BuildComponent = CreateDefaultSubobject<UBuildComponent>(TEXT("Build Component"));
+	BuildComponent->SetOwningPlayer(this);
 
-#if WITH_EDITOR
-
-	PawnRoot->bHiddenInGame = false;
-
-
-#endif //WITH_EDITOR
 }
 
 // Called when the game starts or when spawned
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	RTSController = Cast<ARTSPlayerController>(GetController());
+
+	MovementComp->SetEnabled(true);
 	
 }
 
@@ -72,61 +68,67 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("ScrollUp"), IE_Pressed, this, &APlayerPawn::ScrollUp);
 	PlayerInputComponent->BindAction(TEXT("ScrollDown"), IE_Pressed, this, &APlayerPawn::ScrollDown);
 
+	PlayerInputComponent->BindAction(TEXT("RotatePlacement"), IE_Pressed, this, &APlayerPawn::RotatePlacement);
+
+	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::Confirm);
+	PlayerInputComponent->BindAction(TEXT("Cancel"), IE_Pressed, this, &APlayerPawn::Cancel);
+
 }
 
 #pragma region Binds
 void APlayerPawn::MoveForward(float InAxis)
 {
-	MovementComp->MoveForwards(InAxis);
+	OnMoveForward.ExecuteIfBound(InAxis);
 }
 
 void APlayerPawn::MoveRight(float InAxis)
 {
-	MovementComp->MoveRight(InAxis);
+	OnMoveRight.ExecuteIfBound(InAxis);
 }
 
 void APlayerPawn::Turn(float InAxis)
 {
-	if (!BuildComponent->GetEnabled())
-	{
-		MovementComp->Turn(InAxis);
-	}
+	OnTurn.ExecuteIfBound(InAxis);
 }
 
 void APlayerPawn::MouseMoved(float InAxis)
 {
-	MovementComp->MouseMoved(InAxis);
-
-	if (RTSController)
-	{
-		RTSController->UpdateMousePositions();
-	}
+	OnMouseMoved.Broadcast(InAxis);
 }
 
 void APlayerPawn::StoreMouseCoords()
 {
-	MovementComp->StoreMouseCoords();
+	OnMouseLocationStored.ExecuteIfBound();
 }
 
 void APlayerPawn::ClearMouseCoords()
 {
-	MovementComp->ClearMouseCoords();
+	OnMouseLocationCleared.ExecuteIfBound();
 }
 
 void APlayerPawn::ScrollUp()
 {
-	if (!BuildComponent->GetEnabled())
-	{
-		MovementComp->ZoomOut();
-	}
+	OnScrollUp.ExecuteIfBound();
 }
 
 void APlayerPawn::ScrollDown()
 {
-	if (!BuildComponent->GetEnabled())
-	{
-		MovementComp->ZoomIn();
-	}
+	OnScrollDown.ExecuteIfBound();
+}
+
+void APlayerPawn::RotatePlacement()
+{
+	OnRotatePlacement.ExecuteIfBound();
+}
+
+void APlayerPawn::Confirm()
+{
+	OnConfirmAction.ExecuteIfBound();
+}
+
+void APlayerPawn::Cancel()
+{
+	OnCancelAction.ExecuteIfBound();
 }
 
 #pragma endregion Binds

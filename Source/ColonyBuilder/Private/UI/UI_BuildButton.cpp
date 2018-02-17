@@ -4,9 +4,13 @@
 
 #include "BuildComponent.h"
 #include "BuildingData.h"
+#include "RTSPlayerController.h"
 
 #include "PlayerPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "Utils.h"
+
+#include "Image.h"
 
 #define LOCTEXT_NAMESPACE "Button"
 
@@ -19,17 +23,21 @@ UUI_BuildButton::UUI_BuildButton()
 
 void UUI_BuildButton::BeginBuild()
 {
-	if (!BuildComponentRef)
+	if (!BuildComponentRef || !ControllerRef)
 	{
-		BuildComponentRef = Cast<APlayerPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0))->GetBuildComponent();
+		ControllerRef = Cast<ARTSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		if (ControllerRef)
+		{
+			BuildComponentRef = Cast<APlayerPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0))->GetBuildComponent();
+		}
 	}
 
-	if (BuildComponentRef)
+	if (BuildComponentRef && ControllerRef)
 	{
 		if (BuildingData)
 		{
 			FString StartingBuildmodeCallback = "Beginning building of " + BuildingData->GetName();
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::White, StartingBuildmodeCallback);
+			print(StartingBuildmodeCallback);
 
 			BuildComponentRef->StartBuildingFromClass(BuildingData);
 		}

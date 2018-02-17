@@ -12,7 +12,7 @@
 
 class AColonyBuilderGameModeBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseMoved, FVector, MouseCoordsRaw, FVector, MouseCoordsRounded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseCoordsChanged, FVector, MouseCoordsRaw, FVector, MouseCoordsRounded);
 
 UCLASS()
 class COLONYBUILDER_API ARTSPlayerController : public APlayerController
@@ -24,8 +24,9 @@ class COLONYBUILDER_API ARTSPlayerController : public APlayerController
 	void BeginPlay();
 
 public:
-	void UpdateMousePositions();
-	FOnMouseMoved OnMouseMoved;
+	UFUNCTION()
+	void UpdateMousePositions(float InAxis);
+	FOnMouseCoordsChanged OnMouseMoved;
 
 #pragma region Utils
 	//Getters

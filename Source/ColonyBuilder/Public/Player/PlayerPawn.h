@@ -14,11 +14,19 @@
 
 class ARTSPlayerController;
 
-UENUM(BlueprintType)
-enum class EMovementType : uint8 {
+DECLARE_DELEGATE_OneParam(FOnMoveFoward, float);
+DECLARE_DELEGATE_OneParam(FOnMoveRight, float);
+DECLARE_DELEGATE_OneParam(FOnTurn, float);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMouseMoved, float, InAxis);
 
-	RTS		UMETA(DisplayName = "RTS Movement")
-};
+DECLARE_DELEGATE(FOnStoreMousePosition);
+DECLARE_DELEGATE(FOnClearMousePosition);
+DECLARE_DELEGATE(FOnScrollUp);
+DECLARE_DELEGATE(FOnScrollDown);
+
+DECLARE_DELEGATE(FOnRotatePlacement);
+DECLARE_DELEGATE(FOnConfirmAction);
+DECLARE_DELEGATE(FOnCancelAction);
 
 UCLASS()
 class COLONYBUILDER_API APlayerPawn : public APawn
@@ -56,12 +64,23 @@ public:
 	ARTSPlayerController* RTSController;
 
 	//Getters//
-	EMovementType GetCurrMovementType() { return CurrMovementType; }
-	URTSMovementComponent* GetRTSMovementComponent() { return MovementComp; }
+	UFUNCTION(BlueprintPure, Category = "Player | Modes")	URTSMovementComponent* GetRTSMovementComponent() { return MovementComp; }
 	UBuildComponent* GetBuildComponent() { return BuildComponent; }
 
-	//Setters//
-	void SetCurrMovementType(EMovementType NewMovemementType) { CurrMovementType = NewMovemementType; }
+	//Delegates
+	FOnMoveFoward OnMoveForward;
+	FOnMoveRight OnMoveRight;
+	FOnTurn OnTurn;
+	FOnMouseMoved OnMouseMoved;
+
+	FOnStoreMousePosition OnMouseLocationStored;
+	FOnClearMousePosition OnMouseLocationCleared;
+	FOnScrollUp OnScrollUp;
+	FOnScrollDown OnScrollDown;
+
+	FOnRotatePlacement OnRotatePlacement;
+	FOnConfirmAction OnConfirmAction;
+	FOnCancelAction OnCancelAction;
 
 private:
 	void MoveForward(float InAxis);
@@ -76,7 +95,8 @@ private:
 	void ScrollUp();
 	void ScrollDown();
 
-	EMovementType CurrMovementType;
-
+	void RotatePlacement();
+	void Confirm();
+	void Cancel();
 
 };

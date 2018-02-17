@@ -4,6 +4,7 @@
 
 //Forward Dec
 #include "HUD/RTSHUD.h"
+#include "PlayerPawn.h"
 
 
 DEFINE_LOG_CATEGORY(MovementLog);
@@ -14,13 +15,16 @@ const FName URTSMovementComponent::FloorTag("Floor");
 URTSMovementComponent::URTSMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	IsUsingStaticZ = true;
+	StaticZHeight = 0;
 }
 
 void URTSMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	OwningPawn = Cast<APawn>(GetOwner());
+
+	OwningPawn = Cast<APlayerPawn>(GetOwner());
 	OwningController = Cast<APlayerController>(OwningPawn->GetController());
 
 	GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, 0.02, true);
@@ -196,13 +200,13 @@ float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
 		}
 	}
 
-	if (ReferenceActor)
+	if (ReferenceActor && !IsUsingStaticZ)
 	{
 		return OutZ;
 	}
 	else
 	{
-		return 0;
+		return StaticZHeight;
 	}
 
 }
@@ -234,4 +238,20 @@ void URTSMovementComponent::BlendCameraZoom()
 
 	NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, CDT, CameraZoomSpeed);
 	CameraArm->TargetArmLength = NewArmLength;
+}
+
+void URTSMovementComponent::SetEnabled(bool InEnabled)
+{
+	Super::SetEnabled(InEnabled);
+
+	OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
+	OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
+	OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
+
+	OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
+	OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
+	OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
+
+	OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
+	OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
 }
