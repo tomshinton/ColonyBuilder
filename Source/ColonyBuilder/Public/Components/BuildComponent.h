@@ -42,6 +42,7 @@ public:
 
 	FTimerHandle BuildIntermediatePosTimer;
 	void BuildIntermediatePositions();
+	TArray<FIntermediateBuildingLocation> AlignPositionsToGround(TArray<FIntermediateBuildingLocation> InPositions);
 	TArray<FIntermediateBuildingLocation> GeneratedPositions;
 
 	UBuildingData* CurrentBuildingData;

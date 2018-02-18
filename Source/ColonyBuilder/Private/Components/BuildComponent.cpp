@@ -104,7 +104,6 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* BuildingData)
 
 void UBuildComponent::StartPlacement()
 {
-	//Start tracking where the Rounded location was, where is it now, build an array of points for stuff like walls/farms
 	MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
 	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.5f, true);
 }
@@ -124,6 +123,35 @@ void UBuildComponent::BuildIntermediatePositions()
 	}
 }
 
+TArray<FIntermediateBuildingLocation> UBuildComponent::AlignPositionsToGround(TArray<FIntermediateBuildingLocation> Positions)
+{
+	TArray<FIntermediateBuildingLocation> NewPoints;
+	for (FIntermediateBuildingLocation Pos : Positions)
+	{
+		FHitResult HitRes;
+
+		FCollisionQueryParams TraceParams;
+		TraceParams.bTraceComplex = true;
+
+		TraceParams.AddIgnoredActor(GetOwner());
+		FVector TraceStart = Pos.Location + FVector(0, 0, 1000);
+		FVector TraceEnd = Pos.Location - FVector(0, 0, 1000);
+		if (ControllerRef->GetReferenceActor())
+		{
+			ControllerRef->GetReferenceActor()->ActorLineTraceSingle(HitRes, TraceStart, TraceEnd, ECC_Camera, TraceParams);
+			if (HitRes.Actor.Get())
+			{
+				FIntermediateBuildingLocation NewPoint = Pos;
+				NewPoint.Location = HitRes.Location;
+
+				NewPoints.AddUnique(NewPoint);
+			}
+		}
+	}
+
+	return NewPoints;
+}
+
 TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
 {
 	TArray<FIntermediateBuildingLocation> OutPoints;
@@ -141,19 +169,35 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 	int32 XDeltaAsUnits = XDelta / AColonyBuilderGameModeBase::GridSize;
 	int32 YDeltaAsUnits = YDelta / AColonyBuilderGameModeBase::GridSize;
 
-	FString UnitsCallback = "X Units: " + FString::FromInt(XDeltaAsUnits) + " Y Units: " + FString::FromInt(YDeltaAsUnits);
-	printKey(2, UnitsCallback);
+	int8 XDir;
+	int8 YDir;
 
-	for (int32 x = 0; x <= XDeltaAsUnits; x++)
+	if (XDeltaAsUnits > 0)
 	{
-		for (int32 y = 0; y <= YDeltaAsUnits; y++)
+		XDir = 1;
+	}
+	else
+	{
+		XDir = -1;
+	}
+
+	if (YDeltaAsUnits > 0)
+	{
+		YDir = 1;
+	}
+	else
+	{
+		YDir = -1;
+	}
+
+	for(int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
+	{
+		for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
 		{
 			FVector NewPoint = MouseLocationAtBuildingStart;
 
-			NewPoint.X  =  NewPoint.X + AColonyBuilderGameModeBase::GridSize * x;
-			//print(FString::SanitizeFloat(NewPoint.X));
-			NewPoint.Y = NewPoint.Y + AColonyBuilderGameModeBase::GridSize * y;
-			//print(FString::SanitizeFloat(NewPoint.Y));
+			NewPoint.X  =  NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
+			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
 
 			FIntermediateBuildingLocation NewLocation;
 			NewLocation.Location = NewPoint;
@@ -162,6 +206,7 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 		}
 	}
 
+	OutPoints = AlignPositionsToGround(OutPoints);
 	/*DEBUG*/
 	FlushPersistentDebugLines(GetWorld());
 	FString PointsCallback = FString::FromInt(OutPoints.Num()) + " total points";

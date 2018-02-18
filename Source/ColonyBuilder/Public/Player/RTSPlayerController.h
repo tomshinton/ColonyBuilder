@@ -32,6 +32,7 @@ public:
 	//Getters
 	FVector GetPositionUnderMouse() { return PosUnderMouse; }
 	FVector GetPositionUnderMouseRounded() { return PosUnderMouseRounded; }
+	AActor* GetReferenceActor() { return ReferenceActor; }
 
 	//Setters
 
