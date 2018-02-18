@@ -25,7 +25,8 @@ DECLARE_DELEGATE(FOnScrollUp);
 DECLARE_DELEGATE(FOnScrollDown);
 
 DECLARE_DELEGATE(FOnRotatePlacement);
-DECLARE_DELEGATE(FOnConfirmAction);
+DECLARE_DELEGATE(FOnStartConfirmAction);
+DECLARE_DELEGATE(FOnEndConfirmAction);
 DECLARE_DELEGATE(FOnCancelAction);
 
 UCLASS()
@@ -79,7 +80,8 @@ public:
 	FOnScrollDown OnScrollDown;
 
 	FOnRotatePlacement OnRotatePlacement;
-	FOnConfirmAction OnConfirmAction;
+	FOnStartConfirmAction OnStartConfirmAction;
+	FOnEndConfirmAction OnEndConfirmAction;
 	FOnCancelAction OnCancelAction;
 
 private:
@@ -96,7 +98,8 @@ private:
 	void ScrollDown();
 
 	void RotatePlacement();
-	void Confirm();
+	void StartConfirm();
+	void EndConfirm();
 	void Cancel();
 
 };

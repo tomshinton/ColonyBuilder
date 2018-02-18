@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "BuildableBase.h"
 #include "Ghost.generated.h"
 
 class UBuildingData;
@@ -34,6 +35,8 @@ public:
 
 	void CheckPlacement();
 	void GetObstructingActors(TArray<AActor*>& ObstructingActors);
+
+	TArray<FIntermediateBuildingLocation> IntermediateBuildingLocations;
 	
 private:
 	bool IsValid;

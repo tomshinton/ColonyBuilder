@@ -70,7 +70,8 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction(TEXT("RotatePlacement"), IE_Pressed, this, &APlayerPawn::RotatePlacement);
 
-	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::Confirm);
+	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::StartConfirm);
+	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Released, this, &APlayerPawn::EndConfirm);
 	PlayerInputComponent->BindAction(TEXT("Cancel"), IE_Pressed, this, &APlayerPawn::Cancel);
 
 }
@@ -121,9 +122,14 @@ void APlayerPawn::RotatePlacement()
 	OnRotatePlacement.ExecuteIfBound();
 }
 
-void APlayerPawn::Confirm()
+void APlayerPawn::StartConfirm()
 {
-	OnConfirmAction.ExecuteIfBound();
+	OnStartConfirmAction.ExecuteIfBound();
+}
+
+void APlayerPawn::EndConfirm()
+{
+	OnEndConfirmAction.ExecuteIfBound();
 }
 
 void APlayerPawn::Cancel()

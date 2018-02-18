@@ -10,6 +10,19 @@
 
 class UBuildingData;
 
+USTRUCT(BlueprintType)
+struct FIntermediateBuildingLocation
+{
+	GENERATED_BODY()
+
+	FVector Location;
+
+	bool operator==(const FIntermediateBuildingLocation& OtherLocation) const
+	{
+		return Location == OtherLocation.Location;
+	}
+
+};
 
 UCLASS()
 class COLONYBUILDER_API ABuildableBase : public AActor
@@ -25,6 +38,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* MeshComponent;
+
+	TArray<FIntermediateBuildingLocation> IntermediateBuildingLocations;
 
 	void OnConstruction(const FTransform& Transform);
 

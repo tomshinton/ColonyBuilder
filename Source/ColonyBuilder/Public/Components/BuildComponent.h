@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "RTSBaseComp.h"
+#include "BuildableBase.h"
 
 #include "BuildComponent.generated.h"
 
@@ -32,8 +33,16 @@ public:
 	void RotatePlacement();
 
 	void StartBuildingFromClass(UBuildingData* BuildingData);
-	void ConfirmPlacement();
+	void StartPlacement();
+	void EndPlacement();
 	void CancelBuild();
+
+	TArray<FIntermediateBuildingLocation> BuildLinearPoints();
+	TArray<FIntermediateBuildingLocation> BuildGridPoints();
+
+	FTimerHandle BuildIntermediatePosTimer;
+	void BuildIntermediatePositions();
+	TArray<FIntermediateBuildingLocation> GeneratedPositions;
 
 	UBuildingData* CurrentBuildingData;
 
@@ -41,6 +50,7 @@ private:
 
 	FVector CurrMouseCoords;
 	FVector CurrRoundedMouseCoords;
+	FVector MouseLocationAtBuildingStart;
 	void UpdateGhostLocation();
 	AGhost* SpawnedGhost;
 
