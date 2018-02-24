@@ -9,8 +9,9 @@
 #include "Ghost.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Utils/GridUtils.h"
+
 #include "ColonyBuilderGameModeBase.h"
-#include "DrawDebugHelpers.h"
 
 // Sets default values for this component's properties
 UBuildComponent::UBuildComponent()
@@ -44,6 +45,7 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 	else
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
+		GeneratedPositions.Empty();
 
 		if (ControllerRef && ControllerRef->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
 		{
@@ -68,7 +70,7 @@ void UBuildComponent::UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRou
 	CurrMouseCoords = InCurrMouseCoords;
 	CurrRoundedMouseCoords = InRoundedMouseCoords;
 
-	UpdateGhostLocation();
+	UpdateGhost();
 }
 
 void UBuildComponent::RotatePlacement()
@@ -105,7 +107,7 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* BuildingData)
 void UBuildComponent::StartPlacement()
 {
 	MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
-	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.5f, true);
+	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.1f, true);
 }
 
 void UBuildComponent::BuildIntermediatePositions()
@@ -123,38 +125,70 @@ void UBuildComponent::BuildIntermediatePositions()
 	}
 }
 
-TArray<FIntermediateBuildingLocation> UBuildComponent::AlignPositionsToGround(TArray<FIntermediateBuildingLocation> Positions)
-{
-	TArray<FIntermediateBuildingLocation> NewPoints;
-	for (FIntermediateBuildingLocation Pos : Positions)
-	{
-		FHitResult HitRes;
-
-		FCollisionQueryParams TraceParams;
-		TraceParams.bTraceComplex = true;
-
-		TraceParams.AddIgnoredActor(GetOwner());
-		FVector TraceStart = Pos.Location + FVector(0, 0, 1000);
-		FVector TraceEnd = Pos.Location - FVector(0, 0, 1000);
-		if (ControllerRef->GetReferenceActor())
-		{
-			ControllerRef->GetReferenceActor()->ActorLineTraceSingle(HitRes, TraceStart, TraceEnd, ECC_Camera, TraceParams);
-			if (HitRes.Actor.Get())
-			{
-				FIntermediateBuildingLocation NewPoint = Pos;
-				NewPoint.Location = HitRes.Location;
-
-				NewPoints.AddUnique(NewPoint);
-			}
-		}
-	}
-
-	return NewPoints;
-}
-
 TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
 {
 	TArray<FIntermediateBuildingLocation> OutPoints;
+
+	float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
+	float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
+
+	int32 XDeltaAsUnits = XDelta / AColonyBuilderGameModeBase::GridSize;
+	int32 YDeltaAsUnits = YDelta / AColonyBuilderGameModeBase::GridSize;
+
+	int8 XDir;
+	int8 YDir;
+
+#pragma region Directions
+	if (XDeltaAsUnits >= 0)
+	{
+		XDir = 1;
+	}
+	else
+	{
+		XDir = -1;
+	}
+
+	if (YDeltaAsUnits >= 0)
+	{
+		YDir = 1;
+	}
+	else
+	{
+		YDir = -1;
+	}
+#pragma endregion Directions
+
+
+	if (FMath::Abs(XDeltaAsUnits) > FMath::Abs(YDeltaAsUnits))
+	{
+		//Generate the points along the X
+		for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
+		{
+			FVector NewPoint = MouseLocationAtBuildingStart;
+			NewPoint.X = NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
+			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
+
+			FIntermediateBuildingLocation NewLocation;
+			NewLocation.Location = NewPoint;
+
+			OutPoints.AddUnique(NewLocation);
+		}
+	}
+	else
+	{
+		//Generate the points along the Y
+		for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
+		{
+			FVector NewPoint = MouseLocationAtBuildingStart;
+			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
+			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
+
+			FIntermediateBuildingLocation NewLocation;
+			NewLocation.Location = NewPoint;
+
+			OutPoints.AddUnique(NewLocation);
+		}
+	}
 
 	return OutPoints;
 }
@@ -172,7 +206,8 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 	int8 XDir;
 	int8 YDir;
 
-	if (XDeltaAsUnits > 0)
+#pragma region Directions
+	if (XDeltaAsUnits >= 0)
 	{
 		XDir = 1;
 	}
@@ -181,7 +216,7 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 		XDir = -1;
 	}
 
-	if (YDeltaAsUnits > 0)
+	if (YDeltaAsUnits >= 0)
 	{
 		YDir = 1;
 	}
@@ -189,6 +224,7 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 	{
 		YDir = -1;
 	}
+#pragma endregion Directions
 
 	for(int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
 	{
@@ -198,22 +234,13 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 
 			NewPoint.X  =  NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
 			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
+			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
 
 			FIntermediateBuildingLocation NewLocation;
 			NewLocation.Location = NewPoint;
 
 			OutPoints.AddUnique(NewLocation);
 		}
-	}
-
-	OutPoints = AlignPositionsToGround(OutPoints);
-	/*DEBUG*/
-	FlushPersistentDebugLines(GetWorld());
-	FString PointsCallback = FString::FromInt(OutPoints.Num()) + " total points";
-	for (FIntermediateBuildingLocation Loc : OutPoints)
-	{
-		DrawDebugSphere(GetWorld(), MouseLocationAtBuildingStart, AColonyBuilderGameModeBase::GridSize / 2, 8, FColor::Red, false, 0.5f);
-		DrawDebugSphere(GetWorld(), Loc.Location, AColonyBuilderGameModeBase::GridSize / 2, 8, FColor::Emerald, false, 0.5f);
 	}
 
 	return OutPoints;
@@ -227,15 +254,22 @@ void UBuildComponent::EndPlacement()
 	FVector CurrentGhostLoc;
 	FRotator CurrentGhostRot;
 
-	if (SpawnedGhost && SpawnedGhost->GetIsValid())
+	if (SpawnedGhost)
 	{
 		CurrentGhostLoc = SpawnedGhost->GetActorLocation();
 		CurrentGhostRot = SpawnedGhost->GetActorRotation();
+		
 		SpawnedGhost->Destroy();
 		FActorSpawnParameters SpawnParams;
-		ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(CurrentBuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
-		NewBuilding->IntermediateBuildingLocations = GeneratedPositions;
 
+		//Does this building type actually spawn a building at the end?
+		if (CurrentBuildingData->BuildingClass)
+		{
+			ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(CurrentBuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
+			NewBuilding->IntermediateBuildingLocations = GeneratedPositions;
+
+			GeneratedPositions.Empty();
+		}
 		SetEnabled(false);
 	}
 }
@@ -245,11 +279,11 @@ void UBuildComponent::CancelBuild()
 	SetEnabled(false);
 }
 
-void UBuildComponent::UpdateGhostLocation()
+void UBuildComponent::UpdateGhost()
 {
 	if (SpawnedGhost)
 	{
-		SpawnedGhost->SetActorLocation(CurrRoundedMouseCoords);
+		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, GeneratedPositions);
 	}
 }
 

@@ -36,6 +36,7 @@ public:
 	void CheckPlacement();
 	void GetObstructingActors(TArray<AActor*>& ObstructingActors);
 
+	void UpdateGhost(FVector NewLocation, TArray<FIntermediateBuildingLocation> InIntermediateBuildingLocations);
 	TArray<FIntermediateBuildingLocation> IntermediateBuildingLocations;
 	
 private:

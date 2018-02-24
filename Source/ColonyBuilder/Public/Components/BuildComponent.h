@@ -42,7 +42,6 @@ public:
 
 	FTimerHandle BuildIntermediatePosTimer;
 	void BuildIntermediatePositions();
-	TArray<FIntermediateBuildingLocation> AlignPositionsToGround(TArray<FIntermediateBuildingLocation> InPositions);
 	TArray<FIntermediateBuildingLocation> GeneratedPositions;
 
 	UBuildingData* CurrentBuildingData;
@@ -52,7 +51,7 @@ private:
 	FVector CurrMouseCoords;
 	FVector CurrRoundedMouseCoords;
 	FVector MouseLocationAtBuildingStart;
-	void UpdateGhostLocation();
+	void UpdateGhost();
 	AGhost* SpawnedGhost;
 
 	float RotationRate = 45.f;

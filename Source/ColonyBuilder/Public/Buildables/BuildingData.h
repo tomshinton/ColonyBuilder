@@ -33,14 +33,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Readability")
 	FName BuildingName;
 	
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere, Category = "Spawning | Data")
 	TSubclassOf<ABuildableBase> BuildingClass;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
 	UStaticMesh* BuildingBaseMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
 	EConstructionMethod ConstructionMethod;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
+	bool ShouldEndConstructionOnPlacement;
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
 	UMaterialInterface* ValidGhostMaterial;
@@ -50,5 +53,20 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	UMaterialInterface* BuildingIcon;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
+	FVector2D MaxDimentions;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
+	FVector2D MinDimentions;
+
+	UPROPERTY(EditAnywhere, Category = "Organisation")
+	FString BuildingCategory;
+
+	UPROPERTY(EditAnywhere, Category = "Organisation")
+	FString BuildingSubcategory;
+
+public:
+	FString GetFullCategoryAsString();
 
 };

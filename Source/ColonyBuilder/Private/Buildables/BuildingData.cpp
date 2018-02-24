@@ -3,7 +3,6 @@
 #include "BuildingData.h"
 #include "ConstructorHelpers.h"
 
-
 UBuildingData::UBuildingData()
 {
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ValidGhostMaterial_Ref(TEXT("/Game/Materials/Placeholder/FlatColours/M_FlatColour_ValidGhost.M_FlatColour_ValidGhost"));
@@ -16,4 +15,9 @@ UBuildingData::UBuildingData()
 	{
 		InvalidGhostMaterial = InvalidGhostMaterial_Ref.Object;
 	}
+}
+
+FString UBuildingData::GetFullCategoryAsString()
+{
+	return BuildingCategory + "/" + BuildingSubcategory;
 }

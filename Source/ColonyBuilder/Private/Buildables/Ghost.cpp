@@ -4,6 +4,9 @@
 #include "BuildingData.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+#include "DrawDebugHelpers.h"
+#include "ColonyBuilderGameModeBase.h"
+
 const float AGhost::ValidationCheckFreq(0.05);
 
 // Sets default values
@@ -56,6 +59,16 @@ void AGhost::CheckPlacement()
 
 
 
+	/*DEBUG*/
+	FlushPersistentDebugLines(GetWorld());
+	FlushDebugStrings(GetWorld());
+
+	for (FIntermediateBuildingLocation Loc : IntermediateBuildingLocations)
+	{
+		DrawDebugSphere(GetWorld(), Loc.Location, AColonyBuilderGameModeBase::GridSize / 2, 8, FColor::Emerald, false, 0.5f);
+		DrawDebugString(GetWorld(), Loc.Location, Loc.ToStringFromInts(), NULL, FColor::White, 0.5f, true);
+	}
+
 	SetValid(true);
 }
 
@@ -87,5 +100,15 @@ void AGhost::GetObstructingActors(TArray<AActor*>& ObstructingActors)
 	//Allow for additional checks here, do we want to remove actors from this list?
 
 	ObstructingActors = OverlappingActors;
+}
+
+void AGhost::UpdateGhost(FVector NewLocation, TArray<FIntermediateBuildingLocation> InIntermediateBuildingLocations)
+{
+	if (NewLocation != GetActorLocation())
+	{
+		SetActorLocation(NewLocation);
+	}
+
+	IntermediateBuildingLocations = InIntermediateBuildingLocations;
 }
 

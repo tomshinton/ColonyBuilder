@@ -15,6 +15,7 @@ struct FIntermediateBuildingLocation
 {
 	GENERATED_BODY()
 
+	UPROPERTY(VisibleAnywhere, Category = "Building Info")
 	FVector Location;
 
 	bool operator==(const FIntermediateBuildingLocation& OtherLocation) const
@@ -22,6 +23,11 @@ struct FIntermediateBuildingLocation
 		return Location == OtherLocation.Location;
 	}
 
+	FString ToStringFromInts()
+	{
+		FString OutString = "X: " + FString::FromInt(FMath::CeilToInt(Location.X)) + ", Y: " + FString::FromInt(FMath::CeilToInt(Location.Y));
+		return OutString;
+	}
 };
 
 UCLASS()
@@ -39,6 +45,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* MeshComponent;
 
+	UPROPERTY(VisibleAnywhere, Category = "Building Info")
 	TArray<FIntermediateBuildingLocation> IntermediateBuildingLocations;
 
 	void OnConstruction(const FTransform& Transform);
