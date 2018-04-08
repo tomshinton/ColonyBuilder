@@ -32,6 +32,7 @@ AGhost::AGhost()
 
 	InstancedMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Instanced Meshes"));
 	InstancedMeshes->SetupAttachment(GhostRoot);
+
 	UniqueInstancedMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Unique Instanced Meshes"));
 	UniqueInstancedMeshes->SetupAttachment(GhostRoot);
 
@@ -46,7 +47,12 @@ void AGhost::Tick(float DeltaTime)
 
 void AGhost::SetGhostInfo(UBuildingData* InBuildingData)
 {
+	FVector BoundsOrigin;
+
 	BuildingData = InBuildingData;
+
+	GetActorBounds(false, BoundsOrigin, CachedGhostBounds);
+	MeshComp->SetStaticMesh(BuildingData->BuildingBaseMesh);
 }
 
 void AGhost::CheckPlacement()
@@ -122,6 +128,7 @@ void AGhost::SetGhostMaterial(UMaterialInterface* NewMaterial)
 
 void AGhost::UpdateGhost(FVector NewLocation, TArray<FSubBuilding>& InSubBuildings)
 {
+
 	if (NewLocation != GetActorLocation())
 	{
 		SetActorLocation(NewLocation);
@@ -132,7 +139,6 @@ void AGhost::UpdateGhost(FVector NewLocation, TArray<FSubBuilding>& InSubBuildin
 	switch (BuildingData->ConstructionMethod)
 	{
 	case EConstructionMethod::FireAndForget:
-		UpdateFireAndForgetGhost();
 		break;
 	case EConstructionMethod::Grid:
 		UpdateGridGhost();
@@ -223,9 +229,4 @@ void AGhost::UpdateLinearGhost()
 			InstancedMeshes->AddInstanceWorldSpace(NewMeshTransform);
 		}
 	}
-}
-
-void AGhost::UpdateFireAndForgetGhost()
-{
-	MeshComp->SetStaticMesh(BuildingData->BuildingBaseMesh);
 }

@@ -13,6 +13,7 @@
 
 #include "ColonyBuilderGameModeBase.h"
 #include "BuildableBase.h"
+#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY(BuildCompLogError);
 
@@ -113,6 +114,8 @@ void UBuildComponent::StartPlacement(bool IsNewPlacement)
 	{
 		MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
 	}
+
+	SpawnedGhost->SetBaseGhostVisibility(BuildingData->ShouldHideBaseMeshOnStartPlacement);
 
 	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.1f, true);
 }
@@ -247,6 +250,69 @@ TArray<FSubBuilding> UBuildComponent::BuildGridPoints()
 	return OutPoints;
 }
 
+TArray<FSubBuilding> UBuildComponent::BuildFFPoints()
+{
+	TArray<FSubBuilding> OutPoints;
+	const FVector& CachedBounds = SpawnedGhost->GetCachedGhostBounds();
+	float Higherbounds;
+	int32 BoundsToUnits;
+
+	CachedBounds.X > CachedBounds.Y ? Higherbounds = CachedBounds.X : Higherbounds = CachedBounds.Y;
+	BoundsToUnits = FMath::Abs(FMath::CeilToInt(FMath::Abs(Higherbounds) / AColonyBuilderGameModeBase::GridSize) + 5);
+
+	for (int32 x = -BoundsToUnits/2; x <= BoundsToUnits/2; x++)
+	{
+		for (int32 y = -BoundsToUnits / 2; y <= BoundsToUnits / 2; y++)
+		{
+			FVector NewPoint = SpawnedGhost->GetActorLocation();
+
+			NewPoint.X = NewPoint.X + (AColonyBuilderGameModeBase::GridSize * x);
+			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * y);
+
+			FSubBuilding NewLocation(NewPoint, EPointType::BuildingPoint);
+			OutPoints.AddUnique(NewLocation);
+		}
+	}
+
+	SpawnedGhost->SetActorEnableCollision(true);
+
+	for (int32 i = OutPoints.Num() - 1; i >= 0; i--)
+	{
+		bool HitGhost = false;
+		const FSubBuilding& CurrPoint = OutPoints[i];
+
+		//is overlapping
+		const FName TraceTag("Point Overlap Trace");
+
+		TArray<FHitResult> OverlapsAtPoint;
+		FCollisionQueryParams TraceParams(FName(TEXT("BoxTrace at point")));
+		TraceParams.TraceTag = TraceTag;
+
+		const FVector& StartPoint = CurrPoint.Location + FVector(0, 0, 1000);
+		const FVector& EndPoint = CurrPoint.Location + FVector(0, 0, -100);
+		FCollisionShape Box = FCollisionShape::MakeBox(FVector(AColonyBuilderGameModeBase::GridSize / 2.1, AColonyBuilderGameModeBase::GridSize / 2.1, 1.f));
+		GetWorld()->SweepMultiByChannel(OverlapsAtPoint, StartPoint, EndPoint, FRotator::ZeroRotator.Quaternion(), ECC_Visibility, Box, TraceParams);
+
+		for (int32 i = OverlapsAtPoint.Num() - 1; i >= 0; i--)
+		{
+			AActor* OverlappedActor = OverlapsAtPoint[i].Actor.Get();
+			if (Cast<AGhost>(OverlappedActor))
+			{
+				HitGhost = true;
+				break;
+			}
+		}
+
+		if (!HitGhost)
+		{
+			OutPoints.RemoveAt(i);
+		}
+	}
+
+	SpawnedGhost->SetActorEnableCollision(false);
+	return OutPoints;
+}
+
 void UBuildComponent::AlignAndOrientate()
 {
 	for (FSubBuilding& Point : SubBuildings)
@@ -333,6 +399,15 @@ void UBuildComponent::UpdateGhost()
 	{
 		AlignAndOrientate();
 		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, SubBuildings);
+
+		if (BuildingData)
+		{
+			if (BuildingData->ConstructionMethod == EConstructionMethod::FireAndForget)
+			{
+				SubBuildings = BuildFFPoints();
+				AlignAndOrientate();
+			}
+		}
 	}
 }
 
@@ -362,3 +437,4 @@ void UBuildComponent::ValidatePointTypesToUnique()
 		}
 	}
 }
+

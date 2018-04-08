@@ -43,6 +43,11 @@ public:
 	void SetValid(bool InValidState);
 	void SetGhostMaterial(UMaterialInterface* NewMaterial);
 	bool GetIsValid() { return IsValid; }
+
+	void SetBaseGhostVisibility(bool NewHidden) { MeshComp->SetVisibility(NewHidden); }
+
+	FVector GetCachedGhostBounds() { return CachedGhostBounds; }
+	FRotator GetMeshCompRotation() const { return MeshComp->GetComponentRotation(); }
 		
 	void SetGhostInfo(UBuildingData* InBuildingData);
 	UBuildingData* BuildingData;
@@ -56,13 +61,13 @@ public:
 	void UpdateGridGhost();
 	//Build mock path/wall
 	void UpdateLinearGhost();
-	//Update standard ghost
-	void UpdateFireAndForgetGhost();
 
 	TArray<FSubBuilding> SubBuildings;
 	
 private:
 	bool IsValid;
+
+	FVector CachedGhostBounds;
 
 	TArray<USplineMeshComponent*> SpawnedMeshComponents;
 

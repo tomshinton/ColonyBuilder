@@ -46,6 +46,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
 	int32 UniqueMeshFrequency;
 
+	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
+	bool ShouldHideBaseMeshOnStartPlacement;
+
 #pragma endregion Rendering
 
 #pragma region Materials

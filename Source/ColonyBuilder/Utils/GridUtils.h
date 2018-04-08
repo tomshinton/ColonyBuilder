@@ -61,6 +61,7 @@ public:
 		if (!PointRules)
 		{
 			Reasons.Add(EInvalidReason::NoPointRules);
+			return Reasons;
 		}
 
 		//is overlapping

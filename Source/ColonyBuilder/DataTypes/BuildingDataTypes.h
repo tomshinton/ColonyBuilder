@@ -20,7 +20,8 @@ UENUM(BlueprintType)
 enum class EPointType : uint8
 {
 	GridPoint	UMETA(DisplayName = "Grid Point"),
-	LinearPoint	UMETA(DisplayName = "Linear Point")
+	LinearPoint	UMETA(DisplayName = "Linear Point"),
+	BuildingPoint	UMETA(DisplayName = "Building Point")
 };
 
 //What kind of sub building is this? Edges, corners or grids
@@ -42,6 +43,11 @@ struct FSubBuilding
 
 	FSubBuilding() {}
 
+	FSubBuilding(FVector Location, EPointType PointType) :
+		Location(Location)
+		, PointType(PointType)
+	{}
+
 	//For linear points
 	FSubBuilding(FVector Location, FVector2D Direction, EPointType PointType, ESubBuildingType SubBuildingType) :
 	Location(Location)
@@ -50,6 +56,7 @@ struct FSubBuilding
 	, SubBuildingType(SubBuildingType)
 	{}
 
+	//For grid points
 	FSubBuilding(FVector Location, EPointType PointType, ESubBuildingType SubBuildingType, FVector2D CurrCoord, FVector2D MaxCoord) :
 		Location(Location)
 		, PointType(PointType)

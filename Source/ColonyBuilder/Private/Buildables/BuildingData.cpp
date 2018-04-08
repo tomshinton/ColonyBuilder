@@ -15,6 +15,15 @@ UBuildingData::UBuildingData()
 	{
 		InvalidGhostMaterial = InvalidGhostRef.Object;
 	}
+
+	if (ConstructionMethod == EConstructionMethod::Grid || ConstructionMethod == EConstructionMethod::Linear)
+	{
+		ShouldHideBaseMeshOnStartPlacement = true;
+	}
+	else
+	{
+		ShouldHideBaseMeshOnStartPlacement = false;
+	}
 }
 
 FString UBuildingData::GetFullCategoryAsString()
