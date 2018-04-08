@@ -5,21 +5,13 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 
-#include "BuildableBase.h"
+#include "DataTypes/BuildingDataTypes.h"
+#include "GridBodyBase.h"
 
 #include "BuildingData.generated.h"
 
-/**
- * 
- */
-
-UENUM(BlueprintType)
-enum class EConstructionMethod : uint8 
-{
-	FireAndForget	UMETA(DisplayName = "Fire and Forget"),
-	Grid			UMETA(DisplayName = "Grid"),
-	Linear			UMETA(DisplayName = "Linear Construction")
-};
+class UPointValidationRules;
+class ABuildableBase;
 
 UCLASS()
 class COLONYBUILDER_API UBuildingData : public UDataAsset
@@ -28,31 +20,62 @@ class COLONYBUILDER_API UBuildingData : public UDataAsset
 
 	UBuildingData();
 
-
 public:
+
+#pragma region Readability
+
 	UPROPERTY(EditAnywhere, Category = "Readability")
 	FName BuildingName;
+
+	UPROPERTY(EditAnywhere, Category = "Readability")
+	FString BuildingCategory;
+
+	UPROPERTY(EditAnywhere, Category = "Readability")
+	FString BuildingSubcategory;
+
+#pragma endregion Readability
 	
-	UPROPERTY(EditAnywhere, Category = "Spawning | Data")
-	TSubclassOf<ABuildableBase> BuildingClass;
+#pragma region Rendering
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
 	UStaticMesh* BuildingBaseMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
-	EConstructionMethod ConstructionMethod;
+	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
+	TMap<ESubBuildingType, UStaticMesh*> SubBuildingMeshes;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
-	bool ShouldEndConstructionOnPlacement;
+	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
+	int32 UniqueMeshFrequency;
 
+#pragma endregion Rendering
+
+#pragma region Materials
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
 	UMaterialInterface* ValidGhostMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
 	UMaterialInterface* InvalidGhostMaterial;
+#pragma endregion Materials
 
+#pragma region UI
 	UPROPERTY(EditAnywhere, Category = "UI")
 	UMaterialInterface* BuildingIcon;
+#pragma endregion UI
+
+#pragma region Spawning
+	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
+	bool ShouldUseSpawnPadding;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Rules")
+	UPointValidationRules* PointRules;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
+	EConstructionMethod ConstructionMethod;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Classes")
+	TSubclassOf<ABuildableBase> BuildingClass;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Classes")
+	TSubclassOf<AGridBodyBase> BodyClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
 	FVector2D MaxDimentions;
@@ -60,11 +83,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
 	FVector2D MinDimentions;
 
-	UPROPERTY(EditAnywhere, Category = "Organisation")
-	FString BuildingCategory;
-
-	UPROPERTY(EditAnywhere, Category = "Organisation")
-	FString BuildingSubcategory;
+#pragma endregion Spawning
 
 public:
 	FString GetFullCategoryAsString();

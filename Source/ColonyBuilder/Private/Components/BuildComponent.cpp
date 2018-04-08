@@ -12,6 +12,9 @@
 #include "Utils/GridUtils.h"
 
 #include "ColonyBuilderGameModeBase.h"
+#include "BuildableBase.h"
+
+DEFINE_LOG_CATEGORY(BuildCompLogError);
 
 // Sets default values for this component's properties
 UBuildComponent::UBuildComponent()
@@ -45,7 +48,7 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 	else
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
-		GeneratedPositions.Empty();
+		SubBuildings.Empty();
 
 		if (ControllerRef && ControllerRef->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
 		{
@@ -83,12 +86,12 @@ void UBuildComponent::RotatePlacement()
 	}
 }
 
-void UBuildComponent::StartBuildingFromClass(UBuildingData* BuildingData)
+void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 {
 	SetEnabled(true);
-	CurrentBuildingData = BuildingData;
+	BuildingData = InBuildingData;
 
-	if (CurrentBuildingData)
+	if (BuildingData)
 	{
 		if (SpawnedGhost)
 		{
@@ -96,7 +99,7 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* BuildingData)
 		}
 		FActorSpawnParameters SpawnParams;
 		SpawnedGhost = GetWorld()->SpawnActor<AGhost>(CurrRoundedMouseCoords, FRotator::ZeroRotator, SpawnParams);
-		SpawnedGhost->SetGhostInfo(CurrentBuildingData);
+		SpawnedGhost->SetGhostInfo(BuildingData);
 	}
 	else
 	{
@@ -104,30 +107,38 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* BuildingData)
 	}
 }
 
-void UBuildComponent::StartPlacement()
+void UBuildComponent::StartPlacement(bool IsNewPlacement)
 {
-	MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
+	if (IsNewPlacement)
+	{
+		MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.1f, true);
 }
 
 void UBuildComponent::BuildIntermediatePositions()
 {
-	switch (CurrentBuildingData->ConstructionMethod)
+	switch (BuildingData->ConstructionMethod)
 	{
 	case EConstructionMethod::FireAndForget:
 		break;
 	case EConstructionMethod::Grid:
-		GeneratedPositions = BuildGridPoints();
+		SubBuildings = BuildGridPoints();
 		break;
 	case EConstructionMethod::Linear:
-		GeneratedPositions = BuildLinearPoints();
+		SubBuildings = BuildLinearPoints();
+		ValidatePointTypesToUnique();
 		break;
 	}
+
+	AlignAndOrientate();
+
 }
 
-TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
+TArray<FSubBuilding> UBuildComponent::BuildLinearPoints()
 {
-	TArray<FIntermediateBuildingLocation> OutPoints;
+	TArray<FSubBuilding> OutPoints;
 
 	float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
 	float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
@@ -158,18 +169,15 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
 	}
 #pragma endregion Directions
 
+	FVector NewPoint = MouseLocationAtBuildingStart;
 
 	if (FMath::Abs(XDeltaAsUnits) > FMath::Abs(YDeltaAsUnits))
 	{
 		//Generate the points along the X
 		for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
 		{
-			FVector NewPoint = MouseLocationAtBuildingStart;
-			NewPoint.X = NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
-			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
-
-			FIntermediateBuildingLocation NewLocation;
-			NewLocation.Location = NewPoint;
+			NewPoint.X = MouseLocationAtBuildingStart.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
+			FSubBuilding NewLocation(NewPoint, FVector2D(XDir, 0), EPointType::LinearPoint, ESubBuildingType::SplineGeneral);
 
 			OutPoints.AddUnique(NewLocation);
 		}
@@ -179,13 +187,9 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
 		//Generate the points along the Y
 		for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
 		{
-			FVector NewPoint = MouseLocationAtBuildingStart;
-			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
-			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
+			NewPoint.Y = MouseLocationAtBuildingStart.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
 
-			FIntermediateBuildingLocation NewLocation;
-			NewLocation.Location = NewPoint;
-
+			FSubBuilding NewLocation(NewPoint, FVector2D(0, YDir), EPointType::LinearPoint, ESubBuildingType::SplineGeneral);
 			OutPoints.AddUnique(NewLocation);
 		}
 	}
@@ -193,9 +197,9 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildLinearPoints()
 	return OutPoints;
 }
 
-TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
+TArray<FSubBuilding> UBuildComponent::BuildGridPoints()
 {
-	TArray<FIntermediateBuildingLocation> OutPoints;
+	TArray<FSubBuilding> OutPoints;
 
 	float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
 	float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
@@ -234,11 +238,23 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 
 			NewPoint.X  =  NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
 			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
-			NewPoint.Z = UGridUtils::GetFloorZAtLocation(GetWorld(), NewPoint.X, NewPoint.Y);
 
-			FIntermediateBuildingLocation NewLocation;
-			NewLocation.Location = NewPoint;
+			ESubBuildingType NewType = ESubBuildingType::Body;
 
+			if (BuildingData->ShouldUseSpawnPadding)
+			{
+				if (y == FMath::Abs(YDeltaAsUnits) || x == FMath::Abs(XDeltaAsUnits) || x == 0 || y == 0)
+				{
+					NewType = ESubBuildingType::Edge;
+				}
+
+				if (PointIsInCorner(x, y, FMath::Abs(XDeltaAsUnits), FMath::Abs(XDeltaAsUnits)))
+				{
+					NewType = ESubBuildingType::Corner;
+				}
+			}
+
+			FSubBuilding NewLocation(NewPoint, EPointType::GridPoint, NewType, FVector2D(FMath::Abs(x), FMath::Abs(y)), FVector2D(FMath::Abs(XDeltaAsUnits), FMath::Abs(YDeltaAsUnits)));
 			OutPoints.AddUnique(NewLocation);
 		}
 	}
@@ -246,15 +262,66 @@ TArray<FIntermediateBuildingLocation> UBuildComponent::BuildGridPoints()
 	return OutPoints;
 }
 
+bool UBuildComponent::PointIsInCorner(int32 PointX, int32 PointY, int32 MaxX, int32 MaxY)
+{
+	if (PointX == 0 && PointY == 0)
+	{
+		return true;
+	}
+
+	if (PointX == MaxX && PointY == MaxY)
+	{
+		return true;
+	}
+
+	if (PointX == 0 && PointY == MaxY)
+	{
+		return true;
+	}
+
+	if (PointX == MaxX && PointY == 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void UBuildComponent::AlignAndOrientate()
+{
+	for (FSubBuilding& Point : SubBuildings)
+	{
+		//Align point to ground
+		const FHitResult LocalPointInfo = UGridUtils::GetFloorInfoLocation(GetWorld(), Point.Location.X, Point.Location.Y);
+		Point.Location.Z = LocalPointInfo.Location.Z;
+		Point.LocationNormal = LocalPointInfo.ImpactNormal;
+
+		if (Point.SubBuildingType == ESubBuildingType::Edge)
+		{
+			if (Point.CurrCoord.X == 0 || Point.CurrCoord.X == Point.MaxCoord.X)
+			{
+				//Moving in the Y
+				Point.Direction = FVector2D(0, 1);
+			}
+
+			if (Point.CurrCoord.Y == 0 || Point.CurrCoord.Y == Point.MaxCoord.Y)
+			{
+				Point.Direction = FVector2D(1, 0);
+			}
+		}
+	}
+}
+
 void UBuildComponent::EndPlacement()
 {
-	TArray<FIntermediateBuildingLocation> LocalPositions = GeneratedPositions;
+	//TArray<FSubBuilding> LocalPositions = GeneratedPositions;
 	GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
+
 
 	FVector CurrentGhostLoc;
 	FRotator CurrentGhostRot;
 
-	if (SpawnedGhost)
+	if (SpawnedGhost && SpawnedGhost->GetIsValid())
 	{
 		CurrentGhostLoc = SpawnedGhost->GetActorLocation();
 		CurrentGhostRot = SpawnedGhost->GetActorRotation();
@@ -263,15 +330,32 @@ void UBuildComponent::EndPlacement()
 		FActorSpawnParameters SpawnParams;
 
 		//Does this building type actually spawn a building at the end?
-		if (CurrentBuildingData->BuildingClass)
+		if (BuildingData->BuildingClass)
 		{
-			ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(CurrentBuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
-			NewBuilding->IntermediateBuildingLocations = GeneratedPositions;
-
-			GeneratedPositions.Empty();
+			ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
+			NewBuilding->SubBuildings = SubBuildings;
 		}
-		SetEnabled(false);
+
+		for (FSubBuilding& SubBuilding : SubBuildings)
+		{
+			//Spawn plants and whatnot
+			if (SubBuilding.SubBuildingType == ESubBuildingType::Body)
+			{
+				AGridBodyBase* NewSubBuilding = GetWorld()->SpawnActor<AGridBodyBase>(BuildingData->BodyClass, SubBuilding.Location, FRotator(0, 0, 0));
+			}
+
+			//Spawn linearly spawned actors
+			if (SubBuilding.SubBuildingType == ESubBuildingType::SplineGeneral || SubBuilding.SubBuildingType == ESubBuildingType::SplineUnique)
+			{
+				ABuildableBase* NewSubBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, SubBuilding.Location, FVector(SubBuilding.Direction.X, SubBuilding.Direction.Y, 0).Rotation());
+
+				NewSubBuilding->MeshComponent->SetStaticMesh(*BuildingData->SubBuildingMeshes.Find(SubBuilding.SubBuildingType));
+			}
+		}
 	}
+
+	SetEnabled(false);
+	SubBuildings.Empty();
 }
 
 void UBuildComponent::CancelBuild()
@@ -283,7 +367,34 @@ void UBuildComponent::UpdateGhost()
 {
 	if (SpawnedGhost)
 	{
-		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, GeneratedPositions);
+		AlignAndOrientate();
+		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, SubBuildings);
 	}
 }
 
+void UBuildComponent::ValidatePointTypesToUnique()
+{
+	for (int32 i = 0; i <= SubBuildings.Num() - 1; i++)
+	{
+		if (i == 0)
+		{
+			SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+			continue;
+		}
+
+		if (i == SubBuildings.Num() - 1)
+		{
+			SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+			continue;
+		}
+
+		if (BuildingData->UniqueMeshFrequency > 0)
+		{
+			if (i % BuildingData->UniqueMeshFrequency == 0)
+			{
+				SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+				continue;
+			}
+		}
+	}
+}

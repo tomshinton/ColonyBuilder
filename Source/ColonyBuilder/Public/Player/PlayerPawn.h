@@ -25,7 +25,7 @@ DECLARE_DELEGATE(FOnScrollUp);
 DECLARE_DELEGATE(FOnScrollDown);
 
 DECLARE_DELEGATE(FOnRotatePlacement);
-DECLARE_DELEGATE(FOnStartConfirmAction);
+DECLARE_DELEGATE_OneParam(FOnStartConfirmAction, bool);
 DECLARE_DELEGATE(FOnEndConfirmAction);
 DECLARE_DELEGATE(FOnCancelAction);
 

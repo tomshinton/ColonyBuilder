@@ -13,6 +13,7 @@ ABuildableBase::ABuildableBase()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh"));
 	MeshComponent->SetCollisionProfileName("OverlapAllDynamic");
 	MeshComponent->SetupAttachment(SceneRoot);
+	MeshComponent->bGenerateOverlapEvents = true;
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -23,6 +24,4 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
 	}
-
-
 }

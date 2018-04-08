@@ -6,29 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 
+#include "DataTypes/BuildingDataTypes.h"
 #include "BuildableBase.generated.h"
 
 class UBuildingData;
-
-USTRUCT(BlueprintType)
-struct FIntermediateBuildingLocation
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere, Category = "Building Info")
-	FVector Location;
-
-	bool operator==(const FIntermediateBuildingLocation& OtherLocation) const
-	{
-		return Location == OtherLocation.Location;
-	}
-
-	FString ToStringFromInts()
-	{
-		FString OutString = "X: " + FString::FromInt(FMath::CeilToInt(Location.X)) + ", Y: " + FString::FromInt(FMath::CeilToInt(Location.Y));
-		return OutString;
-	}
-};
 
 UCLASS()
 class COLONYBUILDER_API ABuildableBase : public AActor
@@ -42,15 +23,15 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	USceneComponent* SceneRoot;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Building Info")
-	TArray<FIntermediateBuildingLocation> IntermediateBuildingLocations;
+	TArray<FSubBuilding> SubBuildings;
 
 	void OnConstruction(const FTransform& Transform);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
 
 	

@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "RTSBaseComp.h"
-#include "BuildableBase.h"
+
+#include "DataTypes/BuildingDataTypes.h"
 
 #include "BuildComponent.generated.h"
 
@@ -13,6 +14,8 @@ class AGhost;
 
 class ARTSPlayerController;
 class APlayerPawn;
+
+DECLARE_LOG_CATEGORY_EXTERN(BuildCompLogError, Error, All);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COLONYBUILDER_API UBuildComponent : public URTSBaseComp
@@ -26,25 +29,29 @@ public:
 	void BeginPlay();
 
 	//Setters//
-	virtual void SetEnabled(bool InEnabled) override;
+	virtual void SetEnabled(bool InEsnabled) override;
 
 	UFUNCTION()
-	void UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRoundedMouseCoords);
+		void UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRoundedMouseCoords);
 	void RotatePlacement();
 
 	void StartBuildingFromClass(UBuildingData* BuildingData);
-	void StartPlacement();
+	void StartPlacement(bool IsNewPlacement = true);
 	void EndPlacement();
 	void CancelBuild();
 
-	TArray<FIntermediateBuildingLocation> BuildLinearPoints();
-	TArray<FIntermediateBuildingLocation> BuildGridPoints();
+	void BuildIntermediatePositions();
+	void AlignAndOrientate();
+	void ValidatePointTypesToUnique();
+	
+	TArray<FSubBuilding> BuildLinearPoints();
+	TArray<FSubBuilding> BuildGridPoints();
+	bool PointIsInCorner(int32 PointX, int32 PointY, int32 MaxX, int32 MaxY);
 
 	FTimerHandle BuildIntermediatePosTimer;
-	void BuildIntermediatePositions();
-	TArray<FIntermediateBuildingLocation> GeneratedPositions;
-
-	UBuildingData* CurrentBuildingData;
+	
+	UBuildingData* BuildingData;
+	TArray<FSubBuilding> SubBuildings;
 
 private:
 

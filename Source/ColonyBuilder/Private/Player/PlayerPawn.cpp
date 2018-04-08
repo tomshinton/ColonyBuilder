@@ -124,7 +124,7 @@ void APlayerPawn::RotatePlacement()
 
 void APlayerPawn::StartConfirm()
 {
-	OnStartConfirmAction.ExecuteIfBound();
+	OnStartConfirmAction.ExecuteIfBound(true);
 }
 
 void APlayerPawn::EndConfirm()
