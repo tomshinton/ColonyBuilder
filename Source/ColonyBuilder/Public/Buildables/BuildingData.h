@@ -7,11 +7,11 @@
 
 #include "DataTypes/BuildingDataTypes.h"
 #include "GridBodyBase.h"
+#include "BuildableBase.h"
 
 #include "BuildingData.generated.h"
 
 class UPointValidationRules;
-class ABuildableBase;
 
 UCLASS()
 class COLONYBUILDER_API UBuildingData : public UDataAsset

@@ -50,7 +50,7 @@ public:
 
 	void CheckPlacement();
 
-	void UpdateGhost(FVector NewLocation, TArray<FSubBuilding> SubBuildings);
+	void UpdateGhost(FVector NewLocation, TArray<FSubBuilding>& SubBuildings);
 
 	//Build mock body actors like plantables/beehives, etc etc
 	void UpdateGridGhost();

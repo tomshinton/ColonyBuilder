@@ -239,52 +239,12 @@ TArray<FSubBuilding> UBuildComponent::BuildGridPoints()
 			NewPoint.X  =  NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
 			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
 
-			ESubBuildingType NewType = ESubBuildingType::Body;
-
-			if (BuildingData->ShouldUseSpawnPadding)
-			{
-				if (y == FMath::Abs(YDeltaAsUnits) || x == FMath::Abs(XDeltaAsUnits) || x == 0 || y == 0)
-				{
-					NewType = ESubBuildingType::Edge;
-				}
-
-				if (PointIsInCorner(x, y, FMath::Abs(XDeltaAsUnits), FMath::Abs(XDeltaAsUnits)))
-				{
-					NewType = ESubBuildingType::Corner;
-				}
-			}
-
-			FSubBuilding NewLocation(NewPoint, EPointType::GridPoint, NewType, FVector2D(FMath::Abs(x), FMath::Abs(y)), FVector2D(FMath::Abs(XDeltaAsUnits), FMath::Abs(YDeltaAsUnits)));
+			FSubBuilding NewLocation(NewPoint, EPointType::GridPoint, ESubBuildingType::Body, FVector2D(FMath::Abs(x), FMath::Abs(y)), FVector2D(FMath::Abs(XDeltaAsUnits), FMath::Abs(YDeltaAsUnits)));
 			OutPoints.AddUnique(NewLocation);
 		}
 	}
 
 	return OutPoints;
-}
-
-bool UBuildComponent::PointIsInCorner(int32 PointX, int32 PointY, int32 MaxX, int32 MaxY)
-{
-	if (PointX == 0 && PointY == 0)
-	{
-		return true;
-	}
-
-	if (PointX == MaxX && PointY == MaxY)
-	{
-		return true;
-	}
-
-	if (PointX == 0 && PointY == MaxY)
-	{
-		return true;
-	}
-
-	if (PointX == MaxX && PointY == 0)
-	{
-		return true;
-	}
-
-	return false;
 }
 
 void UBuildComponent::AlignAndOrientate()
@@ -300,7 +260,6 @@ void UBuildComponent::AlignAndOrientate()
 		{
 			if (Point.CurrCoord.X == 0 || Point.CurrCoord.X == Point.MaxCoord.X)
 			{
-				//Moving in the Y
 				Point.Direction = FVector2D(0, 1);
 			}
 
@@ -314,9 +273,7 @@ void UBuildComponent::AlignAndOrientate()
 
 void UBuildComponent::EndPlacement()
 {
-	//TArray<FSubBuilding> LocalPositions = GeneratedPositions;
 	GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
-
 
 	FVector CurrentGhostLoc;
 	FRotator CurrentGhostRot;
@@ -325,7 +282,9 @@ void UBuildComponent::EndPlacement()
 	{
 		CurrentGhostLoc = SpawnedGhost->GetActorLocation();
 		CurrentGhostRot = SpawnedGhost->GetActorRotation();
-		
+
+		SubBuildings = SpawnedGhost->SubBuildings;
+
 		SpawnedGhost->Destroy();
 		FActorSpawnParameters SpawnParams;
 
@@ -338,6 +297,11 @@ void UBuildComponent::EndPlacement()
 
 		for (FSubBuilding& SubBuilding : SubBuildings)
 		{
+			if (!SubBuilding.IsValidPoint)
+			{
+				continue;
+			}
+
 			//Spawn plants and whatnot
 			if (SubBuilding.SubBuildingType == ESubBuildingType::Body)
 			{

@@ -4,11 +4,11 @@
 
 #include "RTSPlayerController.h"
 #include "Kismet/GameplayStatics.h"
-#include "PointValidationRules.h"
-#include "DebugUtils.h"
 
 #include "DataTypes/BuildingDataTypes.h"
 #include "ColonyBuilderGameModeBase.h"
+#include "BuildingData.h"
+#include "PointValidationRules.h"
 
 #include "GridUtils.generated.h"
 
@@ -22,7 +22,8 @@ enum class EInvalidReason : uint8
 	GridIsTooSmall	UMETA(DisplayName = "Grid is too small"),
 	SurfaceTooSteep	UMETA(DisplayName = "Surface is too steep"),
 	NoWorldContext	UMETA(DisplayName = "No World Context"),
-	IllegalOverlap	UMETA(DisplayName = "Illegal Overlap at Point")
+	IllegalOverlap	UMETA(DisplayName = "Illegal Overlap at Point"),
+	LegalOverlap	UMETA(DisplayName = "Legal Overlap at Point")
 };
 
 UCLASS()
@@ -51,9 +52,10 @@ public:
 		return FHitResult();		
 	}
 
-	static FORCEINLINE TArray<EInvalidReason> IsPointValid(AActor* WorldContext, FSubBuilding& InPoint, UPointValidationRules* PointRules)
+	static FORCEINLINE TArray<EInvalidReason> IsPointValid(AActor* WorldContext, FSubBuilding& InPoint, UBuildingData* BuildingData)
 	{
 		TArray<EInvalidReason> Reasons;
+		UPointValidationRules* PointRules = BuildingData->PointRules;
 
 		//no valid points?
 		if (!PointRules)
@@ -84,48 +86,60 @@ public:
 					OverlapsAtPoint.RemoveAt(i);
 					continue;
 				}
+				else if (PointRules->AllowSameTypeOverlaps)
+				{
+					if (OverlappedActor->GetClass() == BuildingData->BodyClass || OverlappedActor->GetClass() == BuildingData->BuildingClass)
+					{
+						Reasons.AddUnique(EInvalidReason::LegalOverlap);
+						continue;
+					}
+				}
 			}
 		}
 
-		if (OverlapsAtPoint.Num() > 0)
+		if (OverlapsAtPoint.Num() > 0 && !Reasons.Contains(EInvalidReason::LegalOverlap))
 		{
-			Reasons.Add(EInvalidReason::IllegalOverlap);
+			Reasons.AddUnique(EInvalidReason::IllegalOverlap);
 		}
 
 		//too low, too high?
 		if (InPoint.Location.Z < PointRules->MinPointHeight) 
 		{
-			Reasons.Add(EInvalidReason::PointIsTooLow);
+			Reasons.AddUnique(EInvalidReason::PointIsTooLow);
 		}
 
 		if (InPoint.Location.Z > PointRules->MaxPointHeight)
 		{
-			Reasons.Add(EInvalidReason::PointIsTooHigh);
+			Reasons.AddUnique(EInvalidReason::PointIsTooHigh);
 		}
 
 		if (InPoint.PointType == EPointType::GridPoint)
 		{
 			//X Coord Bounds
-			//if (InPoint.MaxCoord.X > (InPoint.MaxCoord.X - 1) || InPoint.MaxCoord.Y > (InPoint.MaxCoord.Y - 1))
 			if(InPoint.MaxCoord.X > PointRules->MaxX-1 || InPoint.MaxCoord.Y > PointRules->MaxY-1)
 			{
-				Reasons.Add(EInvalidReason::GridIsTooBig);
+				Reasons.AddUnique(EInvalidReason::GridIsTooBig);
 			}
 			//Y Coord Bounds
-			//if (InPoint.MaxCoord.X < (InPoint.MaxCoord.X - 1) || InPoint.MaxCoord.Y < (InPoint.MaxCoord.Y - 1))
 			if(InPoint.MaxCoord.X < PointRules->MinX -1 || InPoint.MaxCoord.Y < PointRules->MinY -1)
 			{
-				Reasons.Add(EInvalidReason::GridIsTooSmall);
+				Reasons.AddUnique(EInvalidReason::GridIsTooSmall);
 			}
 		}
 		
 		//is too steep
 		if (FMath::Abs(InPoint.LocationNormal.Rotation().Pitch - 90.f) > PointRules->MaxPitch)
 		{
-			Reasons.Add(EInvalidReason::SurfaceTooSteep);
+			Reasons.AddUnique(EInvalidReason::SurfaceTooSteep);
 		}
 
-		if (Reasons.Num() > 0)
+		//The only problem with the point is it is overlapping with something of the same type - this is fine
+		if (Reasons.Num() == 1 && Reasons.Contains(EInvalidReason::LegalOverlap))
+		{
+			InPoint.IsValidPoint = false;
+			return Reasons;
+		}
+		else if (Reasons.Num() >= 1) //must be more than one reason
 		{
 			InPoint.IsValidPoint = false;
 		}

@@ -46,7 +46,6 @@ public:
 	
 	TArray<FSubBuilding> BuildLinearPoints();
 	TArray<FSubBuilding> BuildGridPoints();
-	bool PointIsInCorner(int32 PointX, int32 PointY, int32 MaxX, int32 MaxY);
 
 	FTimerHandle BuildIntermediatePosTimer;
 	

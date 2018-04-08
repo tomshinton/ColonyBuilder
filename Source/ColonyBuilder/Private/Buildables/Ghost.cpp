@@ -58,10 +58,15 @@ void AGhost::CheckPlacement()
 
 	for (FSubBuilding& SubBuilding : SubBuildings)
 	{
-		TArray<EInvalidReason> Reasons = UGridUtils::IsPointValid(this, SubBuilding, BuildingData->PointRules);
+		TArray<EInvalidReason> Reasons = UGridUtils::IsPointValid(this, SubBuilding, BuildingData);
+
 		if (!SubBuilding.IsValidPoint)
 		{
-			SetValid(false);
+			if (Reasons.Num() == 1 && Reasons.Contains(EInvalidReason::LegalOverlap)){}
+			else
+			{			
+				SetValid(false);
+			}
 
 			for (int32 i = 0; i <= Reasons.Num() -1; i++)
 			{
@@ -115,7 +120,7 @@ void AGhost::SetGhostMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
-void AGhost::UpdateGhost(FVector NewLocation, TArray<FSubBuilding> InSubBuildings)
+void AGhost::UpdateGhost(FVector NewLocation, TArray<FSubBuilding>& InSubBuildings)
 {
 	if (NewLocation != GetActorLocation())
 	{

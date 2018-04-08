@@ -40,4 +40,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Location Checks | Overlaps")
 	TArray<UClass*> AllowedOverlapClasses;
+
+	UPROPERTY(EditAnywhere, Category = "Location Checks | Overlaps")
+	bool AllowSameTypeOverlaps;
 };
