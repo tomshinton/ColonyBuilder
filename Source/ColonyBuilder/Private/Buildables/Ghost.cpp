@@ -30,14 +30,23 @@ AGhost::AGhost()
 
 	MeshComp->SetCollisionProfileName(TEXT("OverlapAll"));
 
-	InstancedMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Instanced Meshes"));
-	InstancedMeshes->SetupAttachment(GhostRoot);
+#pragma region Meshes
+	BodyMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Body Meshes"));
+	BodyMeshes->SetupAttachment(GhostRoot);
+	InstancedMeshes.Add(BodyMeshes);
 
-	UniqueInstancedMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Unique Instanced Meshes"));
-	UniqueInstancedMeshes->SetupAttachment(GhostRoot);
+	UniqueMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Unique Meshes"));
+	UniqueMeshes->SetupAttachment(GhostRoot);
+	InstancedMeshes.Add(UniqueMeshes);
 
-	SplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("Spline Comp"));
-	SplineComp->SetupAttachment(GhostRoot);
+	LinkMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Link Meshes"));
+	LinkMeshes->SetupAttachment(GhostRoot);
+	InstancedMeshes.Add(LinkMeshes);
+
+	TerminatorMeshes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Terminator Meshes"));
+	TerminatorMeshes->SetupAttachment(GhostRoot);
+	InstancedMeshes.Add(TerminatorMeshes);
+#pragma endregion Meshes
 }
 
 void AGhost::Tick(float DeltaTime)
@@ -107,21 +116,14 @@ void AGhost::SetGhostMaterial(UMaterialInterface* NewMaterial)
 		MeshComp->SetMaterial(MatID, NewMaterial);
 	}
 
-	//Instances, for stuff like grids.
-	if (InstancedMeshes->GetStaticMesh())
+	for (UHierarchicalInstancedStaticMeshComponent* InstancedMeshComp : InstancedMeshes)
 	{
-		for (int8 MatID = 0; MatID <= InstancedMeshes->GetStaticMesh()->StaticMaterials.Num(); MatID++)
+		if (InstancedMeshComp->GetStaticMesh())
 		{
-			InstancedMeshes->SetMaterial(MatID, NewMaterial);
-		}
-	}
-
-	//Instances, for stuff like wall posts.
-	if (UniqueInstancedMeshes->GetStaticMesh())
-	{
-		for (int8 MatID = 0; MatID <= UniqueInstancedMeshes->GetStaticMesh()->StaticMaterials.Num(); MatID++)
-		{
-			UniqueInstancedMeshes->SetMaterial(MatID, NewMaterial);
+			for (int8 MatID = 0; MatID <= InstancedMeshComp->GetStaticMesh()->StaticMaterials.Num(); MatID++)
+			{
+				InstancedMeshComp->SetMaterial(MatID, NewMaterial);
+			}
 		}
 	}
 }
@@ -151,14 +153,14 @@ void AGhost::UpdateGhost(FVector NewLocation, TArray<FSubBuilding>& InSubBuildin
 
 void AGhost::UpdateGridGhost()
 {
-	InstancedMeshes->ClearInstances();
+	BodyMeshes->ClearInstances();
 
 	if (BuildingData && BuildingData->BodyClass)
 	{
 		UStaticMesh* DefaultMesh = Cast<AGridBodyBase>(BuildingData->BodyClass->GetDefaultObject())->StaticMeshComp->GetStaticMesh();
 		if (DefaultMesh)
 		{
-			InstancedMeshes->SetStaticMesh(DefaultMesh);
+			BodyMeshes->SetStaticMesh(DefaultMesh);
 			FTransform NewInstanceTrans;
 
 			for (FSubBuilding& SubBuilding : SubBuildings)
@@ -167,7 +169,7 @@ void AGhost::UpdateGridGhost()
 				NewInstanceTrans.SetRotation(FRotator(0, 0, 0).Quaternion());
 				NewInstanceTrans.SetScale3D(FVector(1, 1, 1));
 
-				InstancedMeshes->AddInstanceWorldSpace(NewInstanceTrans);
+				BodyMeshes->AddInstanceWorldSpace(NewInstanceTrans);
 			}
 		}
 	}
@@ -175,42 +177,25 @@ void AGhost::UpdateGridGhost()
 
 void AGhost::UpdateLinearGhost()
 {
-	InstancedMeshes->ClearInstances();
-	UniqueInstancedMeshes->ClearInstances();
-
-	SplineComp->ClearSplinePoints(true);
-
-	UStaticMesh* GeneralMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::SplineGeneral);
-	UStaticMesh* UniqueMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::SplineUnique);
-
-	FVector GeneralMeshSize;
-
-	if (!GeneralMesh)
-	{
-		UE_LOG(GhostError, Log, TEXT("No valid linear ghost mesh supplied"));
-		return;
-	}
-	else
-	{
-		GeneralMeshSize = GeneralMesh->GetBoundingBox().GetExtent();
-	}
+	BodyMeshes->ClearInstances();
+	UniqueMeshes->ClearInstances();
+	LinkMeshes->ClearInstances();
+	TerminatorMeshes->ClearInstances();
+	
+	UStaticMesh* BodyMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::LinearBody);
+	UStaticMesh* UniqueMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::LinearUnique);
+	UStaticMesh* LinkMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::LinearLink);
+	UStaticMesh* TerminatorMesh = *BuildingData->SubBuildingMeshes.Find(ESubBuildingType::LinearTerminator);
 
 	if (SubBuildings.Num() <= 0)
 	{
-		UE_LOG(GhostError, Log, TEXT("No spline points yet"));
 		return;
 	}
 
-	for (int32 point = 0; point <= SubBuildings.Num() - 1; point++)
-	{
-		SplineComp->AddSplineWorldPoint(SubBuildings[point].Location);
-		SplineComp->SetSplinePointType(point, ESplinePointType::Linear, true);
-	}
-
-	const int32 MeshesOverSpline = SplineComp->GetSplineLength() / GeneralMeshSize.X;
-
-	InstancedMeshes->SetStaticMesh(GeneralMesh);
-	UniqueInstancedMeshes->SetStaticMesh(UniqueMesh);
+	BodyMeshes->SetStaticMesh(BodyMesh);
+	UniqueMeshes->SetStaticMesh(UniqueMesh);
+	LinkMeshes->SetStaticMesh(LinkMesh);
+	TerminatorMeshes->SetStaticMesh(TerminatorMesh);
 
 	for (int32 i = 0; i <= SubBuildings.Num() - 1; i++)
 	{
@@ -220,13 +205,20 @@ void AGhost::UpdateLinearGhost()
 		NewMeshTransform.SetRotation(FVector(SubBuildings[i].Direction.X, SubBuildings[i].Direction.Y, 0).Rotation().Quaternion());
 		NewMeshTransform.SetScale3D(FVector(1, 1, 1));
 
-		if (SubBuildings[i].SubBuildingType == ESubBuildingType::SplineUnique)
+		switch(SubBuildings[i].SubBuildingType)
 		{
-			UniqueInstancedMeshes->AddInstanceWorldSpace(NewMeshTransform);
-		}
-		else
-		{
-			InstancedMeshes->AddInstanceWorldSpace(NewMeshTransform);
+		case ESubBuildingType::LinearBody:
+			BodyMeshes->AddInstanceWorldSpace(NewMeshTransform);
+			break;
+		case ESubBuildingType::LinearLink:
+			LinkMeshes->AddInstanceWorldSpace(NewMeshTransform);
+			break;
+		case ESubBuildingType::LinearTerminator:
+			TerminatorMeshes->AddInstanceWorldSpace(NewMeshTransform);
+			break;
+		case ESubBuildingType::LinearUnique:
+			UniqueMeshes->AddInstanceWorldSpace(NewMeshTransform);
+			break;
 		}
 	}
 }

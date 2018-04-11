@@ -31,8 +31,10 @@ enum class ESubBuildingType : uint8
 	Corner	UMETA(DisplayName = "Corner"),
 	Edge	UMETA(DisplayName = "Edge"),
 	Body	UMETA(DisplayName = "Body"),
-	SplineGeneral	UMETA(DisplayName = "Spline General"),
-	SplineUnique UMETA(DisplayName = "Spline Unique")
+	LinearTerminator	UMETA(DisplayName = "Linear Terminator"),
+	LinearLink UMETA(DisplayName = "Linear Link"),
+	LinearBody	UMETA(DisplayName = "Linear Body"),
+	LinearUnique	UMETA(DisplayName = "Linear Unique")
 };
 
 //All info associated with a sub building - location, type, maxX and Y etc etc
@@ -91,7 +93,6 @@ struct FSubBuilding
 		return OutString;
 	}
 };
-
 
 UCLASS()
 class COLONYBUILDER_API UBuildingDataTypes : public UObject

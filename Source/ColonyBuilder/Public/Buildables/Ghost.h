@@ -27,8 +27,10 @@ class COLONYBUILDER_API AGhost : public AActor
 	UStaticMeshComponent* MeshComp;
 	UBoxComponent* BoundsComp;
 
-	UHierarchicalInstancedStaticMeshComponent* InstancedMeshes;
-	UHierarchicalInstancedStaticMeshComponent* UniqueInstancedMeshes;
+	UHierarchicalInstancedStaticMeshComponent* BodyMeshes;
+	UHierarchicalInstancedStaticMeshComponent* UniqueMeshes;
+	UHierarchicalInstancedStaticMeshComponent* LinkMeshes;
+	UHierarchicalInstancedStaticMeshComponent* TerminatorMeshes;
 
 	USplineComponent* SplineComp;
 	
@@ -70,5 +72,7 @@ private:
 	FVector CachedGhostBounds;
 
 	TArray<USplineMeshComponent*> SpawnedMeshComponents;
+
+	TArray<UHierarchicalInstancedStaticMeshComponent*> InstancedMeshes;
 
 };

@@ -50,6 +50,7 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
 		SubBuildings.Empty();
+		HasStartedBuilding = false;
 
 		if (ControllerRef && ControllerRef->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
 		{
@@ -110,14 +111,18 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 
 void UBuildComponent::StartPlacement(bool IsNewPlacement)
 {
-	if (IsNewPlacement)
+	if (SpawnedGhost && SpawnedGhost->GetIsValid())
 	{
-		MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
+		if (IsNewPlacement)
+		{
+			MouseLocationAtBuildingStart = CurrRoundedMouseCoords;
+		}
+
+		SpawnedGhost->SetBaseGhostVisibility(BuildingData->ShouldHideBaseMeshOnStartPlacement);
+
+		GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.1f, true);
+		HasStartedBuilding = true;
 	}
-
-	SpawnedGhost->SetBaseGhostVisibility(BuildingData->ShouldHideBaseMeshOnStartPlacement);
-
-	GetWorld()->GetTimerManager().SetTimer(BuildIntermediatePosTimer, this, &UBuildComponent::BuildIntermediatePositions, 0.1f, true);
 }
 
 void UBuildComponent::BuildIntermediatePositions()
@@ -180,7 +185,7 @@ TArray<FSubBuilding> UBuildComponent::BuildLinearPoints()
 		for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
 		{
 			NewPoint.X = MouseLocationAtBuildingStart.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
-			FSubBuilding NewLocation(NewPoint, FVector2D(XDir, 0), EPointType::LinearPoint, ESubBuildingType::SplineGeneral);
+			FSubBuilding NewLocation(NewPoint, FVector2D(XDir, 0), EPointType::LinearPoint, ESubBuildingType::LinearBody);
 
 			OutPoints.AddUnique(NewLocation);
 		}
@@ -192,7 +197,7 @@ TArray<FSubBuilding> UBuildComponent::BuildLinearPoints()
 		{
 			NewPoint.Y = MouseLocationAtBuildingStart.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
 
-			FSubBuilding NewLocation(NewPoint, FVector2D(0, YDir), EPointType::LinearPoint, ESubBuildingType::SplineGeneral);
+			FSubBuilding NewLocation(NewPoint, FVector2D(0, YDir), EPointType::LinearPoint, ESubBuildingType::LinearBody);
 			OutPoints.AddUnique(NewLocation);
 		}
 	}
@@ -339,53 +344,54 @@ void UBuildComponent::AlignAndOrientate()
 
 void UBuildComponent::EndPlacement()
 {
-	GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
-
-	FVector CurrentGhostLoc;
-	FRotator CurrentGhostRot;
-
-	if (SpawnedGhost && SpawnedGhost->GetIsValid())
+	if (HasStartedBuilding)
 	{
-		CurrentGhostLoc = SpawnedGhost->GetActorLocation();
-		CurrentGhostRot = SpawnedGhost->GetActorRotation();
+		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
 
-		SubBuildings = SpawnedGhost->SubBuildings;
+		FVector CurrentGhostLoc;
+		FRotator CurrentGhostRot;
 
-		SpawnedGhost->Destroy();
-		FActorSpawnParameters SpawnParams;
-
-		//Does this building type actually spawn a building at the end?
-		if (BuildingData->BuildingClass)
+		if (SpawnedGhost && SpawnedGhost->GetIsValid())
 		{
-			ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
-			NewBuilding->SubBuildings = SubBuildings;
+			CurrentGhostLoc = SpawnedGhost->GetActorLocation();
+			CurrentGhostRot = SpawnedGhost->GetActorRotation();
+
+			SubBuildings = SpawnedGhost->SubBuildings;
+
+			SpawnedGhost->Destroy();
+			FActorSpawnParameters SpawnParams;
+
+			//Does this building type actually spawn a building at the end?
+			if (BuildingData->BuildingClass && BuildingData->ConstructionMethod == EConstructionMethod::FireAndForget)
+			{
+				ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
+				NewBuilding->SubBuildings = SubBuildings;
+			}
+
+			for (FSubBuilding& SubBuilding : SubBuildings)
+			{
+				if (!SubBuilding.IsValidPoint)
+				{
+					continue;
+				}
+
+				//Spawn plants and whatnot
+				if (SubBuilding.SubBuildingType == ESubBuildingType::Body)
+				{
+					AGridBodyBase* NewSubBuilding = GetWorld()->SpawnActor<AGridBodyBase>(BuildingData->BodyClass, SubBuilding.Location, FRotator(0, 0, 0));
+				}
+
+				if (SubBuilding.PointType == EPointType::LinearPoint)
+				{
+					ABuildableBase* NewSubBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, SubBuilding.Location, FVector(SubBuilding.Direction.X, SubBuilding.Direction.Y, 0).Rotation());
+					NewSubBuilding->MeshComponent->SetStaticMesh(*BuildingData->SubBuildingMeshes.Find(SubBuilding.SubBuildingType));
+				}
+			}
 		}
 
-		for (FSubBuilding& SubBuilding : SubBuildings)
-		{
-			if (!SubBuilding.IsValidPoint)
-			{
-				continue;
-			}
-
-			//Spawn plants and whatnot
-			if (SubBuilding.SubBuildingType == ESubBuildingType::Body)
-			{
-				AGridBodyBase* NewSubBuilding = GetWorld()->SpawnActor<AGridBodyBase>(BuildingData->BodyClass, SubBuilding.Location, FRotator(0, 0, 0));
-			}
-
-			//Spawn linearly spawned actors
-			if (SubBuilding.SubBuildingType == ESubBuildingType::SplineGeneral || SubBuilding.SubBuildingType == ESubBuildingType::SplineUnique)
-			{
-				ABuildableBase* NewSubBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, SubBuilding.Location, FVector(SubBuilding.Direction.X, SubBuilding.Direction.Y, 0).Rotation());
-
-				NewSubBuilding->MeshComponent->SetStaticMesh(*BuildingData->SubBuildingMeshes.Find(SubBuilding.SubBuildingType));
-			}
-		}
+		SetEnabled(false);
+		SubBuildings.Empty();
 	}
-
-	SetEnabled(false);
-	SubBuildings.Empty();
 }
 
 void UBuildComponent::CancelBuild()
@@ -397,17 +403,24 @@ void UBuildComponent::UpdateGhost()
 {
 	if (SpawnedGhost)
 	{
-		AlignAndOrientate();
-		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, SubBuildings);
 
 		if (BuildingData)
 		{
-			if (BuildingData->ConstructionMethod == EConstructionMethod::FireAndForget)
+			if(BuildingData->ConstructionMethod == EConstructionMethod::FireAndForget)
 			{
 				SubBuildings = BuildFFPoints();
-				AlignAndOrientate();
 			}
+			else if(!HasStartedBuilding)
+			{
+				SubBuildings.Empty();
+				FSubBuilding DefaultSubBuilding(CurrRoundedMouseCoords, EPointType::BuildingPoint);
+				SubBuildings.AddUnique(DefaultSubBuilding);
+			}
+
+			AlignAndOrientate();
 		}
+
+		SpawnedGhost->UpdateGhost(CurrRoundedMouseCoords, SubBuildings);
 	}
 }
 
@@ -415,15 +428,22 @@ void UBuildComponent::ValidatePointTypesToUnique()
 {
 	for (int32 i = 0; i <= SubBuildings.Num() - 1; i++)
 	{
-		if (i == 0)
+		if (i == 0 || i == SubBuildings.Num() - 1)
 		{
-			SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+			SubBuildings[i].SubBuildingType = ESubBuildingType::LinearTerminator;
 			continue;
 		}
 
-		if (i == SubBuildings.Num() - 1)
+		if (i == 1 )
 		{
-			SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+			SubBuildings[i].SubBuildingType = ESubBuildingType::LinearLink;
+			SubBuildings[i].Direction *= -1;
+			continue;
+		}
+
+		if (i == SubBuildings.Num() - 2)
+		{
+			SubBuildings[i].SubBuildingType = ESubBuildingType::LinearLink;
 			continue;
 		}
 
@@ -431,7 +451,7 @@ void UBuildComponent::ValidatePointTypesToUnique()
 		{
 			if (i % BuildingData->UniqueMeshFrequency == 0)
 			{
-				SubBuildings[i].SubBuildingType = ESubBuildingType::SplineUnique;
+				SubBuildings[i].SubBuildingType = ESubBuildingType::LinearUnique;
 				continue;
 			}
 		}

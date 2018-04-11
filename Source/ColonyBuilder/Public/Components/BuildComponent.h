@@ -64,5 +64,6 @@ private:
 	float RotationRate = 45.f;
 
 	ARTSPlayerController* ControllerRef;
+	bool HasStartedBuilding;
 	
 };
