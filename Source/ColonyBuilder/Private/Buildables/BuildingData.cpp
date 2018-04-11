@@ -5,12 +5,12 @@
 
 UBuildingData::UBuildingData()
 {
-	ConstructorHelpers::FObjectFinder<UMaterialInterface> ValidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/Placeholder/Ghosts/M_ValidGHost.M_ValidGhost'"));
+	ConstructorHelpers::FObjectFinder<UMaterialInterface> ValidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/PROTO/Ghosts/M_ValidGHost.M_ValidGhost'"));
 	if (ValidGhostRef.Object)
 	{
 		ValidGhostMaterial = ValidGhostRef.Object;
 	}
-	ConstructorHelpers::FObjectFinder<UMaterialInterface> InvalidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/Placeholder/Ghosts/M_InvalidGhost.M_InvalidGhost'"));
+	ConstructorHelpers::FObjectFinder<UMaterialInterface> InvalidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/PROTO/Ghosts/M_InvalidGhost.M_InvalidGhost'"));
 	if (InvalidGhostRef.Object)
 	{
 		InvalidGhostMaterial = InvalidGhostRef.Object;
