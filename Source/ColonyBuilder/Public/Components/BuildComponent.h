@@ -3,12 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "RTSBaseComp.h"
+
+#include "Utils/DataTypes/BuildingDataTypes.h"
+
 #include "BuildComponent.generated.h"
 
+class UBuildingData;
+class AGhost;
+
+class ARTSPlayerController;
+class APlayerPawn;
+
+DECLARE_LOG_CATEGORY_EXTERN(BuildCompLogError, Error, All);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COLONYBUILDER_API UBuildComponent : public UActorComponent
+class COLONYBUILDER_API UBuildComponent : public URTSBaseComp
 {
 	GENERATED_BODY()
 
@@ -16,23 +26,44 @@ public:
 	// Sets default values for this component's properties
 	UBuildComponent();
 
-	//Getters//
-	bool GetEnabled() { return IsEnabled; }
-	//Setters//
-	void SetEnabled(bool NewEnabled) { IsEnabled = NewEnabled; }
+	void BeginPlay();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	//Setters//
+	virtual void SetEnabled(bool InEsnabled) override;
+
+	UFUNCTION()
+		void UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRoundedMouseCoords);
+	void RotatePlacement();
+
+	void StartBuildingFromClass(UBuildingData* BuildingData);
+	void StartPlacement(bool IsNewPlacement = true);
+	void EndPlacement();
+	void CancelBuild();
+
+	void BuildIntermediatePositions();
+	void AlignAndOrientate();
+	void ValidatePointTypesToUnique();
+	
+	TArray<FSubBuilding> BuildFFPoints();
+	TArray<FSubBuilding> BuildLinearPoints();
+	TArray<FSubBuilding> BuildGridPoints();
+
+	FTimerHandle BuildIntermediatePosTimer;
+	
+	UBuildingData* BuildingData;
+	TArray<FSubBuilding> SubBuildings;
 
 private:
-	
-	bool IsEnabled;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	FVector CurrMouseCoords;
+	FVector CurrRoundedMouseCoords;
+	FVector MouseLocationAtBuildingStart;
+	void UpdateGhost();
+	AGhost* SpawnedGhost;
 
-		
+	float RotationRate = 45.f;
+
+	ARTSPlayerController* ControllerRef;
+	bool HasStartedBuilding;
 	
 };

@@ -10,5 +10,12 @@ public class ColonyBuilderEditorTarget : TargetRules
 		Type = TargetType.Editor;
 
 		ExtraModuleNames.AddRange( new string[] { "ColonyBuilder" } );
+		
+		        // Game editor
+        ExtraModuleNames.AddRange(
+            new string[]
+            {
+               "ColonyEditor"
+            });
 	}
 }

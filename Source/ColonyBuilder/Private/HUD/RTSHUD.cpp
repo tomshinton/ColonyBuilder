@@ -3,7 +3,6 @@
 #include "RTSHUD.h"
 #include "Kismet/GameplayStatics.h"
 
-
 void ARTSHUD::DrawHUD()
 {
 	Super::DrawHUD();

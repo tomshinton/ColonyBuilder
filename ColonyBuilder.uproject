@@ -2,15 +2,22 @@
 	"FileVersion": 3,
 	"EngineAssociation": "4.17",
 	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "ColonyBuilder",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
-		}
-	]
+  "Description": "",
+  "Modules": [
+    {
+      "Name": "ColonyBuilder",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "AdditionalDependencies": [
+        "Engine",
+        "UMG",
+        "CoreUObject"
+      ]
+    },
+    {
+      "Name": "ColonyEditor",
+      "Type": "Editor",
+      "LoadingPhase":  "PostEngineInit"
+    }
+  ]
 }

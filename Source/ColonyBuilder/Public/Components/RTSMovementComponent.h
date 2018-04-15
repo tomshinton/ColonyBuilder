@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/HUD.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "RTSBaseComp.h"
 
 #include "RTSMovementComponent.generated.h"
-
 
 USTRUCT(BlueprintType)
 struct FScreenEdge
@@ -54,7 +53,7 @@ struct FEdgeBands
 DECLARE_LOG_CATEGORY_EXTERN(MovementLog, Log, All);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COLONYBUILDER_API URTSMovementComponent : public UActorComponent
+class COLONYBUILDER_API URTSMovementComponent : public URTSBaseComp
 {
 	GENERATED_BODY()
 
@@ -62,9 +61,12 @@ public:
 	// Sets default values for this component's properties
 	URTSMovementComponent();
 
+static const FName FloorTag;
+
 protected:
 	// Called when the game starts
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
+
 	void BuildEdgeBands();
 	float GetAppropriateZ(FVector InLocation);
 
@@ -81,6 +83,7 @@ public:
 	void MoveForwards(float InAxis);
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
+	UFUNCTION()
 	void MouseMoved(float InAxis);
 	USpringArmComponent* CameraArm;
 
@@ -100,6 +103,9 @@ public:
 	float CameraZoomSpeed = 2;
 	float TargetArmLength = MaxArmLength;
 
+	bool IsUsingStaticZ;
+	float StaticZHeight;
+
 	void StoreMouseCoords();
 	void ClearMouseCoords();
 
@@ -114,7 +120,6 @@ private:
 
 	float TargetYaw;
 
-	APawn* OwningPawn;
 	APlayerController* OwningController;
 
 	FVector2D CurrMousePos;
@@ -126,5 +131,8 @@ private:
 	FTimerHandle MiddleMouseMoveTimer;
 	FTimerHandle BlendCameraZoomTimer;
 
+
+public:
+	virtual void SetEnabled(bool InEnabled) override;
 
 };
