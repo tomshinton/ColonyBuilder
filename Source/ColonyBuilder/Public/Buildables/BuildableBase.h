@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 
-#include "DataTypes/BuildingDataTypes.h"
+#include "Utils/DataTypes/BuildingDataTypes.h"
 #include "BuildableBase.generated.h"
 
 class UBuildingData;

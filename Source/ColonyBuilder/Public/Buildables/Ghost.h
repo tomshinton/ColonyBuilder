@@ -9,7 +9,7 @@
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
 
-#include "DataTypes/BuildingDataTypes.h"
+#include "Utils/DataTypes/BuildingDataTypes.h"
 
 #include "Ghost.generated.h"
 

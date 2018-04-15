@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "RTSBaseComp.h"
 
-#include "DataTypes/BuildingDataTypes.h"
+#include "Utils/DataTypes/BuildingDataTypes.h"
 
 #include "BuildComponent.generated.h"
 

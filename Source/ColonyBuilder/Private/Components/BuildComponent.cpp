@@ -9,7 +9,7 @@
 #include "Ghost.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Utils/GridUtils.h"
+#include "Utils/Libraries/GridUtils.h"
 
 #include "ColonyBuilderGameModeBase.h"
 #include "BuildableBase.h"

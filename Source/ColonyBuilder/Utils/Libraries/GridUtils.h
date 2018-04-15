@@ -5,7 +5,7 @@
 #include "RTSPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "DataTypes/BuildingDataTypes.h"
+#include "Utils/DataTypes/BuildingDataTypes.h"
 #include "ColonyBuilderGameModeBase.h"
 #include "BuildingData.h"
 #include "PointValidationRules.h"

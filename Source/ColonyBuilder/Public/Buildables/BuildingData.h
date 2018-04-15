@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 
-#include "DataTypes/BuildingDataTypes.h"
+#include "Utils/DataTypes/BuildingDataTypes.h"
 #include "GridBodyBase.h"
 #include "BuildableBase.h"
 

@@ -8,7 +8,7 @@
 
 #include "PlayerPawn.h"
 #include "Kismet/GameplayStatics.h"
-#include "Utils/DebugUtils.h"
+#include "Utils/Libraries/DebugUtils.h"
 
 #include "Image.h"
 

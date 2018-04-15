@@ -3,8 +3,7 @@
 #include "RTSBaseComp.h"
 #include "PlayerPawn.h"
 
-#include "Utils/DebugUtils.h"
-
+#include "Utils/Libraries/DebugUtils.h"
 
 // Sets default values for this component's properties
 URTSBaseComp::URTSBaseComp()

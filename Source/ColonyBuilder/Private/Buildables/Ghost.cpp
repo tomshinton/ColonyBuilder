@@ -3,13 +3,13 @@
 #include "Ghost.h"
 #include "BuildingData.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Core/GameMode/ColonyBuilderGameModeBase.h"
 
 #include "DrawDebugHelpers.h"
-#include "ColonyBuilderGameModeBase.h"
 #include "Engine/StaticMesh.h"
 
-#include "Utils/DebugUtils.h"
-#include "Utils/GridUtils.h"
+#include "Utils/Libraries/DebugUtils.h"
+#include "Utils/Libraries/GridUtils.h"
 
 const float AGhost::ValidationCheckFreq(0.05);
 
