@@ -20,6 +20,8 @@ class USaveManager : public UColonyManager
 
 	USaveManager();
 
+	static const FString SaveSlot;
+
 	UFUNCTION(BlueprintCallable, Category = "Auto Save")
 	void SetAutosaveFrequency(int32 InAutosaveFrequency);
 	UFUNCTION(BlueprintPure, Category = "Auto Save")
@@ -46,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Save Game")
 	void SaveGame();
+
+	UFUNCTION(BlueprintCallable, Category = "Load Game")
+	void LoadGame(UColonySave* SaveToLoad);
 
 private:
 

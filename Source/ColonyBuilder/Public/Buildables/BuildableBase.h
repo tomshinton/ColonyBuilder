@@ -7,12 +7,15 @@
 #include "Components/StaticMeshComponent.h"
 
 #include "Utils/DataTypes/BuildingDataTypes.h"
+
+#include "Save/SavableInterface.h"
+
 #include "BuildableBase.generated.h"
 
 class UBuildingData;
 
 UCLASS()
-class COLONYBUILDER_API ABuildableBase : public AActor
+class COLONYBUILDER_API ABuildableBase : public AActor,	public ISavableInterface
 {
 	GENERATED_BODY()
 	
@@ -35,5 +38,8 @@ public:
 	UBuildingData* BuildingData;
 
 	
-	
+	//Savable Interface
+public:
+	virtual FSaveData GetSaveData() override;
+	//Savable Interface
 };

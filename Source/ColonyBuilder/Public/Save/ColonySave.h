@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "Utils/DataTypes/SaveDataTypes.h"
 #include "ColonySave.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(SaveSlot, Log, All);
@@ -16,9 +17,7 @@ class COLONYBUILDER_API UColonySave : public USaveGame
 	UColonySave();
 
 public:
-	void LogInfo();
-
-public:
 	FString SlotName;
 	FDateTime SaveTime;
+	TArray<FSaveData> SavedActors;
 };

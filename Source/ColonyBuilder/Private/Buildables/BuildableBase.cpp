@@ -25,3 +25,17 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
 	}
 }
+
+FSaveData ABuildableBase::GetSaveData()
+{
+	FBuildingSaveData SaveData;
+	
+	SaveData.BuildingClass = GetClass();
+	SaveData.BuildingTransform = GetActorTransform();
+
+	
+	FString SavableCallback = GetName() + " interacting with SaveSystem";
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Emerald, SavableCallback);
+
+	return SaveData;
+}
