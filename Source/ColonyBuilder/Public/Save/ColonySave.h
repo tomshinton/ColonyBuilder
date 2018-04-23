@@ -18,10 +18,6 @@ class COLONYBUILDER_API UColonySave : public USaveGame
 	UColonySave();
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Save Game")
-	void Heartbeat();
-
-public:
 	UPROPERTY(SaveGame)
 	FString SlotName;
 	UPROPERTY(SaveGame)

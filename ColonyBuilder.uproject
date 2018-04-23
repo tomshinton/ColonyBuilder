@@ -18,6 +18,11 @@
       "Name": "ColonyEditor",
       "Type": "Editor",
       "LoadingPhase":  "PostEngineInit"
+    },
+    {
+      "Name": "ColonyWorldGen",
+      "Type": "Runtime",
+      "LoadingPhase":  "PostEngineInit"
     }
   ]
 }
