@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Interface.h"
-#include "Utils/DataTypes/SaveDataTypes.h"
+
+//#include "Utils/DataTypes/SaveDataTypes.h"
+
 #include "SavableInterface.generated.h"
 
-// This class does not need to be modified.
+struct FBuildingSaveData;
+
 UINTERFACE(BlueprintType, MinimalAPI)
 class USavableInterface : public UInterface
 {
@@ -19,6 +22,6 @@ class COLONYBUILDER_API ISavableInterface
 	GENERATED_BODY()
 
 public:
-	virtual FSaveData GetSaveData();
-	virtual void ReceiveSaveData();
+	virtual FBuildingSaveData GetBuildingSaveData() = 0;
+	virtual void LoadBuildingSaveData(FBuildingSaveData LoadedData) = 0;
 };

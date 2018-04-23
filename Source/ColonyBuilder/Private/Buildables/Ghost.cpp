@@ -157,8 +157,7 @@ void AGhost::UpdateGridGhost()
 
 	if (BuildingData && BuildingData->BodyClass)
 	{
-		UStaticMesh* DefaultMesh = Cast<AGridBodyBase>(BuildingData->BodyClass->GetDefaultObject())->StaticMeshComp->GetStaticMesh();
-		if (DefaultMesh)
+		if (UStaticMesh* DefaultMesh = Cast<AGridBodyBase>(BuildingData->BodyClass->GetDefaultObject())->StaticMeshComp->GetStaticMesh())
 		{
 			BodyMeshes->SetStaticMesh(DefaultMesh);
 			FTransform NewInstanceTrans;
@@ -172,6 +171,7 @@ void AGhost::UpdateGridGhost()
 				BodyMeshes->AddInstanceWorldSpace(NewInstanceTrans);
 			}
 		}
+
 	}
 }
 

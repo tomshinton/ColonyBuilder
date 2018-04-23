@@ -9,6 +9,7 @@
 #include "Utils/DataTypes/BuildingDataTypes.h"
 
 #include "Save/SavableInterface.h"
+#include "Utils/DataTypes/SaveDataTypes.h"
 
 #include "BuildableBase.generated.h"
 
@@ -37,9 +38,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
 
-	
-	//Savable Interface
+	//ISavableInterface
 public:
-	virtual FSaveData GetSaveData() override;
-	//Savable Interface
+	virtual FBuildingSaveData GetBuildingSaveData() override;
+	virtual void LoadBuildingSaveData(FBuildingSaveData LoadedData) override;
+	//ISavableInterface
+
+
 };

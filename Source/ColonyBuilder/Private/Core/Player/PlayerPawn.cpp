@@ -3,6 +3,12 @@
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
 
+#include "SaveManager.h"
+#include "ColonyInstance.h"
+#include "ColonySave.h"
+
+#include "Kismet/GameplayStatics.h"
+
 
 // Sets default values
 APlayerPawn::APlayerPawn()
@@ -42,7 +48,18 @@ void APlayerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	MovementComp->SetEnabled(true);
-	
+
+	//Load any saved data, if there is any
+	if (UColonyManager* Manager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManager(USaveManager::StaticClass()))
+	{
+		if (USaveManager* SaveManager = Cast<USaveManager>(Manager))
+		{
+			if (SaveManager->GetCurrentSave()->PlayerSaveData.IsValidSetting)
+			{
+				LoadSaveData(SaveManager->GetPlayerSaveInfo());
+			}
+		}
+	}
 }
 
 // Called every frame
@@ -138,3 +155,15 @@ void APlayerPawn::Cancel()
 }
 
 #pragma endregion Binds
+
+FPlayerSaveData APlayerPawn::GetSaveData()
+{
+	FPlayerSaveData NewData(true, GetActorTransform(), SpringArm->GetComponentTransform());
+	return NewData;
+}
+
+void APlayerPawn::LoadSaveData(const FPlayerSaveData& LoadedData)
+{
+	SetActorTransform(LoadedData.PlayerTransform);
+	SpringArm->SetWorldTransform(LoadedData.CameraTransform);
+}

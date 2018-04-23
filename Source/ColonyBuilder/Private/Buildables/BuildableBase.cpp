@@ -26,16 +26,15 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 	}
 }
 
-FSaveData ABuildableBase::GetSaveData()
+//ISavableInterface
+FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
-	FBuildingSaveData SaveData;
-	
-	SaveData.BuildingClass = GetClass();
-	SaveData.BuildingTransform = GetActorTransform();
-
-	
-	FString SavableCallback = GetName() + " interacting with SaveSystem";
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Emerald, SavableCallback);
-
-	return SaveData;
+	FBuildingSaveData NewData(GetClass(), GetActorTransform(), MeshComponent->GetStaticMesh());
+	return NewData;
 }
+
+void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
+{
+	MeshComponent->SetStaticMesh(LoadedData.BuildingMesh);
+}
+//ISavableInterface

@@ -7,6 +7,7 @@
 #include "ColonyManager.h"
 #include "Engine/World.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
+#include "PlayerPawn.h"
 
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
@@ -30,30 +31,46 @@ void USaveManager::PostInitProperties()
 		}
 		else
 		{
-			CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(SaveSlot, 0));
-			LoadGame(CurrentSave);
+			CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0));
 		}
 	}
 
+	LoadGame(CurrentSave);
 	StartAutosaveTimer();
 }
 
 void USaveManager::SaveGame()
 {
 	TArray<AActor*> FoundActors;
-	TArray<FSaveData> RetrievedInfo;
+	TArray<FBuildingSaveData> SavedBuildings;
 
 	if (UWorld* World = GetWorld())
 	{
+
+#pragma region Buildings
 		UGameplayStatics::GetAllActorsWithInterface(World, USavableInterface::StaticClass(), FoundActors);
-	
+
+		CurrentSave->SavedBuildables.Empty();
 		for (AActor* FoundActor : FoundActors)
 		{
 			ISavableInterface* SaveInterface = Cast<ISavableInterface>(FoundActor);
-			RetrievedInfo.Add(SaveInterface->GetSaveData());
+			CurrentSave->SavedBuildables.Add(SaveInterface->GetBuildingSaveData());
 		}
-	
-		CurrentSave->SavedActors = RetrievedInfo;
+#pragma endregion 
+#pragma region Player
+		if (!LocalPawnRef)
+		{
+			if (APawn* LocalPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+			{
+				if (APlayerPawn* PlayerPawn = Cast<APlayerPawn>(LocalPawn))
+				{
+					LocalPawnRef = PlayerPawn;
+				}
+			}
+		}
+
+		CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+#pragma endregion 
 
 		UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
 	}
@@ -76,17 +93,25 @@ void USaveManager::SetAutosaveFrequency(int32 InAutosaveFrequency)
 
 void USaveManager::LoadGame(UColonySave* SaveToLoad)
 {
-	if (SaveToLoad)
+	if (SaveToLoad && GetWorld())
 	{
+#pragma region Buildings
 		FActorSpawnParameters SpawnParams;
 
-		for (FSaveData SavedActor : SaveToLoad->SavedActors)
+		for (FBuildingSaveData SavedBuilding : SaveToLoad->SavedBuildables)
 		{
-			//FBuildingSaveData* BuildingData = Cast<FBuildingSaveData>(&SavedActor);
-			FBuildingSaveData* BuildingData = reinterpret_cast<FBuildingSaveData*>(&SavedActor);
-			FBuildingSaveData BuildingData = (FBuildingSaveData*)&SavedActor;
-			GetWorld()->SpawnActor<AActor>(BuildingData->BuildingClass, BuildingData->BuildingTransform, SpawnParams);
+			if (auto* NewBuilding = GetWorld()->SpawnActor<AActor>(SavedBuilding.BuildingClass, SavedBuilding.BuildingTransform, SpawnParams))
+			{
+				ISavableInterface* SaveInterface = Cast<ISavableInterface>(NewBuilding);
+				SaveInterface->LoadBuildingSaveData(SavedBuilding);
+			}
 		}
+#pragma endregion
 	}
+}
+
+FPlayerSaveData USaveManager::GetPlayerSaveInfo()
+{
+	return CurrentSave->PlayerSaveData;
 }
 

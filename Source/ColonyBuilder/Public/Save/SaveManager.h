@@ -6,7 +6,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Utils/DataTypes/SaveDataTypes.h"
 #include "SaveManager.generated.h"
+
+class APlayerPawn;
 
 DECLARE_LOG_CATEGORY_EXTERN(SaveManager, Log, All);
 
@@ -32,11 +35,12 @@ class USaveManager : public UColonyManager
 	UFUNCTION(BlueprintPure, Category = "Auto Save")
 	bool GetAutosaveEnabled() { return AutosaveEnabled; }
 	
-	UFUNCTION(BlueprintPure, Category = "Save Game")
-	UColonySave* GetCurrentSave() { return CurrentSave; }
 	
 public:
 	virtual void PostInitProperties() override;
+
+	UFUNCTION(BlueprintPure, Category = "Save Game")
+	UColonySave* GetCurrentSave() { return CurrentSave; }
 
 	int32 AutosaveFrequency;
 
@@ -52,6 +56,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Load Game")
 	void LoadGame(UColonySave* SaveToLoad);
 
+	FPlayerSaveData GetPlayerSaveInfo();
+
 private:
 
 	void StartAutosaveTimer();
@@ -60,4 +66,6 @@ private:
 	bool AutosaveEnabled;
 
 	UColonySave* CurrentSave;
+
+	APlayerPawn* LocalPawnRef;
 };

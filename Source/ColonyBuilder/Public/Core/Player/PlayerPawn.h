@@ -10,6 +10,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Utils/DataTypes/SaveDataTypes.h"
 #include "PlayerPawn.generated.h"
 
 class ARTSPlayerController;
@@ -59,7 +60,6 @@ protected:
 public:	
 
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	ARTSPlayerController* RTSController;
@@ -67,6 +67,9 @@ public:
 	//Getters//
 	UFUNCTION(BlueprintPure, Category = "Player | Modes")	URTSMovementComponent* GetRTSMovementComponent() { return MovementComp; }
 	UBuildComponent* GetBuildComponent() { return BuildComponent; }
+
+	FPlayerSaveData GetSaveData();
+	void LoadSaveData(const FPlayerSaveData& LoadedData);
 
 	//Delegates
 	FOnMoveFoward OnMoveForward;

@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "BuildableBase.h"
 
 #include "GridBodyBase.generated.h"
 
 UCLASS()
-class COLONYBUILDER_API AGridBodyBase : public AActor
+class COLONYBUILDER_API AGridBodyBase : public AActor, public ISavableInterface
 {
 	GENERATED_BODY()
 
@@ -27,11 +28,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Meshes")
 	UBoxComponent* GridBodyCollision;
-
-
-public:
-
-	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
-	UStaticMesh* BodyMesh;
 	
+
+	//ISavableInterface
+	virtual FBuildingSaveData GetBuildingSaveData() override;
+	virtual void LoadBuildingSaveData(FBuildingSaveData LoadedData) override;
+	//ISavableInterface
+
+
 };
