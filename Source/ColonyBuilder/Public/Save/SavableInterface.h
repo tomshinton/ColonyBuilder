@@ -5,8 +5,6 @@
 #include "CoreMinimal.h"
 #include "Interface.h"
 
-//#include "Utils/DataTypes/SaveDataTypes.h"
-
 #include "SavableInterface.generated.h"
 
 struct FBuildingSaveData;
