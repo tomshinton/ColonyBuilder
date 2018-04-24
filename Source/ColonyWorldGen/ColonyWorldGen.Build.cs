@@ -4,8 +4,11 @@ using UnrealBuildTool;
 
 public class ColonyWorldGen: ModuleRules
 {
+
 	public ColonyWorldGen (ReadOnlyTargetRules Target) : base(Target)
     {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
         PublicIncludePaths.AddRange(new string[] { "ColonyWorldGen/Public" });
 
         PrivateIncludePaths.AddRange(new string[] { "ColonyWorldGen/Private" });

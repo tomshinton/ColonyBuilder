@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ModuleManager.h"
 #include "ColonyWorldGenModule.h"
+#include "ModuleManager.h"
 
 IMPLEMENT_MODULE(FColonyWorldGenModule, ColonyEditor);
 DEFINE_LOG_CATEGORY(ColonyWorldGenLog)
