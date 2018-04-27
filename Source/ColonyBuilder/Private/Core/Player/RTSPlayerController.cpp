@@ -58,8 +58,6 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 	if(HitRes.Actor.Get())
 	{
 		PosUnderMouse = HitRes.Location;
-		//Debug
-		DrawDebugSphere(GetWorld(), PosUnderMouse, 20, 6, FColor::Emerald);
 	}
 
 	//Rounding
@@ -85,7 +83,6 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 	}
 	else
 	{
-
 		YOut = YIn + (AColonyBuilderGameModeBase::GridSize - YDif);
 	}
 
@@ -107,8 +104,6 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 	}
 
 	PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
-	DrawDebugSphere(GetWorld(), PosUnderMouseRounded, 20, 6, FColor::Blue);
-
 	OnMouseMoved.Broadcast(PosUnderMouse, PosUnderMouseRounded);
 
 }

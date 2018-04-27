@@ -26,18 +26,19 @@ public:
 	// Sets default values for this component's properties
 	UBuildComponent();
 
-	void BeginPlay();
-
 	//Setters//
 	virtual void SetEnabled(bool InEsnabled) override;
 
 	UFUNCTION()
-		void UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRoundedMouseCoords);
+	void UpdateMouseCoords(const FVector& InCurrMouseCoords, const FVector& InRoundedMouseCoords);
 	void RotatePlacement();
 
 	void StartBuildingFromClass(UBuildingData* BuildingData);
+	UFUNCTION()
 	void StartPlacement(bool IsNewPlacement = true);
+	UFUNCTION()
 	void EndPlacement();
+	UFUNCTION()
 	void CancelBuild();
 
 	void BuildIntermediatePositions();
@@ -63,7 +64,6 @@ private:
 
 	float RotationRate = 45.f;
 
-	ARTSPlayerController* ControllerRef;
 	bool HasStartedBuilding;
 	
 };

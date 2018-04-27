@@ -7,6 +7,14 @@
 #include "RTSBaseComp.generated.h"
 
 class APlayerPawn;
+class ARTSPlayerController;
+
+UENUM(BlueprintType)
+enum class EComponentFunctionType : uint8
+{
+	Function	UMETA(DisplayName = "Functional Component"),
+	Navigation	UMETA(DisplayName = "Navigational Component")
+};
 
 DECLARE_LOG_CATEGORY_EXTERN(BaseComponentLog, Log, All);
 
@@ -29,5 +37,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	APlayerPawn* OwningPawn;
+	ARTSPlayerController* OwningController;
+
 	bool IsEnabled;
+	EComponentFunctionType ComponentType;
 };
