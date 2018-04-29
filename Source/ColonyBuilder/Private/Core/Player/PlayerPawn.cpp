@@ -40,6 +40,8 @@ APlayerPawn::APlayerPawn()
 	BuildComponent = CreateDefaultSubobject<UBuildComponent>(TEXT("Build Component"));
 	BuildComponent->SetOwningPlayer(this);
 
+	SelectionComponent = CreateDefaultSubobject<USelectionComponent>(TEXT("Selection Component"));
+	SelectionComponent->SetOwningPlayer(this);
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +49,10 @@ void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RebindNavigationComponents();
+
 	MovementComp->SetEnabled(true);
+	SelectionComponent->SetEnabled(true);
 
 	//Load any saved data, if there is any
 	if (UColonyManager* Manager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManager(USaveManager::StaticClass()))
@@ -90,6 +95,11 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::StartConfirm);
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Released, this, &APlayerPawn::EndConfirm);
 	PlayerInputComponent->BindAction(TEXT("Cancel"), IE_Pressed, this, &APlayerPawn::Cancel);
+
+}
+
+void APlayerPawn::RebindNavigationComponents()
+{
 
 }
 
@@ -141,17 +151,17 @@ void APlayerPawn::RotatePlacement()
 
 void APlayerPawn::StartConfirm()
 {
-	OnStartConfirmAction.ExecuteIfBound(true);
+	OnStartConfirmAction.Broadcast(true);
 }
 
 void APlayerPawn::EndConfirm()
 {
-	OnEndConfirmAction.ExecuteIfBound();
+	OnEndConfirmAction.Broadcast();
 }
 
 void APlayerPawn::Cancel()
 {
-	OnCancelAction.ExecuteIfBound();
+	OnCancelAction.Broadcast();
 }
 
 #pragma endregion Binds

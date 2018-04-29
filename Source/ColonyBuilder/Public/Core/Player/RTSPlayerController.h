@@ -12,7 +12,7 @@
 
 class AColonyBuilderGameModeBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseCoordsChanged, FVector, MouseCoordsRaw, FVector, MouseCoordsRounded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseCoordsChanged, const FVector&, MouseCoordsRaw, const FVector&, MouseCoordsRounded);
 
 UCLASS()
 class COLONYBUILDER_API ARTSPlayerController : public APlayerController

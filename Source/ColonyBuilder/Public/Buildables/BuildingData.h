@@ -8,6 +8,7 @@
 #include "Utils/DataTypes/BuildingDataTypes.h"
 #include "GridBodyBase.h"
 #include "BuildableBase.h"
+#include "UI_SelectionBox.h"
 
 #include "BuildingData.generated.h"
 
@@ -57,11 +58,17 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
 	UMaterialInterface* InvalidGhostMaterial;
+
+	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
+	UMaterialInterface* OnSelectionMaterial;
 #pragma endregion Materials
 
 #pragma region UI
 	UPROPERTY(EditAnywhere, Category = "UI")
 	UMaterialInterface* BuildingIcon;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUI_SelectionBox> SelectionWidget;
 #pragma endregion UI
 
 #pragma region Spawning

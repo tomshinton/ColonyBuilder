@@ -22,11 +22,8 @@ UBuildComponent::UBuildComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SpawnedGhost = nullptr;
-}
 
-void UBuildComponent::BeginPlay()
-{
-	ControllerRef = Cast<ARTSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ComponentType = EComponentFunctionType::Function;
 }
 
 void UBuildComponent::SetEnabled(bool InEnabled)
@@ -36,14 +33,14 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 	if (IsEnabled)
 	{
 
-		if (ControllerRef && !ControllerRef->OnMouseMoved.IsBound())
+		if (OwningController)
 		{
-			ControllerRef->OnMouseMoved.AddDynamic(this, &UBuildComponent::UpdateMouseCoords);
+			OwningController->OnMouseMoved.AddDynamic(this, &UBuildComponent::UpdateMouseCoords);
 		}
 
-		OwningPawn->OnStartConfirmAction.BindUObject(this, &UBuildComponent::StartPlacement);
-		OwningPawn->OnEndConfirmAction.BindUObject(this, &UBuildComponent::EndPlacement);
-		OwningPawn->OnCancelAction.BindUObject(this, &UBuildComponent::CancelBuild);
+		OwningPawn->OnStartConfirmAction.AddDynamic(this, &UBuildComponent::StartPlacement);
+		OwningPawn->OnEndConfirmAction.AddDynamic(this, &UBuildComponent::EndPlacement);
+		OwningPawn->OnCancelAction.AddDynamic(this, &UBuildComponent::CancelBuild);
 		OwningPawn->OnRotatePlacement.BindUObject(this, &UBuildComponent::RotatePlacement);
 	}
 	else
@@ -52,9 +49,9 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 		SubBuildings.Empty();
 		HasStartedBuilding = false;
 
-		if (ControllerRef && ControllerRef->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
+		if (OwningController && OwningController->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
 		{
-			ControllerRef->OnMouseMoved.RemoveDynamic(this, &UBuildComponent::UpdateMouseCoords);
+			OwningController->OnMouseMoved.RemoveDynamic(this, &UBuildComponent::UpdateMouseCoords);
 
 			if (SpawnedGhost)
 			{
@@ -63,14 +60,14 @@ void UBuildComponent::SetEnabled(bool InEnabled)
 			}
 		}
 
-		OwningPawn->OnStartConfirmAction.Unbind();
-		OwningPawn->OnEndConfirmAction.Unbind();
-		OwningPawn->OnCancelAction.Unbind();
+		OwningPawn->OnStartConfirmAction.RemoveDynamic(this, &UBuildComponent::StartPlacement);
+		OwningPawn->OnEndConfirmAction.RemoveDynamic(this, &UBuildComponent::EndPlacement);
+		OwningPawn->OnCancelAction.RemoveDynamic(this, &UBuildComponent::CancelBuild);
 		OwningPawn->OnRotatePlacement.Unbind();
 	}
 }
 
-void UBuildComponent::UpdateMouseCoords(FVector InCurrMouseCoords, FVector InRoundedMouseCoords)
+void UBuildComponent::UpdateMouseCoords(const FVector& InCurrMouseCoords, const FVector& InRoundedMouseCoords)
 {
 	CurrMouseCoords = InCurrMouseCoords;
 	CurrRoundedMouseCoords = InRoundedMouseCoords;

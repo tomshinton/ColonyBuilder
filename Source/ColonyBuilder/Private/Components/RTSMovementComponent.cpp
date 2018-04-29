@@ -2,9 +2,10 @@
 
 #include "RTSMovementComponent.h"
 
-//Forward Dec
 #include "HUD/RTSHUD.h"
+
 #include "PlayerPawn.h"
+#include "RTSPlayerController.h"
 
 
 DEFINE_LOG_CATEGORY(MovementLog);
@@ -24,10 +25,26 @@ void URTSMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwningPawn = Cast<APlayerPawn>(GetOwner());
-	OwningController = Cast<APlayerController>(OwningPawn->GetController());
-
 	GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, 0.02, true);
+}
+
+void URTSMovementComponent::SetEnabled(bool InEnabled)
+{
+	Super::SetEnabled(InEnabled);
+
+	if (IsEnabled)
+	{
+		OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
+		OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
+		OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
+		OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
+		OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
+		OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
+		OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
+
+		OwningPawn->OnMouseMoved.RemoveDynamic(this, &URTSMovementComponent::MouseMoved);
+		OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
+	}
 }
 
 void URTSMovementComponent::BuildEdgeBands()
@@ -240,18 +257,3 @@ void URTSMovementComponent::BlendCameraZoom()
 	CameraArm->TargetArmLength = NewArmLength;
 }
 
-void URTSMovementComponent::SetEnabled(bool InEnabled)
-{
-	Super::SetEnabled(InEnabled);
-
-	OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
-	OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
-	OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
-
-	OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
-	OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
-	OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
-
-	OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
-	OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
-}

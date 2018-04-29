@@ -11,6 +11,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
+#include "SelectionComponent.h"
 #include "PlayerPawn.generated.h"
 
 class ARTSPlayerController;
@@ -26,9 +27,9 @@ DECLARE_DELEGATE(FOnScrollUp);
 DECLARE_DELEGATE(FOnScrollDown);
 
 DECLARE_DELEGATE(FOnRotatePlacement);
-DECLARE_DELEGATE_OneParam(FOnStartConfirmAction, bool);
-DECLARE_DELEGATE(FOnEndConfirmAction);
-DECLARE_DELEGATE(FOnCancelAction);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStartConfirmAction, bool, IsFreshBuild);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndConfirmAction);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCancelAction);
 
 UCLASS()
 class COLONYBUILDER_API APlayerPawn : public APawn
@@ -50,8 +51,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	URTSMovementComponent* MovementComp;
+
 	UPROPERTY(EditDefaultsOnly)
 	UBuildComponent* BuildComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	USelectionComponent* SelectionComponent;
 
 protected:
 
@@ -61,6 +66,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	void RebindNavigationComponents();
 
 	ARTSPlayerController* RTSController;
 

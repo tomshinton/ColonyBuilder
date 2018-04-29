@@ -120,8 +120,6 @@ private:
 
 	float TargetYaw;
 
-	APlayerController* OwningController;
-
 	FVector2D CurrMousePos;
 	FVector2D StoredMousePos;
 	bool UsingMiddleMouseMovement;

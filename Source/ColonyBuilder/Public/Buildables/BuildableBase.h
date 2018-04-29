@@ -9,14 +9,17 @@
 #include "Utils/DataTypes/BuildingDataTypes.h"
 
 #include "Save/SavableInterface.h"
+#include "SelectionInterface.h"
+
 #include "Utils/DataTypes/SaveDataTypes.h"
+#include "UI_SelectionBox.h"
 
 #include "BuildableBase.generated.h"
 
 class UBuildingData;
 
 UCLASS()
-class COLONYBUILDER_API ABuildableBase : public AActor,	public ISavableInterface
+class COLONYBUILDER_API ABuildableBase : public AActor,	public ISavableInterface, public ISelectionInterface
 {
 	GENERATED_BODY()
 	
@@ -38,11 +41,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
 
-	//ISavableInterface
+//ISavableInterface
 public:
 	virtual FBuildingSaveData GetBuildingSaveData() override;
 	virtual void LoadBuildingSaveData(FBuildingSaveData LoadedData) override;
-	//ISavableInterface
+//ISavableInterface
 
+//ISelectionInterface
+public:
+	virtual void OnReceiveHover() override;
+	virtual void OnEndHover() override;
+	virtual void OnSelect() override;
+	virtual void OnEndSelect() override;
+	bool IsSelected;
+	UUI_SelectionBox* SelectionWidget;
+//ISelectionInterface
 
 };

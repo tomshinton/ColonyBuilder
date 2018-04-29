@@ -2,6 +2,7 @@
 
 #include "RTSBaseComp.h"
 #include "PlayerPawn.h"
+#include "RTSPlayerController.h"
 
 #include "Utils/Libraries/DebugUtils.h"
 
@@ -18,6 +19,9 @@ void URTSBaseComp::BeginPlay()
 	
 	FString ComponentCreationCallback = "Creating " + this->GetName() + " for " + OwningPawn->GetName();
 	print(ComponentCreationCallback);
+
+	OwningPawn = Cast<APlayerPawn>(GetOwner());
+	OwningController = Cast<ARTSPlayerController>(OwningPawn->GetController());
 }
 // Called every frame
 void URTSBaseComp::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -29,6 +33,8 @@ void URTSBaseComp::SetEnabled(bool InEnabled)
 {
 	IsEnabled = InEnabled;
 
-	FString EnableCallback = "Setting IsEnabled in " + this->GetName() + " to " + (IsEnabled ? TEXT("True") : TEXT("False"));
-	print(EnableCallback);
+	if (!IsEnabled && OwningPawn && ComponentType == EComponentFunctionType::Function)
+	{
+		OwningPawn->RebindNavigationComponents();
+	}
 }
