@@ -21,10 +21,11 @@ public:
 	void StartManager(TSubclassOf<UColonyManager> ManagerClass, FString ManagerName);
 
 	UFUNCTION(BlueprintCallable, Category = "Managers")
-	UColonyManager* GetManager(TSubclassOf<UColonyManager> ManagerClass);
+	UColonyManager* GetManagerByClass(TSubclassOf<UColonyManager> ManagerClass);
 
 private:
 
+	UPROPERTY()
 	TArray<UColonyManager*> Managers;
 
 };

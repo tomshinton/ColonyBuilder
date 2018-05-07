@@ -32,10 +32,10 @@ void USaveManager::PostInitProperties()
 		else
 		{
 			CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0));
+			LoadGame(CurrentSave);
 		}
 	}
 
-	LoadGame(CurrentSave);
 	StartAutosaveTimer();
 }
 
@@ -46,33 +46,36 @@ void USaveManager::SaveGame()
 
 	if (UWorld* World = GetWorld())
 	{
-
+		if (CurrentSave)
+		{
 #pragma region Buildings
-		UGameplayStatics::GetAllActorsWithInterface(World, USavableInterface::StaticClass(), FoundActors);
+			UGameplayStatics::GetAllActorsWithInterface(World, USavableInterface::StaticClass(), FoundActors);
 
-		CurrentSave->SavedBuildables.Empty();
-		for (AActor* FoundActor : FoundActors)
-		{
-			ISavableInterface* SaveInterface = Cast<ISavableInterface>(FoundActor);
-			CurrentSave->SavedBuildables.Add(SaveInterface->GetBuildingSaveData());
-		}
-#pragma endregion 
-#pragma region Player
-		if (!LocalPawnRef)
-		{
-			if (APawn* LocalPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+			CurrentSave->SavedBuildables.Empty();
+			for (AActor* FoundActor : FoundActors)
 			{
-				if (APlayerPawn* PlayerPawn = Cast<APlayerPawn>(LocalPawn))
+				if (ISavableInterface* SaveInterface = Cast<ISavableInterface>(FoundActor))
 				{
-					LocalPawnRef = PlayerPawn;
+					CurrentSave->SavedBuildables.Add(SaveInterface->GetBuildingSaveData());
 				}
 			}
-		}
-
-		CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
 #pragma endregion 
+#pragma region Player
+			if (!LocalPawnRef)
+			{
+				if (APawn* LocalPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+				{
+					if (APlayerPawn* PlayerPawn = Cast<APlayerPawn>(LocalPawn))
+					{
+						LocalPawnRef = PlayerPawn;
+					}
+				}
+			}
 
-		UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
+			CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+#pragma endregion 
+			UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
+		}
 	}
 }
 

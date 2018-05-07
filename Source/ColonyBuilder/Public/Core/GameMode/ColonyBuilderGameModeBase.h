@@ -21,6 +21,8 @@ class COLONYBUILDER_API AColonyBuilderGameModeBase : public AGameModeBase
 
 public:
 	static const int32 GridSize;
+	static const bool SaveOnExit;
 	
-	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 };

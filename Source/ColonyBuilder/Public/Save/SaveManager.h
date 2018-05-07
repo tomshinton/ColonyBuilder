@@ -65,6 +65,7 @@ private:
 	FTimerHandle AutosaveHandle;
 	bool AutosaveEnabled;
 
+	UPROPERTY()
 	UColonySave* CurrentSave;
 
 	APlayerPawn* LocalPawnRef;

@@ -13,6 +13,7 @@
 
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "UI_SelectionBox.h"
+#include "Construction/ConstructionComponent.h"
 
 #include "BuildableBase.generated.h"
 
@@ -33,13 +34,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UStaticMeshComponent* MeshComponent;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UConstructionComponent* ConstructionComponent;
+
 	UPROPERTY(VisibleAnywhere, Category = "Building Info")
 	TArray<FSubBuilding> SubBuildings;
 
-	void OnConstruction(const FTransform& Transform);
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
+
+	void OnConstruction(const FTransform& Transform);
+
+	UFUNCTION(BlueprintPure, Category = Construction)
+	UConstructionComponent* GetConstructionComponent() { return ConstructionComponent; }
+
+	UFUNCTION()
+	virtual void EnableBuilding();
+
+private:
+
 
 //ISavableInterface
 public:

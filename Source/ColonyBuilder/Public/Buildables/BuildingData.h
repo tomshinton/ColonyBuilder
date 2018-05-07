@@ -25,7 +25,7 @@ public:
 
 #pragma region Readability
 
-	UPROPERTY(EditAnywhere, Category = "Readability")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Readability")
 	FName BuildingName;
 
 	UPROPERTY(EditAnywhere, Category = "Readability")
@@ -94,6 +94,11 @@ public:
 	FVector2D MinDimentions;
 
 #pragma endregion Spawning
+
+#pragma region Construction
+	UPROPERTY(EditAnywhere, Category = "Spawning | Construction")
+	float TotalBuildTime;
+#pragma endregion Construction
 
 public:
 	FString GetFullCategoryAsString();

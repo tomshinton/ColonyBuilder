@@ -3,6 +3,7 @@
 #include "ColonyInstance.h"
 
 #include "SaveManager.h"
+#include "Construction/ConstructionManager.h"
 
 
 DEFINE_LOG_CATEGORY(ColonyInstanceLog);
@@ -10,6 +11,9 @@ DEFINE_LOG_CATEGORY(ColonyInstanceLog);
 void UColonyInstance::Init()
 {
 	UE_LOG(ColonyInstanceLog, Log, TEXT("Colony Instance started"));
+
+	//Gameplay critical managers - need to be instantiated first.
+	StartManager(UConstructionManager::StaticClass(), "Construction Manager");
 
 	StartManager(USaveManager::StaticClass(), "Save Manager");
 }
@@ -23,7 +27,7 @@ void UColonyInstance::StartManager(TSubclassOf<UColonyManager> ManagerClass, FSt
 	Managers.AddUnique(NewManager);
 }
 
-UColonyManager* UColonyInstance::GetManager(TSubclassOf<UColonyManager> ManagerClass)
+UColonyManager* UColonyInstance::GetManagerByClass(TSubclassOf<UColonyManager> ManagerClass)
 {
 	for (UColonyManager* Manager : Managers)
 	{
@@ -31,6 +35,7 @@ UColonyManager* UColonyInstance::GetManager(TSubclassOf<UColonyManager> ManagerC
 		{
 			return Manager;
 		}
+
 	}
 	return nullptr;
 }

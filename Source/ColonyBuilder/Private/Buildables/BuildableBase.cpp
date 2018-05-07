@@ -14,6 +14,9 @@ ABuildableBase::ABuildableBase()
 	MeshComponent->SetCollisionProfileName("BlockAllDynamic");
 	MeshComponent->SetupAttachment(SceneRoot);
 	MeshComponent->bGenerateOverlapEvents = true;
+
+	ConstructionComponent = CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component"));
+	ConstructionComponent->OnConstructionFinished.AddDynamic(this, &ABuildableBase::EnableBuilding);
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -24,23 +27,35 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
 	}
+
+	SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
+	SelectionWidget->SetSelectedActor(this);
+
+	ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
+	ConstructionComponent->OnConstructionFinished.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionFinished);
 }
 
-//ISavableInterface
+#pragma region SavableInterface
+
+void ABuildableBase::EnableBuilding()
+{
+
+}
+
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
-	FBuildingSaveData NewData(GetClass(), GetActorTransform(), MeshComponent->GetStaticMesh());
+	FBuildingSaveData NewData(GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData());
 	return NewData;
 }
 
 void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
 {
 	MeshComponent->SetStaticMesh(LoadedData.BuildingMesh);
+	ConstructionComponent->SetConstructionLoadData(LoadedData.ConstructionData, BuildingData);
 }
+#pragma endregion SavableInterface
 
-//ISavableInterface
-
-//ISelectionInterface
+#pragma region SelectionInterface
 void ABuildableBase::OnReceiveHover()
 {
 	for (int8 i = 0; i <= MeshComponent->GetMaterials().Num(); i++)
@@ -59,12 +74,9 @@ void ABuildableBase::OnEndHover()
 
 void ABuildableBase::OnSelect()
 {
-	if (!IsSelected && BuildingData->SelectionWidget)
+	if (!IsSelected && SelectionWidget)
 	{
-		SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
-		SelectionWidget->SetSelectedActor(this);
 		SelectionWidget->AddToViewport(0);
-
 		IsSelected = true;
 	}
 }
@@ -77,4 +89,4 @@ void ABuildableBase::OnEndSelect()
 		IsSelected = false;
 	}
 }
-//ISelectionInterface
+#pragma endregion SelectionInterface
