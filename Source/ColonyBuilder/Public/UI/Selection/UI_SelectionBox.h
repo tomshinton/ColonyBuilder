@@ -17,6 +17,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Actor")
 	AActor* GetSelectedActor() { return SelectedActor; }
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Update")
+	void OnConstructionUpdated(const float& ConstructionPercentage);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Update")
+	void OnConstructionFinished();
+
 private:
 
 	AActor* SelectedActor;

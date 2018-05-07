@@ -94,6 +94,15 @@ struct FSubBuilding
 	}
 };
 
+UENUM(BlueprintType)
+enum class EConstructionStage : uint8
+{
+	AwaitingResources,
+	Construction,
+	Upgrading,
+	Finished
+};
+
 UCLASS()
 class COLONYBUILDER_API UBuildingDataTypes : public UObject
 {

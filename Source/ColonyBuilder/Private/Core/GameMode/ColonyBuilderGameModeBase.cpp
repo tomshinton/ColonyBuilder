@@ -2,9 +2,29 @@
 
 #include "ColonyBuilderGameModeBase.h"
 #include "RTSPlayerController.h"
+
 #include "HUD/RTSHUD.h"
 
+#include "ColonyInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "SaveManager.h"
+
 const int32 AColonyBuilderGameModeBase::GridSize(256);
+const bool AColonyBuilderGameModeBase::SaveOnExit(true);
+
+void AColonyBuilderGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(AColonyBuilderGameModeBase::SaveOnExit)
+	{
+		if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
+		{
+			if (USaveManager* SaveManager = Cast<USaveManager>(GameInst->GetManagerByClass(USaveManager::StaticClass())))
+			{
+				SaveManager->SaveGame();
+			}
+		}
+	}
+}
 
 AColonyBuilderGameModeBase::AColonyBuilderGameModeBase()
 {

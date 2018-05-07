@@ -4,7 +4,36 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "BuildingDataTypes.h"
+
 #include "SaveDataTypes.generated.h"
+
+class UBuildingData;
+
+USTRUCT()
+struct FConstructionSaveData
+{
+	GENERATED_USTRUCT_BODY()
+
+	FConstructionSaveData() {};
+
+	FConstructionSaveData(EConstructionStage InCurrentStage, float InRemainingBuildTime, float InTotalBuildTime) :
+		CurrentStage(InCurrentStage)
+		, RemainingBuildTime(InRemainingBuildTime)
+		, TotalBuildTime(InTotalBuildTime)
+	{}
+
+public:
+
+	UPROPERTY()
+	EConstructionStage CurrentStage;
+
+	UPROPERTY()
+	float RemainingBuildTime;
+
+	UPROPERTY()
+	float TotalBuildTime;
+};
 
 USTRUCT(BlueprintType)
 struct FBuildingSaveData
@@ -19,15 +48,29 @@ struct FBuildingSaveData
 		, BuildingMesh(InMesh)
 	{};
 
+	FBuildingSaveData(TSubclassOf<AActor> InBuildingClass, UBuildingData* InBuildingData, FTransform InTransform, UStaticMesh* InMesh, FConstructionSaveData InConstructionData) :
+		BuildingClass(InBuildingClass)
+		, BuildingData(InBuildingData)
+		, BuildingTransform(InTransform)
+		, BuildingMesh(InMesh)
+		, ConstructionData(InConstructionData)
+	{};
+
 public:
 	UPROPERTY()
 	TSubclassOf<AActor> BuildingClass;
+
+	UPROPERTY()
+	UBuildingData* BuildingData;
 
 	UPROPERTY()
 	FTransform BuildingTransform;
 
 	UPROPERTY()
 	UStaticMesh* BuildingMesh;
+
+	UPROPERTY()
+	FConstructionSaveData ConstructionData;
 };
 
 USTRUCT(BlueprintType)

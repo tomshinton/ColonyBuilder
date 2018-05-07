@@ -51,7 +51,7 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 
 	FVector TraceStart = PosUnderMouseRaw;
 	FCollisionQueryParams TraceParams;
-	FVector TraceEnd = PosUnderMouseRaw + (DirUnderMouse * 10000);
+	FVector TraceEnd = PosUnderMouseRaw + (DirUnderMouse * 50000);
 
 	ReferenceActor->ActorLineTraceSingle(HitRes, TraceStart, TraceEnd, ECC_Camera, TraceParams);
 

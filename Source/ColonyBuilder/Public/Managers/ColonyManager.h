@@ -15,6 +15,7 @@ class COLONYBUILDER_API UColonyManager : public UObject
 
 public:
 	void SetManagerName(FString InManagerName) { ManagerName = InManagerName; }
+	FString GetManagerName() { return ManagerName; }
 	
 	virtual void PostInitProperties() override;
 

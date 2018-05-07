@@ -14,6 +14,7 @@
 #include "ColonyBuilderGameModeBase.h"
 #include "BuildableBase.h"
 #include "DrawDebugHelpers.h"
+#include "ConstructionComponent.h"
 
 DEFINE_LOG_CATEGORY(BuildCompLogError);
 
@@ -87,7 +88,13 @@ void UBuildComponent::RotatePlacement()
 
 void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 {
+	if (IsEnabled)
+	{
+		SetEnabled(false);
+	}
+
 	SetEnabled(true);
+
 	BuildingData = InBuildingData;
 
 	if (BuildingData)
@@ -341,6 +348,8 @@ void UBuildComponent::AlignAndOrientate()
 
 void UBuildComponent::EndPlacement()
 {
+	TArray<AActor*> SpawnedBuildings;
+
 	if (HasStartedBuilding)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
@@ -363,6 +372,8 @@ void UBuildComponent::EndPlacement()
 			{
 				ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
 				NewBuilding->SubBuildings = SubBuildings;
+				
+				SpawnedBuildings.Add(NewBuilding);
 			}
 
 			for (FSubBuilding& SubBuilding : SubBuildings)
@@ -376,12 +387,32 @@ void UBuildComponent::EndPlacement()
 				if (SubBuilding.SubBuildingType == ESubBuildingType::Body)
 				{
 					AGridBodyBase* NewSubBuilding = GetWorld()->SpawnActor<AGridBodyBase>(BuildingData->BodyClass, SubBuilding.Location, FRotator(0, 0, 0));
+
+					SpawnedBuildings.Add(NewSubBuilding);
 				}
 
 				if (SubBuilding.PointType == EPointType::LinearPoint)
 				{
 					ABuildableBase* NewSubBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, SubBuilding.Location, FVector(SubBuilding.Direction.X, SubBuilding.Direction.Y, 0).Rotation());
 					NewSubBuilding->MeshComponent->SetStaticMesh(*BuildingData->SubBuildingMeshes.Find(SubBuilding.SubBuildingType));
+
+					SpawnedBuildings.Add(NewSubBuilding);
+				}
+			}
+		}
+
+		for (AActor* SpawnedBuilding : SpawnedBuildings)
+		{
+			if (SpawnedBuilding)
+			{
+				TArray<UConstructionComponent*> ConstructionComponents;
+				SpawnedBuilding->GetComponents<UConstructionComponent>(ConstructionComponents);
+				for (UConstructionComponent* ConstructionComp : ConstructionComponents)
+				{
+					if (IConstructionInterface* ConstructionInterface = Cast<IConstructionInterface>(ConstructionComp))
+					{
+						ConstructionInterface->StartConstruction(BuildingData);
+					}
 				}
 			}
 		}
