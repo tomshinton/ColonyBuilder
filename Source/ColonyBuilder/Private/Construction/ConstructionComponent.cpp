@@ -12,9 +12,26 @@ UConstructionComponent::UConstructionComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UConstructionComponent::BeginPlay()
+{
+	if (GetOwner())
+	{
+		TArray<UConstructionSiteComponent*> FoundComponentsRaw;
+		GetOwner()->GetComponents(FoundComponentsRaw);
+
+		for (UActorComponent* FoundComponent : FoundComponentsRaw)
+		{
+			if (UConstructionSiteComponent* NewSite = Cast<UConstructionSiteComponent>(FoundComponent))
+			{
+				FoundConstructionSites.AddUnique(NewSite);
+			}
+		}
+	}
+}
+
 FConstructionCallback UConstructionComponent::GetTickCallbackInfo()
 {
-	FConstructionCallback NewCallback(true, 1);
+	FConstructionCallback NewCallback(true, FoundConstructionSites.Num());
 
 	//Get number of nearby assigned builders
 	
@@ -49,6 +66,7 @@ bool UConstructionComponent::RegisterNewConstruction()
 	return false;
 }
 
+#pragma region SaveData
 FConstructionSaveData UConstructionComponent::GetConstructionSaveData()
 {
 	float TotalBuildTime;
@@ -81,6 +99,7 @@ void UConstructionComponent::SetConstructionLoadData(FConstructionSaveData InLoa
 		RegisterNewConstruction();
 	}
 }
+#pragma endregion SaveData
 
 //IConstructionInterface
 void UConstructionComponent::StartConstruction(UBuildingData* InBuildingData)
@@ -96,7 +115,7 @@ void UConstructionComponent::StartConstruction(UBuildingData* InBuildingData)
 
 void UConstructionComponent::UpdateConstructionTime(float InUpdatedTime)
 {
-	BuildTimeLeft -= InUpdatedTime;
+	BuildTimeLeft -= (InUpdatedTime * FoundConstructionSites.Num());
 
 	float PercentageComplete = 1-(BuildTimeLeft / BuildingData->TotalBuildTime);
 
@@ -108,5 +127,6 @@ void UConstructionComponent::FinishConstruction()
 	CurrStage = EConstructionStage::Finished;
 	OnConstructionFinished.Broadcast();
 }
+
 
 //IConstructionInterface

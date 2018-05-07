@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ConstructionInterface.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
+#include "ConstructionSiteComponent.h"
 
 #include "ConstructionComponent.generated.h"
 
@@ -64,11 +65,14 @@ public:
 	virtual void FinishConstruction() override;
 	//IConstructionInterface
 
+ 	virtual void BeginPlay() override;
+
 private:
 	bool RegisterNewConstruction();
 
 	UBuildingData* BuildingData;
 	float BuildTimeLeft;
+	TArray<UConstructionSiteComponent*> FoundConstructionSites;
 
 	EConstructionStage CurrStage;
 

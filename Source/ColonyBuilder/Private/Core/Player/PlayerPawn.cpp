@@ -23,7 +23,7 @@ APlayerPawn::APlayerPawn()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArm->SetupAttachment(PawnRoot);
 	SpringArm->SetRelativeRotation(FRotator(-45, 0, 0));
-	SpringArm->TargetArmLength = 5000;
+	SpringArm->TargetArmLength = 10000;
 	SpringArm->bDoCollisionTest = false;
 
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));

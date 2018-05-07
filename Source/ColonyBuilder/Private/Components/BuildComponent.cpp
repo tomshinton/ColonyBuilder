@@ -88,7 +88,13 @@ void UBuildComponent::RotatePlacement()
 
 void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 {
+	if (IsEnabled)
+	{
+		SetEnabled(false);
+	}
+
 	SetEnabled(true);
+
 	BuildingData = InBuildingData;
 
 	if (BuildingData)

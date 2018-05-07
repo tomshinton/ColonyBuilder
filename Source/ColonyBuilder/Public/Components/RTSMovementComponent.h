@@ -97,7 +97,7 @@ public:
 	float MaxEdgeMoveStrength = 1.f;
 	float MiddleMouseButtonMoveStrength = 1.f;
 
-	float MaxArmLength = 5000;
+	float MaxArmLength = 10000;
 	float MinArmLength = 1000;
 	float ArmZoomRate = 1000;
 	float CameraZoomSpeed = 2;
