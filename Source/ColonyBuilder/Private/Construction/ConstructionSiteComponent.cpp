@@ -3,6 +3,9 @@
 #include "ConstructionSiteComponent.h"
 #include "ConstructorHelpers.h"
 
+#include "BaseVillager.h"
+#include "VillagerController.h"
+
 UConstructionSiteComponent::UConstructionSiteComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -22,24 +25,20 @@ UConstructionSiteComponent::UConstructionSiteComponent()
 	{
 		Sprite->Sprite = SpriteTextureRef.Object;
 	}
-
 }
 
 void UConstructionSiteComponent::OnEnterConstructionSite(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	if (/*Is a Builder //Are Assigned to this job)*/ true)
+	if (ABaseVillager* LeavingVillager = Cast<ABaseVillager>(OtherActor))
 	{
-		UniqueBuilders.AddUnique(OtherActor);
+		OnNewBuilder.Broadcast(LeavingVillager->GetController());
 	}
 }
 
 void UConstructionSiteComponent::OnLeaveConstructionSite(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (/*Is a Builder //Are Assigned to this job)*/ true)
+	if (ABaseVillager* LeavingVillager = Cast<ABaseVillager>(OtherActor))
 	{
-		if (UniqueBuilders.Contains(OtherActor))
-		{
-			UniqueBuilders.Remove(OtherActor);
-		}
+		OnBuilderLeft.Broadcast(LeavingVillager->GetController());
 	}
 }

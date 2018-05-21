@@ -88,7 +88,7 @@ public:
 	TSubclassOf<AGridBodyBase> BodyClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
-	FVector2D MaxDimentions;
+	FVector2D MaxDimensions;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
 	FVector2D MinDimentions;
@@ -98,6 +98,10 @@ public:
 #pragma region Construction
 	UPROPERTY(EditAnywhere, Category = "Spawning | Construction")
 	float TotalBuildTime;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Construction")
+	int32 MaxBuilders;
+
 #pragma endregion Construction
 
 public:

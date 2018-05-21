@@ -42,18 +42,20 @@ struct FBuildingSaveData
 
 	FBuildingSaveData() {};
 
-	FBuildingSaveData(TSubclassOf<AActor> InBuildingClass, FTransform InTransform, UStaticMesh* InMesh) :
+	FBuildingSaveData(TSubclassOf<AActor> InBuildingClass, FTransform InTransform, UStaticMesh* InMesh, int32 InBuildingID) :
 		BuildingClass(InBuildingClass)
 		, BuildingTransform(InTransform)
 		, BuildingMesh(InMesh)
+		, BuildingID(InBuildingID)
 	{};
 
-	FBuildingSaveData(TSubclassOf<AActor> InBuildingClass, UBuildingData* InBuildingData, FTransform InTransform, UStaticMesh* InMesh, FConstructionSaveData InConstructionData) :
+	FBuildingSaveData(TSubclassOf<AActor> InBuildingClass, UBuildingData* InBuildingData, FTransform InTransform, UStaticMesh* InMesh, FConstructionSaveData InConstructionData, int32 InBuildingID) :
 		BuildingClass(InBuildingClass)
 		, BuildingData(InBuildingData)
 		, BuildingTransform(InTransform)
 		, BuildingMesh(InMesh)
 		, ConstructionData(InConstructionData)
+		, BuildingID(InBuildingID)
 	{};
 
 public:
@@ -68,6 +70,9 @@ public:
 
 	UPROPERTY()
 	UStaticMesh* BuildingMesh;
+
+	UPROPERTY()
+	float BuildingID;
 
 	UPROPERTY()
 	FConstructionSaveData ConstructionData;

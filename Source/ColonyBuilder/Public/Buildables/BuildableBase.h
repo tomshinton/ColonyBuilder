@@ -52,7 +52,7 @@ public:
 	virtual void EnableBuilding();
 
 private:
-
+	int32 BuildingID;
 
 //ISavableInterface
 public:
@@ -67,6 +67,8 @@ public:
 	virtual void OnSelect() override;
 	virtual void OnEndSelect() override;
 	bool IsSelected;
+
+	UPROPERTY()
 	UUI_SelectionBox* SelectionWidget;
 //ISelectionInterface
 

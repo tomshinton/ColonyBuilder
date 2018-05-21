@@ -8,6 +8,8 @@
 #include "Components/BillboardComponent.h"
 #include "ConstructionSiteComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewBuilder, const AController*, NewBuilder);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBuilderLeft, const AController*, LeftBuilder);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COLONYBUILDER_API UConstructionSiteComponent : public USceneComponent
@@ -22,7 +24,8 @@ public:
 
 	UBillboardComponent* Sprite;
 
-	int32 GetNumBuilders() { return UniqueBuilders.Num(); }
+	FOnNewBuilder OnNewBuilder;
+	FOnBuilderLeft OnBuilderLeft;
 
 private:
 	UFUNCTION()
@@ -30,5 +33,4 @@ private:
 	UFUNCTION()
 	void OnLeaveConstructionSite(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	TArray<AActor*> UniqueBuilders;
 };

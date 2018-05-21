@@ -7,8 +7,11 @@
 #include "ConstructionManager.generated.h"
 
 class UConstructionComponent;
+class AVillagerController;
 
-UCLASS()
+DECLARE_LOG_CATEGORY_EXTERN(ConstructionManagerLog, All, All)
+
+UCLASS(Blueprintable)
 class COLONYBUILDER_API UConstructionManager : public UColonyManager
 {
 	GENERATED_BODY()
@@ -18,10 +21,15 @@ class COLONYBUILDER_API UConstructionManager : public UColonyManager
 public:
 
 	void RegisterNewConstructionComponent(UConstructionComponent* NewComponent);
-
 	bool IsComponentRegistered(UConstructionComponent* InComponent);
 
 	virtual void PostInitProperties() override;
+
+	UFUNCTION(BlueprintCallable, Category = Construction)
+	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, FVector& SiteLocation);
+
+	UFUNCTION(BlueprintPure, Category = Construction)
+	TArray<UConstructionComponent*> GetOnGoingConstructs() { return RegisteredComponents; }
 	
 private:
 	void TickComponents();

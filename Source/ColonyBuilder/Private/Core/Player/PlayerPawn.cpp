@@ -55,15 +55,13 @@ void APlayerPawn::BeginPlay()
 	SelectionComponent->SetEnabled(true);
 
 	//Load any saved data, if there is any
-	if (UColonyManager* Manager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManagerByClass(USaveManager::StaticClass()))
+	//if (UColonyManager* Manager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManagerByClass(USaveManager::StaticClass()))
+	if (USaveManager* SaveManager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManager<USaveManager>())
 	{
-		if (USaveManager* SaveManager = Cast<USaveManager>(Manager))
-		{
-			if (SaveManager->GetCurrentSave()->PlayerSaveData.IsValidSetting)
-			{
-				LoadSaveData(SaveManager->GetPlayerSaveInfo());
-			}
-		}
+		//if (USaveManager* SaveManager = Cast<USaveManager>(Manager))
+		//{
+			LoadSaveData(SaveManager->GetCachedPlayerData());
+	/*	}*/
 	}
 }
 
@@ -98,9 +96,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 }
 
-void APlayerPawn::RebindNavigationComponents()
-{
-
+void APlayerPawn::RebindNavigationComponents(){
 }
 
 #pragma region Binds
@@ -168,12 +164,20 @@ void APlayerPawn::Cancel()
 
 FPlayerSaveData APlayerPawn::GetSaveData()
 {
-	FPlayerSaveData NewData(true, GetActorTransform(), SpringArm->GetComponentTransform());
-	return NewData;
+	if (this)
+	{
+		FPlayerSaveData NewData(true, GetActorTransform(), SpringArm->GetComponentTransform());
+		return NewData;
+	}
+	
+	return FPlayerSaveData();
 }
 
 void APlayerPawn::LoadSaveData(const FPlayerSaveData& LoadedData)
 {
-	SetActorTransform(LoadedData.PlayerTransform);
-	SpringArm->SetWorldTransform(LoadedData.CameraTransform);
+	if (LoadedData.IsValidSetting)
+	{
+		SetActorTransform(LoadedData.PlayerTransform);
+		SpringArm->SetWorldTransform(LoadedData.CameraTransform);
+	}
 }

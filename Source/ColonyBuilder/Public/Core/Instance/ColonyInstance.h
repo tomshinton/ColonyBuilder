@@ -20,8 +20,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Managers")
 	void StartManager(TSubclassOf<UColonyManager> ManagerClass, FString ManagerName);
 
+	/*best BP implementation*/
 	UFUNCTION(BlueprintCallable, Category = "Managers")
-	UColonyManager* GetManagerByClass(TSubclassOf<UColonyManager> ManagerClass);
+	UColonyManager* GetManagerFromClass(TSubclassOf<UColonyManager> InManagerClass);
+
+#pragma region Templates
+	/*best cpp implementation*/
+	template<class T>
+	T* GetManager()
+	{
+		for (UColonyManager* Manager : Managers)
+		{
+			if (Manager->IsA(T::StaticClass()))
+			{
+				T* ReturnManager = Cast<T>(Manager);
+				return ReturnManager;
+			}
+		}
+
+		return nullptr;
+	}
+#pragma endregion
 
 private:
 

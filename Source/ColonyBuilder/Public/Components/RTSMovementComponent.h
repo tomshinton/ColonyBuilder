@@ -91,8 +91,8 @@ public:
 	float MoveSpeed;
 	float HeightOffset;
 	
-	float EdgePadding_Major = 100;
-	float EdgePadding_Bottom = 20;
+	float EdgePadding_Major = 20;
+	float EdgePadding_Bottom = 10;
 
 	float MaxEdgeMoveStrength = 1.f;
 	float MiddleMouseButtonMoveStrength = 1.f;

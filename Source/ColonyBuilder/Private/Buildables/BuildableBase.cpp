@@ -24,8 +24,9 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 	if (BuildingData)
 	{
 		MeshComponent->SetStaticMesh(BuildingData->BuildingBaseMesh);
-
+#if WITH_EDITOR
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
+#endif //WITH_EDITOR
 	}
 
 	SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
@@ -44,7 +45,7 @@ void ABuildableBase::EnableBuilding()
 
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
-	FBuildingSaveData NewData(GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData());
+	FBuildingSaveData NewData(GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData(), BuildingID);
 	return NewData;
 }
 

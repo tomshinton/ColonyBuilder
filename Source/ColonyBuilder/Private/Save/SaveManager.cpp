@@ -9,6 +9,8 @@
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "PlayerPawn.h"
 
+#include "AI/Navigation/NavigationSystem.h"
+
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
 DEFINE_LOG_CATEGORY(SaveManager);
@@ -23,32 +25,32 @@ void USaveManager::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	if (!CurrentSave) 
+	if (UColonySave* CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0)))
 	{
-		if (!UGameplayStatics::DoesSaveGameExist(SaveSlot, 0))
-		{
-			CurrentSave = Cast<UColonySave>(UGameplayStatics::CreateSaveGameObject(UColonySave::StaticClass()));
-		}
-		else
-		{
-			CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0));
-			LoadGame(CurrentSave);
-		}
+		LoadGame(CurrentSave);
 	}
 
-	StartAutosaveTimer();
+	if (AutosaveEnabled)
+	{
+		StartAutosaveTimer();
+	}
 }
 
 void USaveManager::SaveGame()
 {
+	UE_LOG(SaveManager, Log, TEXT("Saving Game"));
 	TArray<AActor*> FoundActors;
 	TArray<FBuildingSaveData> SavedBuildings;
 
 	if (UWorld* World = GetWorld())
 	{
+		UColonySave* CurrentSave = Cast<UColonySave>(UGameplayStatics::CreateSaveGameObject(UColonySave::StaticClass()));
+
+		//Get/Create a new save
 		if (CurrentSave)
 		{
 #pragma region Buildings
+			UE_LOG(SaveManager, Log, TEXT("Saving Buildings"));
 			UGameplayStatics::GetAllActorsWithInterface(World, USavableInterface::StaticClass(), FoundActors);
 
 			CurrentSave->SavedBuildables.Empty();
@@ -71,9 +73,10 @@ void USaveManager::SaveGame()
 					}
 				}
 			}
-
+			UE_LOG(SaveManager, Log, TEXT("Saving Player Info"));
 			CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
 #pragma endregion 
+			UE_LOG(SaveManager, Log, TEXT("Saving data to file"));
 			UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
 		}
 	}
@@ -110,11 +113,9 @@ void USaveManager::LoadGame(UColonySave* SaveToLoad)
 			}
 		}
 #pragma endregion
+#pragma region Player
+		CachedPlayerData = SaveToLoad->PlayerSaveData;
+#pragma endregion Player
 	}
-}
-
-FPlayerSaveData USaveManager::GetPlayerSaveInfo()
-{
-	return CurrentSave->PlayerSaveData;
 }
 

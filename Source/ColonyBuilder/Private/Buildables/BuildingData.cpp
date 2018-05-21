@@ -3,7 +3,9 @@
 #include "BuildingData.h"
 #include "ConstructorHelpers.h"
 
-UBuildingData::UBuildingData()
+UBuildingData::UBuildingData() :
+	MaxBuilders(5)
+
 {
 	ConstructorHelpers::FObjectFinder<UMaterialInterface> ValidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/PROTO/Ghosts/M_ValidGHost.M_ValidGhost'"));
 	if (ValidGhostRef.Object)

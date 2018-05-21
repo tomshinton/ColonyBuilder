@@ -3,22 +3,27 @@
 #include "ConstructionManager.h"
 #include "Construction/ConstructionComponent.h"
 
+DEFINE_LOG_CATEGORY(ConstructionManagerLog)
+
 const float UConstructionManager::ConstructionTickRate(0.1);
 
 void UConstructionManager::TickComponents()
 {
-	for (int32 i = RegisteredComponents.Num()-1; i>=0; i--)
+	if (RegisteredComponents.Num() > 0)
 	{
-		UConstructionComponent* CurrComponent = RegisteredComponents[i];
-
-		if (CurrComponent->GetTickCallbackInfo().CanTick)
+		for (int32 i = RegisteredComponents.Num() - 1; i >= 0; i--)
 		{
-			CurrComponent->UpdateConstructionTime(ConstructionTickRate);
+			UConstructionComponent* CurrComponent = RegisteredComponents[i];
 
-			if (CurrComponent->GetCurrentBuildTime() <= 0.f)
+			if (CurrComponent->GetTickCallbackInfo().CanTick)
 			{
-				CurrComponent->FinishConstruction();
-				RegisteredComponents.Remove(CurrComponent);
+				CurrComponent->UpdateConstructionTime(CurrComponent->GetTickCallbackInfo().TickModifier*ConstructionTickRate);
+
+				if (CurrComponent->GetCurrentBuildTime() <= 0.f)
+				{
+					CurrComponent->FinishConstruction();
+					RegisteredComponents.Remove(CurrComponent);
+				}
 			}
 		}
 	}
@@ -49,4 +54,21 @@ void UConstructionManager::PostInitProperties()
 	{
 		GetWorld()->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
 	}
+}
+
+UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(AController* RequestingController, FVector& SiteLocation)
+{
+	for (UConstructionComponent* RegisteredComponent : RegisteredComponents)
+	{
+		if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
+		{
+			if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
+			{
+				RegisteredComponent->RegisterNewBuilder(VillagerController);
+				SiteLocation = RegisteredComponent->GetConstructionSiteLocation();
+				return RegisteredComponent;
+			}
+		}
+	}
+	return nullptr;
 }

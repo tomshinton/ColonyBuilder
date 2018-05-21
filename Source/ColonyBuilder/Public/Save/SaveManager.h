@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
+#include "WeakObjectPtrTemplates.h"
 #include "SaveManager.generated.h"
 
 class APlayerPawn;
@@ -40,7 +41,7 @@ public:
 	virtual void PostInitProperties() override;
 
 	UFUNCTION(BlueprintPure, Category = "Save Game")
-	UColonySave* GetCurrentSave() { return CurrentSave; }
+	FPlayerSaveData GetCachedPlayerData() { return CachedPlayerData; }
 
 	int32 AutosaveFrequency;
 
@@ -65,8 +66,7 @@ private:
 	FTimerHandle AutosaveHandle;
 	bool AutosaveEnabled;
 
-	UPROPERTY()
-	UColonySave* CurrentSave;
+	FPlayerSaveData CachedPlayerData;
 
 	APlayerPawn* LocalPawnRef;
 };

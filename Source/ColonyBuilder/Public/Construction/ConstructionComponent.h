@@ -7,6 +7,7 @@
 #include "ConstructionInterface.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "ConstructionSiteComponent.h"
+#include "VillagerController.h"
 
 #include "ConstructionComponent.generated.h"
 
@@ -14,6 +15,8 @@ class UBuildingData;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnConstructionFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnConstructionUpdated, const float&, PercentageComplete);
+
+DECLARE_LOG_CATEGORY_EXTERN(ConstructionComponentLog, All, All)
 
 USTRUCT(BlueprintType)
 struct FConstructionCallback
@@ -45,19 +48,40 @@ public:
 		
 public:
 
-	FConstructionCallback GetTickCallbackInfo();
-	float GetCurrentBuildTime() { return BuildTimeLeft; }
+ 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintPure, Category = Construction)
 	float GetConstructionPercentageReadable();
+
+	UFUNCTION(BlueprintPure, Category = Construction)
+	FVector GetConstructionSiteLocation();
+
+	UFUNCTION(BlueprintPure, Category = Construction)
+	EConstructionStage GetCurrConstructionStage() { return CurrStage; }
+
+	UFUNCTION(BlueprintCallable, Category = Construction)
+	void GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders);
 
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionUpdated OnConstructionUpdated;
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionFinished OnConstructionFinished;
 
+	FConstructionCallback GetTickCallbackInfo();
+	float GetCurrentBuildTime() { return BuildTimeLeft; }
+
 	FConstructionSaveData GetConstructionSaveData();
 	void SetConstructionLoadData(FConstructionSaveData InLoadedData, UBuildingData* InBuildingData);
+
+	bool CanAcceptAnyMoreBuilders(AController* RequestingController);
+
+	UFUNCTION()
+	void NewLocalBuilder(const AController* NewBuilder);
+	UFUNCTION()
+	void LocalBuilderLeft(const AController* LeavingBuilder);
+
+	void RegisterNewBuilder(AVillagerController* RegisteredController);
+
 
 	//IConstructionInterface
 	virtual void StartConstruction(UBuildingData* InBuildingData) override;
@@ -65,7 +89,6 @@ public:
 	virtual void FinishConstruction() override;
 	//IConstructionInterface
 
- 	virtual void BeginPlay() override;
 
 private:
 	bool RegisterNewConstruction();
@@ -77,4 +100,7 @@ private:
 	EConstructionStage CurrStage;
 
 	FConstructionSaveData SaveData;
+
+	TArray<const AVillagerController*> RegisteredBuilders;
+	TArray<const AVillagerController*> LocalBuilders;
 };

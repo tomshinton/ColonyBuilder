@@ -18,7 +18,7 @@ void AColonyBuilderGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReaso
 	{
 		if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
 		{
-			if (USaveManager* SaveManager = Cast<USaveManager>(GameInst->GetManagerByClass(USaveManager::StaticClass())))
+			if(USaveManager* SaveManager = GameInst->GetManager<USaveManager>())
 			{
 				SaveManager->SaveGame();
 			}
