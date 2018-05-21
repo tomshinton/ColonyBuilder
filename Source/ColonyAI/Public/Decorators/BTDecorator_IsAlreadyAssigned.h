@@ -13,9 +13,13 @@ UCLASS()
 class COLONYAI_API UBTDecorator_IsAlreadyAssigned : public UBTDecorator
 {
 	GENERATED_BODY()
-	
+
+	UBTDecorator_IsAlreadyAssigned();
 		
 protected:
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+
+private:
+	virtual FString GetStaticDescription() const override;
 
 };

@@ -62,6 +62,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Construction)
 	void GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders);
 
+	TArray<const AVillagerController*> const GetRegisteredBuilders() { return RegisteredBuilders; }
+	TArray<const AVillagerController*> const GetLocalBuilders() { return LocalBuilders; }
+
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionUpdated OnConstructionUpdated;
 	UPROPERTY(BlueprintAssignable, Category = Construction)

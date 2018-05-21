@@ -23,6 +23,7 @@ public:
 	void RegisterNewConstructionComponent(UConstructionComponent* NewComponent);
 	bool IsComponentRegistered(UConstructionComponent* InComponent);
 
+	bool IsControllerAlreadyRegistered(AVillagerController* InController);
 	virtual void PostInitProperties() override;
 
 	UFUNCTION(BlueprintCallable, Category = Construction)

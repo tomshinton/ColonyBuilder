@@ -46,6 +46,21 @@ bool UConstructionManager::IsComponentRegistered(UConstructionComponent* InCompo
 	}
 }
 
+bool UConstructionManager::IsControllerAlreadyRegistered(AVillagerController* InController)
+{
+	bool IsRegistered = false;
+
+	for (UConstructionComponent* RegisteredComponent : RegisteredComponents)
+	{
+		if (RegisteredComponent->GetLocalBuilders().Contains(InController))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void UConstructionManager::PostInitProperties()
 {
 	Super::PostInitProperties();
