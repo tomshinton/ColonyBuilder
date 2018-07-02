@@ -5,6 +5,7 @@
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
 #include "Engine/EngineTypes.h"
+#include "Utils/Libraries/CollisionChannels.h"
 
 void USelectionComponent::SetEnabled(bool InEnabled)
 {
@@ -36,7 +37,7 @@ void USelectionComponent::HoverCheck(const FVector& PosUnderMouse, const FVector
 	{
 	
 		FHitResult HitResult;
-		OwningController->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+		OwningController->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(CC_SELECTION), true, HitResult);
 
 		if (!HitResult.Actor.Get() && HoveredInterface)
 		{

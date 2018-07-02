@@ -13,6 +13,7 @@ UConstructionSiteComponent::UConstructionSiteComponent()
 	CollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision Component"));
 	CollisionComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, NAME_None);
 	CollisionComponent->SetBoxExtent(FVector(200, 200, 200), true);
+	CollisionComponent->SetCollisionProfileName("OverlapAllDynamic");
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &UConstructionSiteComponent::OnEnterConstructionSite);
 	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &UConstructionSiteComponent::OnLeaveConstructionSite);
 

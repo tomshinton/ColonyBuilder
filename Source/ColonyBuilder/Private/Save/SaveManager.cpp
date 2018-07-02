@@ -18,7 +18,7 @@ DEFINE_LOG_CATEGORY(SaveManager);
 USaveManager::USaveManager()
 {
 	AutosaveFrequency = 5.f;
-	AutosaveEnabled = true;
+	AutosaveEnabled = false;
 }
 
 void USaveManager::PostInitProperties()

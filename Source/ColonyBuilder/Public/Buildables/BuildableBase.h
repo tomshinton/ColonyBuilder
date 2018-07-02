@@ -51,8 +51,15 @@ public:
 	UFUNCTION()
 	virtual void EnableBuilding();
 
+	void CheckCanEnableBuilding();
+
+	UFUNCTION()
+	void StartEnableChecks();
+
 private:
 	int32 BuildingID;
+	FTimerHandle CanEnableBuildingHandle;
+
 
 //ISavableInterface
 public:

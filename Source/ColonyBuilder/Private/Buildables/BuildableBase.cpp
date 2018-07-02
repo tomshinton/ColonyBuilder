@@ -11,12 +11,12 @@ ABuildableBase::ABuildableBase()
 	RootComponent = SceneRoot;
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh"));
-	MeshComponent->SetCollisionProfileName("BlockAllDynamic");
+	MeshComponent->SetCollisionProfileName("ConstructionSite");
 	MeshComponent->SetupAttachment(SceneRoot);
 	MeshComponent->bGenerateOverlapEvents = true;
 
 	ConstructionComponent = CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component"));
-	ConstructionComponent->OnConstructionFinished.AddDynamic(this, &ABuildableBase::EnableBuilding);
+	ConstructionComponent->OnConstructionFinished.AddDynamic(this, &ABuildableBase::StartEnableChecks);
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -27,20 +27,38 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 #if WITH_EDITOR
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
 #endif //WITH_EDITOR
+
+		SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
+		SelectionWidget->SetSelectedActor(this);
+
+		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
 	}
-
-	SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
-	SelectionWidget->SetSelectedActor(this);
-
-	ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
-	ConstructionComponent->OnConstructionFinished.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionFinished);
 }
 
 #pragma region SavableInterface
 
 void ABuildableBase::EnableBuilding()
 {
+	if (SelectionWidget)
+	{
+		SelectionWidget->OnConstructionFinished();
+	}
 
+	MeshComponent->SetCollisionProfileName("Building");
+}
+
+void ABuildableBase::CheckCanEnableBuilding()
+{
+	if (true /*is there anyone overlapping this?*/)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CanEnableBuildingHandle);
+		EnableBuilding();
+	}
+}
+
+void ABuildableBase::StartEnableChecks()
+{
+	GetWorld()->GetTimerManager().SetTimer(CanEnableBuildingHandle, this, &ABuildableBase::CheckCanEnableBuilding, 0.5f, true, 0.f);
 }
 
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
@@ -53,6 +71,11 @@ void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
 {
 	MeshComponent->SetStaticMesh(LoadedData.BuildingMesh);
 	ConstructionComponent->SetConstructionLoadData(LoadedData.ConstructionData, BuildingData);
+
+	if (ConstructionComponent->GetCurrConstructionStage() == EConstructionStage::Finished)
+	{
+		EnableBuilding();
+	}
 }
 #pragma endregion SavableInterface
 

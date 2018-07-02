@@ -9,6 +9,7 @@
 #include "ColonyBuilderGameModeBase.h"
 #include "BuildingData.h"
 #include "PointValidationRules.h"
+#include "CollisionChannels.h"
 
 #include "GridUtils.generated.h"
 
@@ -74,7 +75,7 @@ public:
 		const FVector& StartPoint = InPoint.Location + FVector(0, 0, 1000);
 		const FVector& EndPoint = InPoint.Location + FVector(0, 0, -100);
 		FCollisionShape Box = FCollisionShape::MakeBox(FVector(AColonyBuilderGameModeBase::GridSize / 2.1, AColonyBuilderGameModeBase::GridSize / 2.1, 1.f));
-		WorldContext->GetWorld()->SweepMultiByChannel(OverlapsAtPoint, StartPoint, EndPoint, FRotator::ZeroRotator.Quaternion(), ECC_Visibility, Box, TraceParams);
+		WorldContext->GetWorld()->SweepMultiByChannel(OverlapsAtPoint, StartPoint, EndPoint, FRotator::ZeroRotator.Quaternion(), CC_PLACEMENT, Box, TraceParams);
 
 		for (int32 i = OverlapsAtPoint.Num() - 1; i >= 0; i--)
 		{
