@@ -32,4 +32,7 @@ public:
 	
 	UPROPERTY(SaveGame)
 	FPlayerSaveData PlayerSaveData;
+
+	UPROPERTY(SaveGame)
+	TArray<FVillagerSaveData> SavedVillagers;
 };

@@ -14,9 +14,5 @@ class COLONYAI_API UBTDecorator_ShouldRepath : public UBTDecorator
 {
 	GENERATED_BODY()
 
-	UBTDecorator_ShouldRepath();
-
-
-	
 	
 };

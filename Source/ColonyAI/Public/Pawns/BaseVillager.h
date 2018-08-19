@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
+#include "Utils/DataTypes/SaveDataTypes.h"
 
 #include "BaseVillager.generated.h"
 
@@ -18,4 +19,6 @@ class COLONYAI_API ABaseVillager : public ACharacter
 public:
 	ABaseVillager();
 
+	FVillagerSaveData GetSaveData();
+	void LoadVillagerSaveData(const FVillagerSaveData& InData);
 };

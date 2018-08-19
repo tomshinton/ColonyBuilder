@@ -10,6 +10,7 @@
 #include "PlayerPawn.h"
 
 #include "AI/Navigation/NavigationSystem.h"
+#include "BaseVillager.h"
 
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
@@ -18,7 +19,7 @@ DEFINE_LOG_CATEGORY(SaveManager);
 USaveManager::USaveManager()
 {
 	AutosaveFrequency = 5.f;
-	AutosaveEnabled = false;
+	AutosaveEnabled = true;
 }
 
 void USaveManager::PostInitProperties()
@@ -62,8 +63,9 @@ void USaveManager::SaveGame()
 				}
 			}
 #pragma endregion 
+
 #pragma region Player
-			if (!LocalPawnRef)
+			if (!LocalPawnRef.IsValid())
 			{
 				if (APawn* LocalPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
 				{
@@ -73,21 +75,45 @@ void USaveManager::SaveGame()
 					}
 				}
 			}
-			UE_LOG(SaveManager, Log, TEXT("Saving Player Info"));
-			CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+
+			if (LocalPawnRef.IsValid())
+			{
+				UE_LOG(SaveManager, Log, TEXT("Saving Player Info"));
+				CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+			}
 #pragma endregion 
-			UE_LOG(SaveManager, Log, TEXT("Saving data to file"));
-			UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
+
+#pragma region AI
+
+			TArray<AActor*> FoundVillagers;
+			UGameplayStatics::GetAllActorsOfClass(World, ABaseVillager::StaticClass(), FoundVillagers);
+
+			for (AActor* FoundVillager : FoundVillagers)
+			{
+				if (ABaseVillager* Villager = Cast<ABaseVillager>(FoundVillager))
+				{
+					CurrentSave->SavedVillagers.Add(Villager->GetSaveData());
+				}
+			}
+
+
+#pragma endregion 
+
+				UE_LOG(SaveManager, Log, TEXT("Saving data to file"));
+				UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
 		}
 	}
 }
 
 void USaveManager::StartAutosaveTimer()
 {
-	if (GetWorld() && AutosaveEnabled)
+	if (UWorld* World = GetWorld())
 	{
-		AutosaveHandle.Invalidate();
-		GetWorld()->GetTimerManager().SetTimer(AutosaveHandle, this, &USaveManager::SaveGame, AutosaveFrequency, true, 0.f);
+		if (AutosaveEnabled)
+		{
+			AutosaveHandle.Invalidate();
+			World->GetTimerManager().SetTimer(AutosaveHandle, this, &USaveManager::SaveGame, AutosaveFrequency, true, 0.f);
+		}
 	}
 }
 

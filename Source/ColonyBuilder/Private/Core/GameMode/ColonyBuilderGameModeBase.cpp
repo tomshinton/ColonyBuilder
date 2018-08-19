@@ -20,7 +20,7 @@ void AColonyBuilderGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReaso
 		{
 			if(USaveManager* SaveManager = GameInst->GetManager<USaveManager>())
 			{
-				SaveManager->SaveGame();
+				//SaveManager->SaveGame();
 			}
 		}
 	}

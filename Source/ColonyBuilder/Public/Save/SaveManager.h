@@ -68,5 +68,6 @@ private:
 
 	FPlayerSaveData CachedPlayerData;
 
-	APlayerPawn* LocalPawnRef;
+	UPROPERTY()
+	TWeakObjectPtr<APlayerPawn> LocalPawnRef;
 };

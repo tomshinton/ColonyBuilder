@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "BuildingDataTypes.h"
+#include "Datatypes/PackedBlackboard.h"
 
 #include "SaveDataTypes.generated.h"
 
 class UBuildingData;
+class APawn;
 
 USTRUCT()
 struct FConstructionSaveData
@@ -81,7 +83,6 @@ public:
 USTRUCT(BlueprintType)
 struct FPlayerSaveData
 {
-
 	GENERATED_USTRUCT_BODY()
 
 	FPlayerSaveData() :
@@ -104,4 +105,32 @@ public:
 
 	UPROPERTY()
 	FTransform CameraTransform;
+};
+
+USTRUCT(BlueprintType)
+struct FVillagerSaveData
+{
+	GENERATED_BODY();
+
+	FVillagerSaveData() 
+		: PawnClass()
+		, VillagerTransform(FTransform())
+		, PackedBlackboard()
+	{}
+
+
+	FVillagerSaveData(TSubclassOf<APawn> InPawnClass, const FTransform InTransform, FPackedBlackboard InPackedBlackoboard)
+		: PawnClass(InPawnClass)
+		, VillagerTransform(InTransform)
+		, PackedBlackboard(InPackedBlackoboard)
+	{}
+
+	UPROPERTY()
+	TSubclassOf<APawn> PawnClass;
+
+	UPROPERTY()
+	FTransform VillagerTransform;
+
+	UPROPERTY()
+	FPackedBlackboard PackedBlackboard;
 };
