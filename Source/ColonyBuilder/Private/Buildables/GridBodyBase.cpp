@@ -7,7 +7,7 @@ const FName AGridBodyBase::MeshName = FName("MeshName");
 
 FBuildingSaveData AGridBodyBase::GetBuildingSaveData()
 {
-	FBuildingSaveData NewData(GetClass(), GetActorTransform(), nullptr, BuildingID);
+	FBuildingSaveData NewData(BuildingID, GetClass(), GetActorTransform(), nullptr);
 	return NewData;
 }
 

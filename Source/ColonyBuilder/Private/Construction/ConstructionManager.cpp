@@ -2,31 +2,80 @@
 
 #include "ConstructionManager.h"
 #include "Construction/ConstructionComponent.h"
+#include "BuildableBase.h"
 
 DEFINE_LOG_CATEGORY(ConstructionManagerLog)
 
-const float UConstructionManager::ConstructionTickRate(0.1);
+const float UConstructionManager::ConstructionTickRate(0.01);
+
+void UConstructionManager::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
+	}
+}
 
 void UConstructionManager::TickComponents()
 {
 	if (RegisteredComponents.Num() > 0)
 	{
-		for (int32 i = RegisteredComponents.Num() - 1; i >= 0; i--)
+		if (UConstructionComponent* CurrComponent = RegisteredComponents[CurrentRegisteredIndex].Get())
 		{
-			UConstructionComponent* CurrComponent = RegisteredComponents[i];
-
 			if (CurrComponent->GetTickCallbackInfo().CanTick)
 			{
-				CurrComponent->UpdateConstructionTime(CurrComponent->GetTickCallbackInfo().TickModifier*ConstructionTickRate);
+				const float UpdateAmount = CurrComponent->GetTickCallbackInfo().TickModifier*ConstructionTickRate * (RegisteredComponents.Num() + 1);
+				CurrComponent->UpdateConstructionTime(UpdateAmount);
 
 				if (CurrComponent->GetCurrentBuildTime() <= 0.f)
 				{
-					CurrComponent->FinishConstruction();
 					RegisteredComponents.Remove(CurrComponent);
+					PendingFinishedComponents.Add(CurrComponent);
 				}
 			}
 		}
 	}
+
+	(CurrentRegisteredIndex + 1) > RegisteredComponents.Num() - 1 ? CurrentRegisteredIndex = 0 : CurrentRegisteredIndex++;
+
+	if (PendingFinishedComponents.Num() > 0)
+	{
+		for (int32 i = PendingFinishedComponents.Num() - 1; i >= 0; i--)
+		{
+			if (UConstructionComponent* ComponentPtr = PendingFinishedComponents[i].Get())
+			{
+				if (ComponentPtr->CanFinish())
+				{
+					ComponentPtr->FinishConstruction();
+					PendingFinishedComponents.RemoveAt(i);
+
+					if (ABuildableBase* FinishedBuilding = Cast<ABuildableBase>(ComponentPtr->GetOwner()))
+					{
+						FinishedBuildings.Add(FinishedBuilding);
+					}
+				}
+			}
+		}
+	}
+}
+
+UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite)
+{
+	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
+	{
+		if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
+		{
+			if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
+			{
+				RegisteredComponent->RegisterNewBuilder(VillagerController);
+				ConstructionSite = RegisteredComponent->GetRandomConstructionSite();
+				return RegisteredComponent.Get();
+			}
+		}
+	}
+	return nullptr;
 }
 
 void UConstructionManager::RegisterNewConstructionComponent(UConstructionComponent* NewComponent)
@@ -46,13 +95,13 @@ bool UConstructionManager::IsComponentRegistered(UConstructionComponent* InCompo
 	}
 }
 
-bool UConstructionManager::IsControllerAlreadyRegistered(AVillagerController* InController)
+bool UConstructionManager::IsControllerOnActiveComponent(AVillagerController* InController) const
 {
 	bool IsRegistered = false;
 
-	for (UConstructionComponent* RegisteredComponent : RegisteredComponents)
+	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
 	{
-		if (RegisteredComponent->GetLocalBuilders().Contains(InController))
+		if(RegisteredComponent.Get()->GetRegisteredBuilders().Contains(InController))
 		{
 			return true;
 		}
@@ -61,29 +110,54 @@ bool UConstructionManager::IsControllerAlreadyRegistered(AVillagerController* In
 	return false;
 }
 
-void UConstructionManager::PostInitProperties()
+bool UConstructionManager::IsControllerOnPendingFinishComponent(AVillagerController* InController) const
 {
-	Super::PostInitProperties();
+	bool IsRegistered = false;
 
-	if (GetWorld())
+	for (TWeakObjectPtr<UConstructionComponent> PendingComponent : PendingFinishedComponents)
 	{
-		GetWorld()->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
+		if (PendingComponent.Get()->GetRegisteredBuilders().Contains(InController))
+		{
+			return true;
+		}
 	}
+
+	return false;
 }
 
-UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(AController* RequestingController, FVector& SiteLocation)
+TWeakObjectPtr<ABuildableBase> UConstructionManager::IsPawnRegisteredAsEmployee(ABaseVillager* InVillager) const
 {
-	for (UConstructionComponent* RegisteredComponent : RegisteredComponents)
+	//Is this pawn registered to any of of our Finished Buildings as an employee?
+
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
 	{
-		if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
+		if (FinishedBuilding.IsValid())
 		{
-			if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
+			if (FinishedBuilding.Get()->RegisteredEmployees.Contains(InVillager->VillagerID))
 			{
-				RegisteredComponent->RegisterNewBuilder(VillagerController);
-				SiteLocation = RegisteredComponent->GetConstructionSiteLocation();
-				return RegisteredComponent;
+				return FinishedBuilding;
 			}
 		}
 	}
+
 	return nullptr;
 }
+
+TWeakObjectPtr<ABuildableBase> UConstructionManager::IsPawnRegistedAsResident(ABaseVillager* InVillager) const
+{
+	//Is this pawn registered to any of our Finished Buildings as a Resident? 
+
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (FinishedBuilding.IsValid())
+		{
+			if (FinishedBuilding.Get()->RegisteredResidents.Contains(InVillager->VillagerID))
+			{
+				return FinishedBuilding;
+			}
+		}
+	}
+
+	return nullptr;
+}
+

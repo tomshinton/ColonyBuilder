@@ -7,6 +7,7 @@
 #include "PlayerPawn.h"
 
 #include "GameFramework/GameModeBase.h"
+#include "BaseVillager.h"
 #include "ColonyBuilderGameModeBase.generated.h"
 
 /**
@@ -20,9 +21,16 @@ class COLONYBUILDER_API AColonyBuilderGameModeBase : public AGameModeBase
 	AColonyBuilderGameModeBase();
 
 public:
+	UPROPERTY(EditDefaultsOnly, Category = Defaults)
+	TSubclassOf<ABaseVillager> VillagerClass;
+
 	static const int32 GridSize;
 	static const bool SaveOnExit;
 	
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+
+protected:
+	virtual void BeginPlay() override;
 
 };

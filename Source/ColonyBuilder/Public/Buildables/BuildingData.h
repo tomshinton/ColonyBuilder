@@ -34,7 +34,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Readability")
 	FString BuildingSubcategory;
 
-#pragma endregion Readability
+#pragma endregion 
 	
 #pragma region Rendering
 
@@ -50,7 +50,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
 	bool ShouldHideBaseMeshOnStartPlacement;
 
-#pragma endregion Rendering
+#pragma endregion 
 
 #pragma region Materials
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
@@ -61,7 +61,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Materials")
 	UMaterialInterface* OnSelectionMaterial;
-#pragma endregion Materials
+#pragma endregion 
 
 #pragma region UI
 	UPROPERTY(EditAnywhere, Category = "UI")
@@ -69,7 +69,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUI_SelectionBox> SelectionWidget;
-#pragma endregion UI
+#pragma endregion 
 
 #pragma region Spawning
 	UPROPERTY(EditAnywhere, Category = "Spawning | Actions")
@@ -93,7 +93,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
 	FVector2D MinDimentions;
 
-#pragma endregion Spawning
+#pragma endregion 
 
 #pragma region Construction
 	UPROPERTY(EditAnywhere, Category = "Spawning | Construction")
@@ -102,9 +102,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning | Construction")
 	int32 MaxBuilders;
 
-#pragma endregion Construction
+#pragma endregion 
 
+#pragma region Professions
+	UPROPERTY(EditAnywhere, Category = "Professions | Construction")
+	TArray<TSubclassOf<UProfessionBase>> Professions;
+#pragma endregion
+	
 public:
 	FString GetFullCategoryAsString();
-
 };

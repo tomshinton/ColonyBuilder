@@ -5,6 +5,7 @@
 #include "SaveManager.h"
 #include "Construction/ConstructionManager.h"
 #include "AI/Navigation/NavigationSystem.h"
+#include "Managers/VillagerManager.h"
 
 
 DEFINE_LOG_CATEGORY(ColonyInstanceLog);
@@ -21,6 +22,7 @@ void UColonyInstance::Init()
 
 	//Gameplay critical managers - need to be instantiated first.
 	StartManager(UConstructionManager::StaticClass(), "Construction Manager");
+	StartManager(UVillagerManager::StaticClass(), "Villager Manager");
 	StartManager(USaveManager::StaticClass(), "Save Manager");
 }
 

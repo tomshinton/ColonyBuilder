@@ -11,6 +11,8 @@
 
 #include "AI/Navigation/NavigationSystem.h"
 #include "BaseVillager.h"
+#include "VillagerManager.h"
+#include "ColonyInstance.h"
 
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
@@ -19,7 +21,7 @@ DEFINE_LOG_CATEGORY(SaveManager);
 USaveManager::USaveManager()
 {
 	AutosaveFrequency = 5.f;
-	AutosaveEnabled = true;
+	AutosaveEnabled = false;
 }
 
 void USaveManager::PostInitProperties()
@@ -125,23 +127,36 @@ void USaveManager::SetAutosaveFrequency(int32 InAutosaveFrequency)
 
 void USaveManager::LoadGame(UColonySave* SaveToLoad)
 {
-	if (SaveToLoad && GetWorld())
+	if (SaveToLoad)
 	{
-#pragma region Buildings
-		FActorSpawnParameters SpawnParams;
-
-		for (FBuildingSaveData SavedBuilding : SaveToLoad->SavedBuildables)
+		if (UWorld* World = GetWorld())
 		{
-			if (auto* NewBuilding = GetWorld()->SpawnActor<AActor>(SavedBuilding.BuildingClass, SavedBuilding.BuildingTransform, SpawnParams))
+			FActorSpawnParameters SpawnParams;
+
+			for (FBuildingSaveData& SavedBuilding : SaveToLoad->SavedBuildables)
 			{
-				ISavableInterface* SaveInterface = Cast<ISavableInterface>(NewBuilding);
-				SaveInterface->LoadBuildingSaveData(SavedBuilding);
+				if (auto* NewBuilding = GetWorld()->SpawnActor<AActor>(SavedBuilding.BuildingClass, SavedBuilding.BuildingTransform, SpawnParams))
+				{
+					ISavableInterface* SaveInterface = Cast<ISavableInterface>(NewBuilding);
+					SaveInterface->LoadBuildingSaveData(SavedBuilding);
+				}
+			}
+		
+			//Store player data because the Player hasnt spawned yet
+			CachedPlayerData = SaveToLoad->PlayerSaveData;
+
+			for (FVillagerSaveData& SavedVillagerData : SaveToLoad->SavedVillagers)
+			{
+				if (SavedVillagerData.PawnClass)
+				{
+					if (UVillagerManager* VillagerManager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(World))->GetManager<UVillagerManager>())
+					{
+						//Respawn the villagers from save
+						VillagerManager->CreateVillagerFromSavedata(SavedVillagerData);
+					}
+				}
 			}
 		}
-#pragma endregion
-#pragma region Player
-		CachedPlayerData = SaveToLoad->PlayerSaveData;
-#pragma endregion Player
 	}
-}
 
+}

@@ -4,12 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Managers/ColonyManager.h"
+#include "ConstructionSiteComponent.h"
+#include "BaseVillager.h"
 #include "ConstructionManager.generated.h"
 
 class UConstructionComponent;
 class AVillagerController;
+class ABuildableBase;
 
 DECLARE_LOG_CATEGORY_EXTERN(ConstructionManagerLog, All, All)
+
+//////////////////////////////////////////////////////////////////////////
+// Construction Manager - UObject in charge or managing all ongoing construction projects
+//////////////////////////////////////////////////////////////////////////
 
 UCLASS(Blueprintable)
 class COLONYBUILDER_API UConstructionManager : public UColonyManager
@@ -23,18 +30,48 @@ public:
 	void RegisterNewConstructionComponent(UConstructionComponent* NewComponent);
 	bool IsComponentRegistered(UConstructionComponent* InComponent);
 
-	bool IsControllerAlreadyRegistered(AVillagerController* InController);
+	bool IsControllerOnActiveComponent(AVillagerController* InController) const;
+	bool IsControllerOnPendingFinishComponent(AVillagerController* InController) const;
+
+	TWeakObjectPtr<ABuildableBase> IsPawnRegisteredAsEmployee(ABaseVillager* InVillager) const;
+	TWeakObjectPtr<ABuildableBase> IsPawnRegistedAsResident(ABaseVillager* InVillager) const;
+
 	virtual void PostInitProperties() override;
 
-	UFUNCTION(BlueprintCallable, Category = Construction)
-	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, FVector& SiteLocation);
+	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite);
 
 	UFUNCTION(BlueprintPure, Category = Construction)
-	TArray<UConstructionComponent*> GetOnGoingConstructs() { return RegisteredComponents; }
+	TArray<UConstructionComponent*> GetOnGoingConstructs() { return GetRegisteredComponentsAsRaw(); }
 	
+	TArray<UConstructionComponent*> GetRegisteredComponentsAsRaw()
+	{
+		TArray<UConstructionComponent*> Constructs;
+
+		for (TWeakObjectPtr<UConstructionComponent> Component : RegisteredComponents)
+		{
+			if (Component.IsValid())
+			{
+				Constructs.Add(Component.Get());
+			}
+		}
+
+		return Constructs;
+	}
+
 private:
+
 	void TickComponents();
 
-	TArray<UConstructionComponent*> RegisteredComponents;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UConstructionComponent>> RegisteredComponents;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UConstructionComponent>> PendingFinishedComponents;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ABuildableBase>> FinishedBuildings;
+
 	FTimerHandle TickComponentsHandle;
+
+	int32 CurrentRegisteredIndex;
 };

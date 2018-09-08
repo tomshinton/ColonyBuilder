@@ -23,17 +23,9 @@ public:
 	UBlackboardComponent* BlackboardComp;
 	UBehaviorTreeComponent* BehaviourTreeComp;
 
-	TSubclassOf<UProfessionBase> GetProfession() { return Profession; }
-
-	bool IsPawnEncroaching() { return PawnIsEncroaching; }
-
 private:
 	UBehaviorTree* BehaviourTree;
 	UBlackboardData* Blackboard;
-
-	bool PawnIsEncroaching;
-
-	TSubclassOf<UProfessionBase> Profession;
 	
 public:
 	virtual void Possess(APawn* InPawn) override;

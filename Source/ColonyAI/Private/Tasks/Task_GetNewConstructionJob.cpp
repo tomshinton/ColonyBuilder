@@ -6,8 +6,9 @@
 #include "ColonyInstance.h"
 #include "ConstructionManager.h"
 #include "ConstructionComponent.h"
+#include "BTNodeUtils.h"
 
-const FName UTask_GetNewConstructionJob::TargetLocationKey(TEXT("MoveToLocation"));
+const FName UTask_GetNewConstructionJob::MoveToLocationKey(TEXT("MoveToLocation"));
 
 UTask_GetNewConstructionJob::UTask_GetNewConstructionJob()
 {}
@@ -20,21 +21,28 @@ EBTNodeResult::Type UTask_GetNewConstructionJob::ExecuteTask(UBehaviorTreeCompon
 		{
 			if (UColonyInstance* ColonyInstance = Cast<UColonyInstance>(GetWorld()->GetGameInstance()))
 			{
-				if(UConstructionManager* ConstructionManager = ColonyInstance->GetManager<UConstructionManager>())
+				if (UConstructionManager* ConstructionManager = ColonyInstance->GetManager<UConstructionManager>())
 				{
-					FVector SiteLocation;
-					UConstructionComponent* FoundConstruction = ConstructionManager->ProcessNewConstructionRequest(OwningVillager, SiteLocation);
+					TWeakObjectPtr<UConstructionSiteComponent> FoundSite = nullptr;
 
-					if (FoundConstruction)
+					UConstructionComponent* FoundConstruction = ConstructionManager->ProcessNewConstructionRequest(OwningVillager, FoundSite);
+
+					if (FoundSite.IsValid())
 					{
-						OwningBlackboard->SetValueAsVector(UTask_GetNewConstructionJob::TargetLocationKey, SiteLocation);
-						return EBTNodeResult::Succeeded;
+						const FVector FoundBuildLocation = GetRandomNavigablePointInVolume(FoundSite->GetComponentLocation(), FoundSite->CollisionComponent->GetScaledBoxExtent(), this);
+
+						if (FoundConstruction)
+						{
+							OwningBlackboard->SetValueAsVector(UTask_GetNewConstructionJob::MoveToLocationKey, FoundBuildLocation);
+							return EBTNodeResult::Succeeded;
+						}
 					}
+
+					return EBTNodeResult::Failed;
 				}
 			}
 		}
 	}
 
 	return EBTNodeResult::Failed;
-
 }

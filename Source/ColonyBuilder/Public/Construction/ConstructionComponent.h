@@ -53,8 +53,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = Construction)
 	float GetConstructionPercentageReadable();
 
-	UFUNCTION(BlueprintPure, Category = Construction)
-	FVector GetConstructionSiteLocation();
+	TWeakObjectPtr<UConstructionSiteComponent> GetRandomConstructionSite();
 
 	UFUNCTION(BlueprintPure, Category = Construction)
 	EConstructionStage GetCurrConstructionStage() { return CurrStage; }
@@ -67,6 +66,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionUpdated OnConstructionUpdated;
+
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionFinished OnConstructionFinished;
 
@@ -77,6 +77,8 @@ public:
 	void SetConstructionLoadData(FConstructionSaveData InLoadedData, UBuildingData* InBuildingData);
 
 	bool CanAcceptAnyMoreBuilders(AController* RequestingController);
+
+	bool CanFinish() const;
 
 	UFUNCTION()
 	void NewLocalBuilder(const AController* NewBuilder);

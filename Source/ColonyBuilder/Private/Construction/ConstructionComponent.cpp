@@ -8,6 +8,7 @@
 #include "ConstructionManager.h"
 #include "Utils/DataTypes/BuildingDataTypes.h"
 #include "VillagerController.h"
+#include "BaseVillager.h"
 
 
 DEFINE_LOG_CATEGORY(ConstructionComponentLog)
@@ -60,15 +61,15 @@ float UConstructionComponent::GetConstructionPercentageReadable()
 	return 0.f;
 }
 
-FVector UConstructionComponent::GetConstructionSiteLocation()
+TWeakObjectPtr<UConstructionSiteComponent> UConstructionComponent::GetRandomConstructionSite()
 {
 	if (FoundConstructionSites.Num() > 0)
 	{
 		UConstructionSiteComponent* RandomConstructionSite = FoundConstructionSites[FMath::RandRange(0, FoundConstructionSites.Num() - 1)];
-		return RandomConstructionSite->GetComponentLocation();
+		return RandomConstructionSite;
 	}
 	
-	return FVector(0, 0, 0);
+	return nullptr;
 }
 
 void UConstructionComponent::GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders)
@@ -118,6 +119,24 @@ bool UConstructionComponent::CanAcceptAnyMoreBuilders(AController* RequestingCon
 	{
 		return false;
 	}
+}
+
+bool UConstructionComponent::CanFinish() const
+{
+	if (AActor* OwningActor = GetOwner())
+	{
+		TArray<AActor*> OverlappingActors;
+		OwningActor->GetOverlappingActors(OverlappingActors, ABaseVillager::StaticClass());
+
+		if (OverlappingActors.Num() > 0)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	UE_LOG(ConstructionComponentLog, Error, TEXT("UConstructionComponent::CanFinish Component has no owning actor, returning false"));
+	return false;
 }
 
 void UConstructionComponent::NewLocalBuilder(const AController* NewBuilder)

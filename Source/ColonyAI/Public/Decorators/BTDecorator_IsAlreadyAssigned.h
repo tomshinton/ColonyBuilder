@@ -6,9 +6,10 @@
 #include "BehaviorTree/BTDecorator.h"
 #include "BTDecorator_IsAlreadyAssigned.generated.h"
 
-/**
- * 
- */
+//////////////////////////////////////////////////////////////////////////
+// Is this controller already assigned to a Construction Project?
+//////////////////////////////////////////////////////////////////////////
+
 UCLASS()
 class COLONYAI_API UBTDecorator_IsAlreadyAssigned : public UBTDecorator
 {

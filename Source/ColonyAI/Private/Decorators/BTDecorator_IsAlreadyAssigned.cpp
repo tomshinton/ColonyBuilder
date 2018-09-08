@@ -18,7 +18,8 @@ bool UBTDecorator_IsAlreadyAssigned::CalculateRawConditionValue(UBehaviorTreeCom
 		if (UConstructionManager* ConstructionManager = GameInst->GetManager<UConstructionManager>())
 		{
 			AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
-			return ConstructionManager->IsControllerAlreadyRegistered(OwningVillager);
+			const bool IsAssigned = ConstructionManager->IsControllerOnActiveComponent(OwningVillager) || ConstructionManager->IsControllerOnPendingFinishComponent(OwningVillager);
+			return IsAssigned;
 		}
 	}
 

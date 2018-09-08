@@ -18,6 +18,11 @@
 #include "BuildableBase.generated.h"
 
 class UBuildingData;
+class ABaseVillager;
+
+//////////////////////////////////////////////////////////////////////////
+// Base actor for any actor that can be built via the Construction System
+//////////////////////////////////////////////////////////////////////////
 
 UCLASS()
 class COLONYBUILDER_API ABuildableBase : public AActor,	public ISavableInterface, public ISelectionInterface
@@ -27,6 +32,11 @@ class COLONYBUILDER_API ABuildableBase : public AActor,	public ISavableInterface
 public:	
 	// Sets default values for this actor's properties
 	ABuildableBase();
+
+	void OnConstruction(const FTransform& Transform);
+	
+	UFUNCTION(BlueprintPure, Category = Construction)
+	UConstructionComponent* GetConstructionComponent() { return ConstructionComponent; }
 
 	UPROPERTY(EditDefaultsOnly)
 	USceneComponent* SceneRoot;
@@ -43,23 +53,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
 
-	void OnConstruction(const FTransform& Transform);
-
-	UFUNCTION(BlueprintPure, Category = Construction)
-	UConstructionComponent* GetConstructionComponent() { return ConstructionComponent; }
+	FGuid BuildingID;
 
 	UFUNCTION()
 	virtual void EnableBuilding();
 
-	void CheckCanEnableBuilding();
+	UPROPERTY()
+	TArray<FGuid> RegisteredEmployees;
 
-	UFUNCTION()
-	void StartEnableChecks();
+	UPROPERTY()
+	TArray<FGuid> RegisteredResidents;
 
 private:
-	int32 BuildingID;
-	FTimerHandle CanEnableBuildingHandle;
-
 
 //ISavableInterface
 public:
@@ -76,7 +81,7 @@ public:
 	bool IsSelected;
 
 	UPROPERTY()
-	UUI_SelectionBox* SelectionWidget;
+	TWeakObjectPtr<UUI_SelectionBox> SelectionWidget;
 //ISelectionInterface
 
 };

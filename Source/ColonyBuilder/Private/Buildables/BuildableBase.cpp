@@ -16,7 +16,8 @@ ABuildableBase::ABuildableBase()
 	MeshComponent->bGenerateOverlapEvents = true;
 
 	ConstructionComponent = CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component"));
-	ConstructionComponent->OnConstructionFinished.AddDynamic(this, &ABuildableBase::StartEnableChecks);
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -31,7 +32,7 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 		SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
 		SelectionWidget->SetSelectedActor(this);
 
-		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
+		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget.Get(), &UUI_SelectionBox::OnConstructionUpdated);
 	}
 }
 
@@ -39,31 +40,17 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 
 void ABuildableBase::EnableBuilding()
 {
-	if (SelectionWidget)
+	if (SelectionWidget.IsValid())
 	{
-		SelectionWidget->OnConstructionFinished();
+		SelectionWidget.Get()->OnConstructionFinished();
 	}
 
 	MeshComponent->SetCollisionProfileName("Building");
 }
 
-void ABuildableBase::CheckCanEnableBuilding()
-{
-	if (true /*is there anyone overlapping this?*/)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(CanEnableBuildingHandle);
-		EnableBuilding();
-	}
-}
-
-void ABuildableBase::StartEnableChecks()
-{
-	GetWorld()->GetTimerManager().SetTimer(CanEnableBuildingHandle, this, &ABuildableBase::CheckCanEnableBuilding, 0.5f, true, 0.f);
-}
-
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
-	FBuildingSaveData NewData(GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData(), BuildingID);
+	FBuildingSaveData NewData(BuildingID, GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData(), RegisteredEmployees, RegisteredResidents);
 	return NewData;
 }
 
@@ -76,7 +63,10 @@ void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
 	{
 		EnableBuilding();
 	}
+
+	BuildingID = LoadedData.ID;
 }
+
 #pragma endregion SavableInterface
 
 #pragma region SelectionInterface
@@ -98,18 +88,18 @@ void ABuildableBase::OnEndHover()
 
 void ABuildableBase::OnSelect()
 {
-	if (!IsSelected && SelectionWidget)
+	if (!IsSelected && SelectionWidget.IsValid())
 	{
-		SelectionWidget->AddToViewport(0);
+		SelectionWidget.Get()->AddToViewport(0);
 		IsSelected = true;
 	}
 }
 
 void ABuildableBase::OnEndSelect()
 {
-	if (IsSelected && SelectionWidget)
+	if (IsSelected && SelectionWidget.IsValid())
 	{
-		SelectionWidget->RemoveFromParent();
+		SelectionWidget.Get()->RemoveFromParent();
 		IsSelected = false;
 	}
 }

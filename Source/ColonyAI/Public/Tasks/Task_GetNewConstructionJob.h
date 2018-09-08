@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
+#include <EnvironmentQuery/EnvQuery.h>
 #include "Task_GetNewConstructionJob.generated.h"
 
 /**
@@ -16,8 +17,8 @@ class COLONYAI_API UTask_GetNewConstructionJob : public UBTTaskNode
 
 	UTask_GetNewConstructionJob();
 
-	static const FName TargetLocationKey;
+protected:
+	static const FName MoveToLocationKey;
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
 };

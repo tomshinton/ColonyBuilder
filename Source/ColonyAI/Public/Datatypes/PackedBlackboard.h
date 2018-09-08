@@ -191,9 +191,113 @@ struct FPackedVector : public FPackedKey
 #pragma endregion
 
 USTRUCT()
-struct FPackedBlackboard
+struct COLONYAI_API FPackedBlackboard
 {
 	GENERATED_BODY()
+
+		bool GetBoolByName(const FName InName)
+	{
+		for (FPackedBool& PackedBool : PackedBools)
+		{
+			if (PackedBool.KeyName == InName)
+			{
+				return PackedBool.Value;
+			}
+		}
+
+		return false;
+	}
+
+	TSubclassOf<UObject> GetClassByName(const FName InName)
+	{
+		for (FPackedClass& PackedClass : PackedClasses)
+		{
+			if (PackedClass.KeyName == InName)
+			{
+				return PackedClass.Value;
+			}
+		}
+
+		return nullptr;
+	}
+
+	float GetFloatByName(const FName InName)
+	{
+		for (FPackedFloat& PackedFloat : PackedFloats)
+		{
+			if (PackedFloat.KeyName == InName)
+			{
+				return PackedFloat.Value;
+			}
+		}
+
+		return 0.f;
+	}
+
+	int32 GetIntByName(const FName InName)
+	{
+		for (FPackedInt& PackedInt : PackedInts)
+		{
+			if (PackedInt.KeyName == InName)
+			{
+				return PackedInt.Value;
+			}
+		}
+
+		return 0;
+	}
+
+	FName GetNameByName(const FName InName)
+	{
+		for (FPackedName& PackedName : PackedNames)
+		{
+			if (PackedName.KeyName == InName)
+			{
+				return PackedName.Value;
+			}
+		}
+
+		return TEXT("");
+	}
+
+	FRotator GetRotatorByName(const FName InName)
+	{
+		for (FPackedRotator& PackedRotator : PackedRotators)
+		{
+			if (PackedRotator.KeyName == InName)
+			{
+				return PackedRotator.Value;
+			}
+		}
+
+		return FRotator::ZeroRotator;
+	}
+
+	FString GetStringByName(const FName InName)
+	{
+		for (FPackedString& PackedString : PackedStrings)
+		{
+			if (PackedString.KeyName == InName)
+			{
+				return PackedString.Value;
+			}
+		}
+
+		return TEXT("");
+	}
+
+	FVector GetVectorByName(const FName InName)
+	{
+		for (FPackedVector& PackedVector : PackedVectors)
+		{
+			if (PackedVector.KeyName == InName)
+			{
+				return PackedVector.Value;
+			}
+		}
+
+		return FVector::ZeroVector;
+	}
 
 	void Pack(UBlackboardComponent* SourceBlackboardComponent)
 	{
@@ -323,108 +427,21 @@ struct FPackedBlackboard
 		}
 	}
 
-	bool GetBoolByName(const FName InName)
-	{
-		for (FPackedBool& PackedBool : PackedBools)
-		{
-			if (PackedBool.KeyName == InName)
-			{
-				return PackedBool.Value;
-			}
-		}
-	}
-
-	TSubclassOf<UObject> GetClassByName(const FName InName)
-	{
-		for (FPackedClass& PackedClass : PackedClasses)
-		{
-			if (PackedClass.KeyName == InName)
-			{
-				return PackedClass.Value;
-			}
-		}
-	}
-
-	float GetFloatByName(const FName InName)
-	{
-		for (FPackedFloat& PackedFloat : PackedFloats)
-		{
-			if (PackedFloat.KeyName == InName)
-			{
-				return PackedFloat.Value;
-			}
-		}
-	}
-
-	int32 GetIntByName(const FName InName)
-	{
-		for (FPackedInt& PackedInt : PackedInts)
-		{
-			if (PackedInt.KeyName == InName)
-			{
-				return PackedInt.Value;
-			}
-		}
-	}
-
-	FName GetNameByName(const FName InName)
-	{
-		for (FPackedName& PackedName : PackedNames)
-		{
-			if (PackedName.KeyName == InName)
-			{
-				return PackedName.Value;
-			}
-		}
-	}
-
-	FRotator GetRotatorByName(const FName InName)
-	{
-		for (FPackedRotator& PackedRotator : PackedRotators)
-		{
-			if (PackedRotator.KeyName == InName)
-			{
-				return PackedRotator.Value;
-			}
-		}
-	}
-
-	FString GetStringByName(const FName InName)
-	{
-		for (FPackedString& PackedString : PackedStrings)
-		{
-			if (PackedString.KeyName == InName)
-			{
-				return PackedString.Value;
-			}
-		}
-	}
-
-	FVector GetVectorByName(const FName InName)
-	{
-		for (FPackedVector& PackedVector : PackedVectors)
-		{
-			if (PackedVector.KeyName == InName)
-			{
-				return PackedVector.Value;
-			}
-		}
-	}
 
 	UPROPERTY(SaveGame)
-	TArray<FPackedBool> PackedBools;
+		TArray<FPackedBool> PackedBools;
 	UPROPERTY(SaveGame)
-	TArray<FPackedClass> PackedClasses;
+		TArray<FPackedClass> PackedClasses;
 	UPROPERTY(SaveGame)
-	TArray<FPackedFloat> PackedFloats;
+		TArray<FPackedFloat> PackedFloats;
 	UPROPERTY(SaveGame)
-	TArray<FPackedInt> PackedInts;
+		TArray<FPackedInt> PackedInts;
 	UPROPERTY(SaveGame)
-	TArray<FPackedName> PackedNames;
+		TArray<FPackedName> PackedNames;
 	UPROPERTY(SaveGame)
-	TArray<FPackedRotator> PackedRotators;
+		TArray<FPackedRotator> PackedRotators;
 	UPROPERTY(SaveGame)
-	TArray<FPackedString> PackedStrings;
+		TArray<FPackedString> PackedStrings;
 	UPROPERTY(SaveGame)
-	TArray<FPackedVector> PackedVectors;
+		TArray<FPackedVector> PackedVectors;
 };

@@ -15,7 +15,7 @@ public:
 	void SetSelectedActor(AActor* InSelectedActor) { SelectedActor = InSelectedActor; }
 	
 	UFUNCTION(BlueprintPure, Category = "Actor")
-	AActor* GetSelectedActor() { return SelectedActor; }
+	AActor* GetSelectedActor() { return SelectedActor.Get(); }
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Update")
 	void OnConstructionUpdated(const float& ConstructionPercentage);
@@ -25,5 +25,5 @@ public:
 
 private:
 
-	AActor* SelectedActor;
+	TWeakObjectPtr<AActor> SelectedActor;
 };

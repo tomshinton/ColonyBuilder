@@ -21,8 +21,6 @@ AVillagerController::AVillagerController()
 	{
 		Blackboard = BlackboardDataRef.Object;
 	}
-
-	Profession = UBuilder::StaticClass();
 }
 
 void AVillagerController::Possess(APawn* InPawn)

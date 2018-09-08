@@ -3,6 +3,7 @@
 #include "BTDecorator_IsThisProfession.h"
 #include "Professions.h"
 #include "VillagerController.h"
+#include "BaseVillager.h"
 
 UBTDecorator_IsThisProfession::UBTDecorator_IsThisProfession()
 {
@@ -11,13 +12,14 @@ UBTDecorator_IsThisProfession::UBTDecorator_IsThisProfession()
 
 bool UBTDecorator_IsThisProfession::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	AVillagerController* OwningVillagerController = Cast<AVillagerController>(OwnerComp.GetAIOwner());
-
-	if (OwningVillagerController && OwningVillagerController->GetProfession() == Profession)
+	if (AVillagerController* OwningVillagerController = Cast<AVillagerController>(OwnerComp.GetAIOwner()))
 	{
-		return true;
+		if(ABaseVillager* OwningVillagerPawn = Cast<ABaseVillager>(OwningVillagerController))
+		{
+			return OwningVillagerPawn->GetProfession() == Profession;
+		}
 	}
-	
+
 	return false;
 }
 

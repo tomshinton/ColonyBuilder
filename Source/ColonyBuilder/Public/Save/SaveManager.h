@@ -40,7 +40,7 @@ class USaveManager : public UColonyManager
 public:
 	virtual void PostInitProperties() override;
 
-	UFUNCTION(BlueprintPure, Category = "Save Game")
+	UFUNCTION(BlueprintPure, Category = "Save Ga me")
 	FPlayerSaveData GetCachedPlayerData() { return CachedPlayerData; }
 
 	int32 AutosaveFrequency;

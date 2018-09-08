@@ -3,7 +3,7 @@
 
 #include "Professions.generated.h"
 
-UCLASS()
+UCLASS(abstract)
 class UProfessionBase : public UObject
 {
 	GENERATED_BODY()
