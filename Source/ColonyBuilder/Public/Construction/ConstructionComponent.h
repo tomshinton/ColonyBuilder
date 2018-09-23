@@ -37,7 +37,7 @@ struct FConstructionCallback
 	uint32 TickModifier;
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(Construction), meta=(BlueprintSpawnableComponent) )
 class COLONYBUILDER_API UConstructionComponent : public UActorComponent, public IConstructionInterface
 {
 	GENERATED_BODY()
@@ -59,10 +59,13 @@ public:
 	EConstructionStage GetCurrConstructionStage() { return CurrStage; }
 
 	UFUNCTION(BlueprintCallable, Category = Construction)
+	void SetCurrConstructionStage(const EConstructionStage InNewContrustionStage) { CurrStage = InNewContrustionStage; }
+
+	UFUNCTION(BlueprintCallable, Category = Construction)
 	void GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders);
 
-	TArray<const AVillagerController*> const GetRegisteredBuilders() { return RegisteredBuilders; }
-	TArray<const AVillagerController*> const GetLocalBuilders() { return LocalBuilders; }
+	TArray<const AVillagerController*> const GetRegisteredBuilders() { return RegisteredBuilders; };
+	TArray<const AVillagerController*> const GetLocalBuilders() { return LocalBuilders; };
 
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionUpdated OnConstructionUpdated;

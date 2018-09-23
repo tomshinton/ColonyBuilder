@@ -3,6 +3,7 @@
 #include "ConstructionManager.h"
 #include "Construction/ConstructionComponent.h"
 #include "BuildableBase.h"
+#include <EngineUtils.h>
 
 DEFINE_LOG_CATEGORY(ConstructionManagerLog)
 
@@ -12,10 +13,45 @@ void UConstructionManager::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	if (GetWorld())
+	if (UWorld* World = GetWorld())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
+		World->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
+
+		//Grab all preplaced-buildings and enable them as finished buildings
+		for(TActorIterator<ABuildableBase> Itr(GetWorld()); Itr; ++Itr)
+		{
+			ABuildableBase* PreplacedBuilding = *Itr;
+
+			if (PreplacedBuilding)
+			{
+				if (PreplacedBuilding->IsPreplaced)
+				{
+					PreplacedBuilding->ConstructionComponent->SetCurrConstructionStage(EConstructionStage::Finished);
+					PreplacedBuilding->EnableBuilding();
+					PreplacedBuilding->BuildingID = FGuid::NewGuid();
+					FinishedBuildings.Add(PreplacedBuilding);
+				}
+			}
+		}
 	}
+}
+
+bool UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
+{
+	//Current implementation assigns pawn to first available vacancy
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (ABuildableBase* BuildingPtr = FinishedBuilding.Get())
+		{
+			if (BuildingPtr->HasVacancies())
+			{
+				BuildingPtr->AddEmployee(InVillager);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 void UConstructionManager::TickComponents()

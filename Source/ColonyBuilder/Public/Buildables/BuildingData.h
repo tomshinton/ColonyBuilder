@@ -107,6 +107,9 @@ public:
 #pragma region Professions
 	UPROPERTY(EditAnywhere, Category = "Professions | Construction")
 	TArray<TSubclassOf<UProfessionBase>> Professions;
+
+	UPROPERTY(EditAnywhere, Category = "Professions | Employment")
+	int32 MaxEmployees;
 #pragma endregion
 	
 public:

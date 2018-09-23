@@ -14,7 +14,7 @@ bool UBTDecorator_IsThisProfession::CalculateRawConditionValue(UBehaviorTreeComp
 {
 	if (AVillagerController* OwningVillagerController = Cast<AVillagerController>(OwnerComp.GetAIOwner()))
 	{
-		if(ABaseVillager* OwningVillagerPawn = Cast<ABaseVillager>(OwningVillagerController))
+		if(ABaseVillager* OwningVillagerPawn = Cast<ABaseVillager>(OwningVillagerController->GetPawn()))
 		{
 			return OwningVillagerPawn->GetProfession() == Profession;
 		}

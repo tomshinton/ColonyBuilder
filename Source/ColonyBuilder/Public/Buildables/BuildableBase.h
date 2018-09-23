@@ -14,6 +14,7 @@
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "UI_SelectionBox.h"
 #include "Construction/ConstructionComponent.h"
+#include "BaseVillager.h"
 
 #include "BuildableBase.generated.h"
 
@@ -47,16 +48,27 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UConstructionComponent* ConstructionComponent;
 
+	/** Was this buildable placed by design? If so, consider it a finished building on begin play */
+	UPROPERTY(EditAnywhere, Category = "Building Info")
+	bool IsPreplaced;
+
 	UPROPERTY(VisibleAnywhere, Category = "Building Info")
 	TArray<FSubBuilding> SubBuildings;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data")
 	UBuildingData* BuildingData;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool Preplaced;
+
 	FGuid BuildingID;
 
 	UFUNCTION()
 	virtual void EnableBuilding();
+
+	void AddEmployee(ABaseVillager* InVillagerID);
+
+	bool HasVacancies() const;
 
 	UPROPERTY()
 	TArray<FGuid> RegisteredEmployees;

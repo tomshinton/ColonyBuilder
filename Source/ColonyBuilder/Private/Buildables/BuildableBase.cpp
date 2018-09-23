@@ -48,6 +48,30 @@ void ABuildableBase::EnableBuilding()
 	MeshComponent->SetCollisionProfileName("Building");
 }
 
+void ABuildableBase::AddEmployee(ABaseVillager* InVillager)
+{
+	RegisteredEmployees.AddUnique(InVillager->VillagerID);
+
+	InVillager->WorkplaceID = BuildingID;
+
+	if (BuildingData->Professions.Num() > 0)
+	{
+		InVillager->SetProfession(BuildingData->Professions[0]);
+	}
+}
+
+bool ABuildableBase::HasVacancies() const
+{
+	if (RegisteredEmployees.Num() < BuildingData->MaxEmployees)
+	{
+		return true;
+	} 
+	else
+	{
+		return false;
+	}
+}
+
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
 	FBuildingSaveData NewData(BuildingID, GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData(), RegisteredEmployees, RegisteredResidents);

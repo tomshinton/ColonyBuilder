@@ -38,6 +38,8 @@ public:
 
 	virtual void PostInitProperties() override;
 
+	bool AssignPawnToWorkplace(ABaseVillager* InVillager);
+
 	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite);
 
 	UFUNCTION(BlueprintPure, Category = Construction)

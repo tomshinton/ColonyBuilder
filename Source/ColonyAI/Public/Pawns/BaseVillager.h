@@ -14,9 +14,9 @@
 // Base class for all Villagers in the colony
 //////////////////////////////////////////////////////////////////////////
 
-DECLARE_LOG_CATEGORY_EXTERN(VillagerLog, All, All)
-
 class AAIController;
+
+DECLARE_LOG_CATEGORY_EXTERN(VillagerLog, All, All)
 
 UCLASS()
 class COLONYAI_API ABaseVillager : public ACharacter, public ISelectionInterface
@@ -30,12 +30,11 @@ public:
 	void LoadVillagerSaveData(const FVillagerSaveData& InData);
 
 	TSubclassOf<UProfessionBase> GetProfession() { return Profession; }
+	void SetProfession(const TSubclassOf<UProfessionBase> InNewProfession) { Profession = InNewProfession; };
 
 	FGuid VillagerID;
 	FGuid ResidenceID;
 	FGuid WorkplaceID;
-
-	
 
 //Selection Interface
 	virtual void OnReceiveHover() override;
