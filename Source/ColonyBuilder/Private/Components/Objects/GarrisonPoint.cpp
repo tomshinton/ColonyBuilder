@@ -1,34 +1,46 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
 #include "GarrisonPoint.h"
+#include <Components/StaticMeshComponent.h>
+#include <Components/BoxComponent.h>
 
+DEFINE_LOG_CATEGORY_STATIC(GarrisonComponentLog, Log, All);
 
-// Sets default values for this component's properties
 UGarrisonPoint::UGarrisonPoint()
+	: MeshComponent(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh")))
+	, OverlapComponent(CreateDefaultSubobject<UBoxComponent>(TEXT("OverlapComponent")))
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
-	// ...
+	MeshComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, NAME_None);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	OverlapComponent->SetupAttachment(this);
+	OverlapComponent->SetCollisionProfileName("OverlapAllDynamic");
+
+	OverlapComponent->OnComponentBeginOverlap.AddDynamic(this, &UGarrisonPoint::AttemptGarrison);
 }
 
-
-// Called when the game starts
-void UGarrisonPoint::BeginPlay()
+void UGarrisonPoint::AttemptGarrison(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	Super::BeginPlay();
+	UE_LOG(GarrisonComponentLog, Log, TEXT("Attempting to garrison %s in %s"), *OtherActor->GetName(), *GetOwner()->GetName());
 
-	// ...
-	
+	if (ABaseVillager* OtherActorAsVillager = Cast<ABaseVillager>(OtherActor))
+	{
+		if (ExpectedGarrisonedVillagers.Contains(OtherActorAsVillager))
+		{
+			GarrisonedVillagers.AddUnique(OtherActorAsVillager);
+			OtherActor->SetActorHiddenInGame(true);
+			ExpectedGarrisonedVillagers.Remove(OtherActorAsVillager);
+		}
+	}
 }
 
-
-// Called every frame
-void UGarrisonPoint::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UGarrisonPoint::Ungarrison(ABaseVillager* BaseVillager)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	if (GarrisonedVillagers.Contains(BaseVillager))
+	{
+		GarrisonedVillagers.Remove(BaseVillager);
+		BaseVillager->SetActorHiddenInGame(false);
+	}
 }
-

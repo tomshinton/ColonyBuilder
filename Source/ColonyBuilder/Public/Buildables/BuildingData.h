@@ -111,6 +111,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Professions | Employment")
 	int32 MaxEmployees;
 #pragma endregion
+
+#pragma region Residence
+	UPROPERTY(EditAnywhere, Category = "Residence")
+	int32 MaxResidents;
+#pragma endregion
 	
 public:
 	FString GetFullCategoryAsString();

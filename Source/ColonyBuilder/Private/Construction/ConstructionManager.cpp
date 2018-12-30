@@ -4,6 +4,7 @@
 #include "Construction/ConstructionComponent.h"
 #include "BuildableBase.h"
 #include <EngineUtils.h>
+#include "GarrisonPoint.h"
 
 DEFINE_LOG_CATEGORY(ConstructionManagerLog)
 
@@ -54,11 +55,28 @@ bool UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
 	return false;
 }
 
+bool UConstructionManager::AssignPawnToResidence(ABaseVillager* InVillager)
+{
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (ABuildableBase* BuildingPtr = FinishedBuilding.Get())
+		{
+			if (BuildingPtr->HasBoardingRoom())
+			{
+				BuildingPtr->AddResident(InVillager);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void UConstructionManager::TickComponents()
 {
 	if (RegisteredComponents.Num() > 0)
 	{
-		if (UConstructionComponent* CurrComponent = RegisteredComponents[CurrentRegisteredIndex].Get())
+		if (UConstructionComponent* CurrComponent = RegisteredComponents[CurrentRegisteredIndex])
 		{
 			if (CurrComponent->GetTickCallbackInfo().CanTick)
 			{
@@ -80,7 +98,7 @@ void UConstructionManager::TickComponents()
 	{
 		for (int32 i = PendingFinishedComponents.Num() - 1; i >= 0; i--)
 		{
-			if (UConstructionComponent* ComponentPtr = PendingFinishedComponents[i].Get())
+			if (UConstructionComponent* ComponentPtr = PendingFinishedComponents[i])
 			{
 				if (ComponentPtr->CanFinish())
 				{
@@ -112,6 +130,11 @@ UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(ACon
 		}
 	}
 	return nullptr;
+}
+
+ABuildableBase* UConstructionManager::GetBuildingFromId(const FGuid BuildingId)
+{
+	return *FinishedBuildings.FindByPredicate([&](ABuildableBase* Building) { return Building->BuildingID == BuildingId; });
 }
 
 void UConstructionManager::RegisterNewConstructionComponent(UConstructionComponent* NewComponent)
@@ -195,5 +218,44 @@ TWeakObjectPtr<ABuildableBase> UConstructionManager::IsPawnRegistedAsResident(AB
 	}
 
 	return nullptr;
+}
+
+bool UConstructionManager::IsPawnGarrisoned(ABaseVillager* InVillager) const
+{
+	for (ABuildableBase* FinishedBuilding : FinishedBuildings)
+	{
+		TArray<UActorComponent*> ActorComps = FinishedBuilding->GetComponentsByClass(UGarrisonPoint::StaticClass());
+		for (UActorComponent* ActorComp : ActorComps)
+		{
+			if (UGarrisonPoint* GarrisonPoint = Cast<UGarrisonPoint>(ActorComp))
+			{
+				if (GarrisonPoint->IsPawnGarrisoned(InVillager))
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+void UConstructionManager::UngarrisonPawn(ABaseVillager* InVillager) const
+{
+	for (ABuildableBase* FinishedBuilding : FinishedBuildings)
+	{
+		TArray<UActorComponent*> ActorComps = FinishedBuilding->GetComponentsByClass(UGarrisonPoint::StaticClass());
+		for (UActorComponent* ActorComp : ActorComps)
+		{
+			if (UGarrisonPoint* GarrisonPoint = Cast<UGarrisonPoint>(ActorComp))
+			{
+				if (GarrisonPoint->IsPawnGarrisoned(InVillager))
+				{
+					GarrisonPoint->Ungarrison(InVillager);
+					break;
+				}
+			}
+		}
+	}
 }
 

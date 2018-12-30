@@ -13,6 +13,7 @@
 #include "BaseVillager.h"
 #include "VillagerManager.h"
 #include "ColonyInstance.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
@@ -149,7 +150,7 @@ void USaveManager::LoadGame(UColonySave* SaveToLoad)
 			{
 				if (SavedVillagerData.PawnClass)
 				{
-					if (UVillagerManager* VillagerManager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(World))->GetManager<UVillagerManager>())
+					if (UVillagerManager* VillagerManager = GetManager<UVillagerManager>(World))
 					{
 						//Respawn the villagers from save
 						VillagerManager->CreateVillagerFromSavedata(SavedVillagerData);

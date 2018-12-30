@@ -8,7 +8,7 @@
 #include "ColonySave.h"
 
 #include "Kismet/GameplayStatics.h"
-
+#include "Utils/Libraries/ManagerUtils.h"
 
 // Sets default values
 APlayerPawn::APlayerPawn()
@@ -55,7 +55,7 @@ void APlayerPawn::BeginPlay()
 	SelectionComponent->SetEnabled(true);
 
 	//Load any saved data, if there is any
-	if (USaveManager* SaveManager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManager<USaveManager>())
+	if (USaveManager* SaveManager = GetManager<USaveManager>(this))
 	{
 		LoadSaveData(SaveManager->GetCachedPlayerData());
 	}

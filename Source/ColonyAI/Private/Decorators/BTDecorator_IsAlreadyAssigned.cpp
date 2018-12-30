@@ -5,6 +5,7 @@
 #include "ConstructionManager.h"
 #include "VillagerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 UBTDecorator_IsAlreadyAssigned::UBTDecorator_IsAlreadyAssigned()
 {
@@ -13,14 +14,11 @@ UBTDecorator_IsAlreadyAssigned::UBTDecorator_IsAlreadyAssigned()
 
 bool UBTDecorator_IsAlreadyAssigned::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
+	if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(GetWorld()))
 	{
-		if (UConstructionManager* ConstructionManager = GameInst->GetManager<UConstructionManager>())
-		{
-			AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
-			const bool IsAssigned = ConstructionManager->IsControllerOnActiveComponent(OwningVillager) || ConstructionManager->IsControllerOnPendingFinishComponent(OwningVillager);
-			return IsAssigned;
-		}
+		AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
+		const bool IsAssigned = ConstructionManager->IsControllerOnActiveComponent(OwningVillager) || ConstructionManager->IsControllerOnPendingFinishComponent(OwningVillager);
+		return IsAssigned;
 	}
 
 	return false;

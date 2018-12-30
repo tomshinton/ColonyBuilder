@@ -1,13 +1,12 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
-#include "Task_FindWorkplace.h"
-#include "ColonyInstance.h"
-#include "ConstructionManager.h"
+#include "Task_Ungarrison.h"
 #include "VillagerController.h"
 #include "BaseVillager.h"
+#include "ConstructionManager.h"
 #include "Utils/Libraries/ManagerUtils.h"
 
-EBTNodeResult::Type UTask_FindWorkplace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UTask_Ungarrison::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (AVillagerController* OwningVillager = Cast<AVillagerController>(OwnerComp.GetAIOwner()))
 	{
@@ -15,11 +14,13 @@ EBTNodeResult::Type UTask_FindWorkplace::ExecuteTask(UBehaviorTreeComponent& Own
 		{
 			if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(OwningVillagerPawn))
 			{
-				const bool PawnHasBeenAssigned = ConstructionManager->AssignPawnToWorkplace(OwningVillagerPawn);
-				return PawnHasBeenAssigned ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
+				if (ConstructionManager->IsPawnGarrisoned(OwningVillagerPawn))
+				{
+					ConstructionManager->UngarrisonPawn(OwningVillagerPawn);
+				}
 			}
 		}
 	}
 
-	return EBTNodeResult::Failed;
+	return EBTNodeResult::Succeeded;
 }

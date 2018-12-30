@@ -35,43 +35,33 @@ public:
 
 	TWeakObjectPtr<ABuildableBase> IsPawnRegisteredAsEmployee(ABaseVillager* InVillager) const;
 	TWeakObjectPtr<ABuildableBase> IsPawnRegistedAsResident(ABaseVillager* InVillager) const;
+	bool IsPawnGarrisoned(ABaseVillager* InVillager) const;
+	void UngarrisonPawn(ABaseVillager* InVillager) const;
 
 	virtual void PostInitProperties() override;
 
 	bool AssignPawnToWorkplace(ABaseVillager* InVillager);
+	bool AssignPawnToResidence(ABaseVillager* InVillager);
 
 	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite);
 
+	ABuildableBase* GetBuildingFromId(const FGuid BuildingId);
+
 	UFUNCTION(BlueprintPure, Category = Construction)
-	TArray<UConstructionComponent*> GetOnGoingConstructs() { return GetRegisteredComponentsAsRaw(); }
+	TArray<UConstructionComponent*> GetOnGoingConstructs() const { return RegisteredComponents; }
 	
-	TArray<UConstructionComponent*> GetRegisteredComponentsAsRaw()
-	{
-		TArray<UConstructionComponent*> Constructs;
-
-		for (TWeakObjectPtr<UConstructionComponent> Component : RegisteredComponents)
-		{
-			if (Component.IsValid())
-			{
-				Constructs.Add(Component.Get());
-			}
-		}
-
-		return Constructs;
-	}
-
 private:
 
 	void TickComponents();
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<UConstructionComponent>> RegisteredComponents;
+	TArray<UConstructionComponent*> RegisteredComponents;
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<UConstructionComponent>> PendingFinishedComponents;
+	TArray<UConstructionComponent*> PendingFinishedComponents;
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<ABuildableBase>> FinishedBuildings;
+	TArray<ABuildableBase*> FinishedBuildings;
 
 	FTimerHandle TickComponentsHandle;
 

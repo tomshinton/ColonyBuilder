@@ -13,16 +13,13 @@ UBTDecorator_HasResidence::UBTDecorator_HasResidence()
 
 bool UBTDecorator_HasResidence::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
+	if (AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner()))
 	{
-		if (UConstructionManager* ConstructionManager = GameInst->GetManager<UConstructionManager>())
+		if (ABaseVillager* VillagerPawn = Cast<ABaseVillager>(OwningVillager->GetPawn()))
 		{
-			AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
+			const bool HasValidResidence = VillagerPawn->ResidenceID.IsValid();
 
-			if (ABaseVillager* VillagerPawn = Cast<ABaseVillager>(OwningVillager->GetPawn()))
-			{
-				return ConstructionManager->IsPawnRegistedAsResident(VillagerPawn).IsValid();
-			}
+			return HasValidResidence;
 		}
 	}
 

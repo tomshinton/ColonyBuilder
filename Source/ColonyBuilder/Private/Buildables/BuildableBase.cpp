@@ -3,21 +3,23 @@
 #include "BuildableBase.h"
 #include "BuildingData.h"
 #include "UserWidget.h"
+#include "ConstructionComponent.h"
+#include <Components/StaticMeshComponent.h>
+#include <Components/SceneComponent.h>
+#include "GarrisonPoint.h"
 
-// Sets default values
 ABuildableBase::ABuildableBase()
+	: SceneRoot(CreateDefaultSubobject<USceneComponent>(TEXT("Building Root")))
+	, MeshComponent(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh")))
+	, ConstructionComponent(CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component")))
 {
-	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Building Root"));
 	RootComponent = SceneRoot;
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh"));
 	MeshComponent->SetCollisionProfileName("ConstructionSite");
 	MeshComponent->SetupAttachment(SceneRoot);
 	MeshComponent->bGenerateOverlapEvents = true;
 
-	ConstructionComponent = CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component"));
-
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -34,9 +36,9 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 
 		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget.Get(), &UUI_SelectionBox::OnConstructionUpdated);
 	}
-}
 
-#pragma region SavableInterface
+	CachedGarrisonPoint = Cast<UGarrisonPoint>(GetComponentByClass(UGarrisonPoint::StaticClass()));
+}
 
 void ABuildableBase::EnableBuilding()
 {
@@ -60,12 +62,30 @@ void ABuildableBase::AddEmployee(ABaseVillager* InVillager)
 	}
 }
 
+void ABuildableBase::AddResident(ABaseVillager* InVillager)
+{
+	RegisteredResidents.AddUnique(InVillager->VillagerID);
+	InVillager->ResidenceID = BuildingID;
+}
+
 bool ABuildableBase::HasVacancies() const
 {
 	if (RegisteredEmployees.Num() < BuildingData->MaxEmployees)
 	{
 		return true;
 	} 
+	else
+	{
+		return false;
+	}
+}
+
+bool ABuildableBase::HasBoardingRoom() const
+{
+	if (RegisteredResidents.Num() < BuildingData->MaxResidents)
+	{
+		return true;
+	}
 	else
 	{
 		return false;
@@ -91,9 +111,6 @@ void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
 	BuildingID = LoadedData.ID;
 }
 
-#pragma endregion SavableInterface
-
-#pragma region SelectionInterface
 void ABuildableBase::OnReceiveHover()
 {
 	for (int8 i = 0; i <= MeshComponent->GetMaterials().Num(); i++)
@@ -127,4 +144,4 @@ void ABuildableBase::OnEndSelect()
 		IsSelected = false;
 	}
 }
-#pragma endregion SelectionInterface
+

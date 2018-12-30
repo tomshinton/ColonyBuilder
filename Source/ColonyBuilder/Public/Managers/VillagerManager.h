@@ -30,6 +30,5 @@ public:
 private:
 
 	TSubclassOf<ABaseVillager> BaseVillagerClass;
-
 	TArray<TWeakObjectPtr<ABaseVillager>> SpawnedVillagers;
 };

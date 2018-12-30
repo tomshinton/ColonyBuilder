@@ -2,9 +2,9 @@
 
 #include "BTDecorator_BuildComplete.h"
 #include "ColonyInstance.h"
-#include <Kismet/GameplayStatics.h>
 #include "ConstructionManager.h"
 #include "VillagerController.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 UBTDecorator_BuildComplete::UBTDecorator_BuildComplete()
 {
@@ -13,13 +13,10 @@ UBTDecorator_BuildComplete::UBTDecorator_BuildComplete()
 
 bool UBTDecorator_BuildComplete::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
+	if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(GetWorld()))
 	{
-		if (UConstructionManager* ConstructionManager = GameInst->GetManager<UConstructionManager>())
-		{
-			AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
-			return ConstructionManager->IsControllerOnPendingFinishComponent(OwningVillager);
-		}
+		AVillagerController* OwningVillager = Cast <AVillagerController>(OwnerComp.GetAIOwner());
+		return ConstructionManager->IsControllerOnPendingFinishComponent(OwningVillager);
 	}
 
 	return false;

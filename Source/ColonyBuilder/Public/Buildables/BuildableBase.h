@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/StaticMeshComponent.h"
 
 #include "Utils/DataTypes/BuildingDataTypes.h"
 
@@ -13,13 +12,18 @@
 
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "UI_SelectionBox.h"
-#include "Construction/ConstructionComponent.h"
 #include "BaseVillager.h"
 
 #include "BuildableBase.generated.h"
 
 class UBuildingData;
+class AVillagerController;
 class ABaseVillager;
+
+class USceneComponent;
+class UStaticMeshComponent;
+class UConstructionComponent;
+class UGarrisonPoint;
 
 //////////////////////////////////////////////////////////////////////////
 // Base actor for any actor that can be built via the Construction System
@@ -35,9 +39,20 @@ public:
 	ABuildableBase();
 
 	void OnConstruction(const FTransform& Transform);
-	
+
 	UFUNCTION(BlueprintPure, Category = Construction)
 	UConstructionComponent* GetConstructionComponent() { return ConstructionComponent; }
+
+	TWeakObjectPtr<UGarrisonPoint> GetGarrisonPoint() { return CachedGarrisonPoint; }
+
+	UFUNCTION()
+	virtual void EnableBuilding();
+
+	void AddEmployee(ABaseVillager* InVillager);
+	void AddResident(ABaseVillager* InVillager);
+
+	bool HasVacancies() const;
+	bool HasBoardingRoom() const;
 
 	UPROPERTY(EditDefaultsOnly)
 	USceneComponent* SceneRoot;
@@ -47,6 +62,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UConstructionComponent* ConstructionComponent;
+
+	UPROPERTY()
+	TWeakObjectPtr<UGarrisonPoint> CachedGarrisonPoint;
 
 	/** Was this buildable placed by design? If so, consider it a finished building on begin play */
 	UPROPERTY(EditAnywhere, Category = "Building Info")
@@ -59,16 +77,9 @@ public:
 	UBuildingData* BuildingData;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-		bool Preplaced;
+	bool Preplaced;
 
 	FGuid BuildingID;
-
-	UFUNCTION()
-	virtual void EnableBuilding();
-
-	void AddEmployee(ABaseVillager* InVillagerID);
-
-	bool HasVacancies() const;
 
 	UPROPERTY()
 	TArray<FGuid> RegisteredEmployees;

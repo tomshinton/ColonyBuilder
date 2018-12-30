@@ -9,6 +9,7 @@
 #include "Utils/DataTypes/BuildingDataTypes.h"
 #include "VillagerController.h"
 #include "BaseVillager.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 
 DEFINE_LOG_CATEGORY(ConstructionComponentLog)
@@ -87,16 +88,14 @@ void UConstructionComponent::GetBuilders(TArray<AVillagerController*>& OutLocalB
 
 bool UConstructionComponent::RegisterNewConstruction()
 {
-	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
-	{
-		if (UConstructionManager* ConstructionManager = GameInst->GetManager<UConstructionManager>())
-		{
-			ConstructionManager->RegisterNewConstructionComponent(this);
 
-			if (ConstructionManager->IsComponentRegistered(this))
-			{
-				return true;
-			}
+	if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(this))
+	{
+		ConstructionManager->RegisterNewConstructionComponent(this);
+
+		if (ConstructionManager->IsComponentRegistered(this))
+		{
+			return true;
 		}
 	}
 

@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SaveManager.h"
 #include "VillagerManager.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 const int32 AColonyBuilderGameModeBase::GridSize(256);
 const bool AColonyBuilderGameModeBase::SaveOnExit(true);
@@ -22,14 +23,11 @@ AColonyBuilderGameModeBase::AColonyBuilderGameModeBase()
 
 void AColonyBuilderGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if(AColonyBuilderGameModeBase::SaveOnExit)
+	if (AColonyBuilderGameModeBase::SaveOnExit)
 	{
-		if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
+		if (USaveManager* SaveManager = GetManager<USaveManager>(this))
 		{
-			if(USaveManager* SaveManager = GameInst->GetManager<USaveManager>())
-			{
-				//SaveManager->SaveGame();
-			}
+			//SaveManager->SaveGame();
 		}
 	}
 }
@@ -38,7 +36,7 @@ void AColonyBuilderGameModeBase::BeginPlay()
 {
 	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
-		if (UVillagerManager* VillagerManager = GameInst->GetManager<UVillagerManager>())
+		if (UVillagerManager* VillagerManager = GetManager<UVillagerManager>(this))
 		{
 			VillagerManager->SetBaseVillagerClass(VillagerClass);
 		}

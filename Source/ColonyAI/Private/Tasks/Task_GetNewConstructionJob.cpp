@@ -7,6 +7,7 @@
 #include "ConstructionManager.h"
 #include "ConstructionComponent.h"
 #include "BTNodeUtils.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 const FName UTask_GetNewConstructionJob::MoveToLocationKey(TEXT("MoveToLocation"));
 
@@ -19,27 +20,24 @@ EBTNodeResult::Type UTask_GetNewConstructionJob::ExecuteTask(UBehaviorTreeCompon
 	{
 		if (UBlackboardComponent* OwningBlackboard = OwningVillager->GetBlackboardComponent())
 		{
-			if (UColonyInstance* ColonyInstance = Cast<UColonyInstance>(GetWorld()->GetGameInstance()))
+			if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(GetWorld()))
 			{
-				if (UConstructionManager* ConstructionManager = ColonyInstance->GetManager<UConstructionManager>())
+				TWeakObjectPtr<UConstructionSiteComponent> FoundSite = nullptr;
+
+				UConstructionComponent* FoundConstruction = ConstructionManager->ProcessNewConstructionRequest(OwningVillager, FoundSite);
+
+				if (FoundSite.IsValid())
 				{
-					TWeakObjectPtr<UConstructionSiteComponent> FoundSite = nullptr;
+					const FVector FoundBuildLocation = GetRandomNavigablePointInVolume(FoundSite->GetComponentLocation(), FoundSite->CollisionComponent->GetScaledBoxExtent(), this);
 
-					UConstructionComponent* FoundConstruction = ConstructionManager->ProcessNewConstructionRequest(OwningVillager, FoundSite);
-
-					if (FoundSite.IsValid())
+					if (FoundConstruction)
 					{
-						const FVector FoundBuildLocation = GetRandomNavigablePointInVolume(FoundSite->GetComponentLocation(), FoundSite->CollisionComponent->GetScaledBoxExtent(), this);
-
-						if (FoundConstruction)
-						{
-							OwningBlackboard->SetValueAsVector(UTask_GetNewConstructionJob::MoveToLocationKey, FoundBuildLocation);
-							return EBTNodeResult::Succeeded;
-						}
+						OwningBlackboard->SetValueAsVector(UTask_GetNewConstructionJob::MoveToLocationKey, FoundBuildLocation);
+						return EBTNodeResult::Succeeded;
 					}
-
-					return EBTNodeResult::Failed;
 				}
+
+				return EBTNodeResult::Failed;
 			}
 		}
 	}

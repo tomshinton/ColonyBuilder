@@ -1,21 +1,22 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
-#include "Task_FindWorkplace.h"
-#include "ColonyInstance.h"
+#include "Task_FindResidence.h"
+
 #include "ConstructionManager.h"
 #include "VillagerController.h"
 #include "BaseVillager.h"
 #include "Utils/Libraries/ManagerUtils.h"
 
-EBTNodeResult::Type UTask_FindWorkplace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UTask_FindResidence::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (AVillagerController* OwningVillager = Cast<AVillagerController>(OwnerComp.GetAIOwner()))
 	{
 		if (ABaseVillager* OwningVillagerPawn = Cast<ABaseVillager>(OwningVillager->GetPawn()))
 		{
-			if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(OwningVillagerPawn))
+			if (UConstructionManager* ConstructionManager = GetManager<UConstructionManager>(OwningVillager))
 			{
-				const bool PawnHasBeenAssigned = ConstructionManager->AssignPawnToWorkplace(OwningVillagerPawn);
+				const bool PawnHasBeenAssigned = ConstructionManager->AssignPawnToResidence(OwningVillagerPawn);
+
 				return PawnHasBeenAssigned ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
 			}
 		}

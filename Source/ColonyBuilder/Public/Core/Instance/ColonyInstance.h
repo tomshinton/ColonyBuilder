@@ -24,27 +24,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Managers")
 	UColonyManager* GetManagerFromClass(TSubclassOf<UColonyManager> InManagerClass);
 
-#pragma region Templates
-	/*best cpp implementation*/
-	template<class T>
-	T* GetManager()
-	{
-		for (UColonyManager* Manager : Managers)
-		{
-			if (Manager->IsA(T::StaticClass()))
-			{
-				T* ReturnManager = Cast<T>(Manager);
-				return ReturnManager;
-			}
-		}
+	TArray<UColonyManager*> GetManagers() { return Managers; }
 
-		return nullptr;
-	}
+#pragma region Templates
+
 #pragma endregion
 
 private:
 
 	UPROPERTY()
 	TArray<UColonyManager*> Managers;
-
 };
