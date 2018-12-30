@@ -2,26 +2,139 @@
 
 #include "ConstructionManager.h"
 #include "Construction/ConstructionComponent.h"
+#include "BuildableBase.h"
+#include <EngineUtils.h>
+#include "GarrisonPoint.h"
 
-const float UConstructionManager::ConstructionTickRate(0.1);
+DEFINE_LOG_CATEGORY(ConstructionManagerLog)
 
-void UConstructionManager::TickComponents()
+const float UConstructionManager::ConstructionTickRate(0.01);
+
+void UConstructionManager::PostInitProperties()
 {
-	for (int32 i = RegisteredComponents.Num()-1; i>=0; i--)
+	Super::PostInitProperties();
+
+	if (UWorld* World = GetWorld())
 	{
-		UConstructionComponent* CurrComponent = RegisteredComponents[i];
+		World->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
 
-		if (CurrComponent->GetTickCallbackInfo().CanTick)
+		//Grab all preplaced-buildings and enable them as finished buildings
+		for(TActorIterator<ABuildableBase> Itr(GetWorld()); Itr; ++Itr)
 		{
-			CurrComponent->UpdateConstructionTime(ConstructionTickRate);
+			ABuildableBase* PreplacedBuilding = *Itr;
 
-			if (CurrComponent->GetCurrentBuildTime() <= 0.f)
+			if (PreplacedBuilding)
 			{
-				CurrComponent->FinishConstruction();
-				RegisteredComponents.Remove(CurrComponent);
+				if (PreplacedBuilding->IsPreplaced)
+				{
+					PreplacedBuilding->ConstructionComponent->SetCurrConstructionStage(EConstructionStage::Finished);
+					PreplacedBuilding->EnableBuilding();
+					PreplacedBuilding->BuildingID = FGuid::NewGuid();
+					FinishedBuildings.Add(PreplacedBuilding);
+				}
 			}
 		}
 	}
+}
+
+bool UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
+{
+	//Current implementation assigns pawn to first available vacancy
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (ABuildableBase* BuildingPtr = FinishedBuilding.Get())
+		{
+			if (BuildingPtr->HasVacancies())
+			{
+				BuildingPtr->AddEmployee(InVillager);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool UConstructionManager::AssignPawnToResidence(ABaseVillager* InVillager)
+{
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (ABuildableBase* BuildingPtr = FinishedBuilding.Get())
+		{
+			if (BuildingPtr->HasBoardingRoom())
+			{
+				BuildingPtr->AddResident(InVillager);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void UConstructionManager::TickComponents()
+{
+	if (RegisteredComponents.Num() > 0)
+	{
+		if (UConstructionComponent* CurrComponent = RegisteredComponents[CurrentRegisteredIndex])
+		{
+			if (CurrComponent->GetTickCallbackInfo().CanTick)
+			{
+				const float UpdateAmount = CurrComponent->GetTickCallbackInfo().TickModifier*ConstructionTickRate * (RegisteredComponents.Num() + 1);
+				CurrComponent->UpdateConstructionTime(UpdateAmount);
+
+				if (CurrComponent->GetCurrentBuildTime() <= 0.f)
+				{
+					RegisteredComponents.Remove(CurrComponent);
+					PendingFinishedComponents.Add(CurrComponent);
+				}
+			}
+		}
+	}
+
+	(CurrentRegisteredIndex + 1) > RegisteredComponents.Num() - 1 ? CurrentRegisteredIndex = 0 : CurrentRegisteredIndex++;
+
+	if (PendingFinishedComponents.Num() > 0)
+	{
+		for (int32 i = PendingFinishedComponents.Num() - 1; i >= 0; i--)
+		{
+			if (UConstructionComponent* ComponentPtr = PendingFinishedComponents[i])
+			{
+				if (ComponentPtr->CanFinish())
+				{
+					ComponentPtr->FinishConstruction();
+					PendingFinishedComponents.RemoveAt(i);
+
+					if (ABuildableBase* FinishedBuilding = Cast<ABuildableBase>(ComponentPtr->GetOwner()))
+					{
+						FinishedBuildings.Add(FinishedBuilding);
+					}
+				}
+			}
+		}
+	}
+}
+
+UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite)
+{
+	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
+	{
+		if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
+		{
+			if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
+			{
+				RegisteredComponent->RegisterNewBuilder(VillagerController);
+				ConstructionSite = RegisteredComponent->GetRandomConstructionSite();
+				return RegisteredComponent.Get();
+			}
+		}
+	}
+	return nullptr;
+}
+
+ABuildableBase* UConstructionManager::GetBuildingFromId(const FGuid BuildingId)
+{
+	return *FinishedBuildings.FindByPredicate([&](ABuildableBase* Building) { return Building->BuildingID == BuildingId; });
 }
 
 void UConstructionManager::RegisterNewConstructionComponent(UConstructionComponent* NewComponent)
@@ -41,12 +154,108 @@ bool UConstructionManager::IsComponentRegistered(UConstructionComponent* InCompo
 	}
 }
 
-void UConstructionManager::PostInitProperties()
+bool UConstructionManager::IsControllerOnActiveComponent(AVillagerController* InController) const
 {
-	Super::PostInitProperties();
+	bool IsRegistered = false;
 
-	if (GetWorld())
+	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
 	{
-		GetWorld()->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
+		if(RegisteredComponent.Get()->GetRegisteredBuilders().Contains(InController))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UConstructionManager::IsControllerOnPendingFinishComponent(AVillagerController* InController) const
+{
+	bool IsRegistered = false;
+
+	for (TWeakObjectPtr<UConstructionComponent> PendingComponent : PendingFinishedComponents)
+	{
+		if (PendingComponent.Get()->GetRegisteredBuilders().Contains(InController))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+TWeakObjectPtr<ABuildableBase> UConstructionManager::IsPawnRegisteredAsEmployee(ABaseVillager* InVillager) const
+{
+	//Is this pawn registered to any of of our Finished Buildings as an employee?
+
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (FinishedBuilding.IsValid())
+		{
+			if (FinishedBuilding.Get()->RegisteredEmployees.Contains(InVillager->VillagerID))
+			{
+				return FinishedBuilding;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+TWeakObjectPtr<ABuildableBase> UConstructionManager::IsPawnRegistedAsResident(ABaseVillager* InVillager) const
+{
+	//Is this pawn registered to any of our Finished Buildings as a Resident? 
+
+	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
+	{
+		if (FinishedBuilding.IsValid())
+		{
+			if (FinishedBuilding.Get()->RegisteredResidents.Contains(InVillager->VillagerID))
+			{
+				return FinishedBuilding;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+bool UConstructionManager::IsPawnGarrisoned(ABaseVillager* InVillager) const
+{
+	for (ABuildableBase* FinishedBuilding : FinishedBuildings)
+	{
+		TArray<UActorComponent*> ActorComps = FinishedBuilding->GetComponentsByClass(UGarrisonPoint::StaticClass());
+		for (UActorComponent* ActorComp : ActorComps)
+		{
+			if (UGarrisonPoint* GarrisonPoint = Cast<UGarrisonPoint>(ActorComp))
+			{
+				if (GarrisonPoint->IsPawnGarrisoned(InVillager))
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+void UConstructionManager::UngarrisonPawn(ABaseVillager* InVillager) const
+{
+	for (ABuildableBase* FinishedBuilding : FinishedBuildings)
+	{
+		TArray<UActorComponent*> ActorComps = FinishedBuilding->GetComponentsByClass(UGarrisonPoint::StaticClass());
+		for (UActorComponent* ActorComp : ActorComps)
+		{
+			if (UGarrisonPoint* GarrisonPoint = Cast<UGarrisonPoint>(ActorComp))
+			{
+				if (GarrisonPoint->IsPawnGarrisoned(InVillager))
+				{
+					GarrisonPoint->Ungarrison(InVillager);
+					break;
+				}
+			}
+		}
 	}
 }
+

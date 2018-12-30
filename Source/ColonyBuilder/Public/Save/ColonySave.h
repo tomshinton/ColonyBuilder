@@ -22,14 +22,19 @@ public:
 	void Heartbeat();
 
 public:
+
 	UPROPERTY(SaveGame)
 	FString SlotName;
+
 	UPROPERTY(SaveGame)
 	FDateTime SaveTime;
 
 	UPROPERTY(SaveGame)
 	TArray<FBuildingSaveData> SavedBuildables;
-	
+
 	UPROPERTY(SaveGame)
 	FPlayerSaveData PlayerSaveData;
+
+	UPROPERTY(SaveGame)
+	TArray<FVillagerSaveData> SavedVillagers;
 };

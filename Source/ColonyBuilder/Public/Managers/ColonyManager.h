@@ -8,7 +8,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(ColonyManagerLog, Log, All);
 
-UCLASS(Abstract)
+UCLASS()
 class COLONYBUILDER_API UColonyManager : public UObject
 {
 	GENERATED_BODY()	

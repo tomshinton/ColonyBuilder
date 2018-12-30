@@ -9,6 +9,12 @@
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "PlayerPawn.h"
 
+#include "AI/Navigation/NavigationSystem.h"
+#include "BaseVillager.h"
+#include "VillagerManager.h"
+#include "ColonyInstance.h"
+#include "Utils/Libraries/ManagerUtils.h"
+
 const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 
 DEFINE_LOG_CATEGORY(SaveManager);
@@ -16,39 +22,39 @@ DEFINE_LOG_CATEGORY(SaveManager);
 USaveManager::USaveManager()
 {
 	AutosaveFrequency = 5.f;
-	AutosaveEnabled = true;
+	AutosaveEnabled = false;
 }
 
 void USaveManager::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	if (!CurrentSave) 
+	if (UColonySave* CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0)))
 	{
-		if (!UGameplayStatics::DoesSaveGameExist(SaveSlot, 0))
-		{
-			CurrentSave = Cast<UColonySave>(UGameplayStatics::CreateSaveGameObject(UColonySave::StaticClass()));
-		}
-		else
-		{
-			CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0));
-			LoadGame(CurrentSave);
-		}
+		LoadGame(CurrentSave);
 	}
 
-	StartAutosaveTimer();
+	if (AutosaveEnabled)
+	{
+		StartAutosaveTimer();
+	}
 }
 
 void USaveManager::SaveGame()
 {
+	UE_LOG(SaveManager, Log, TEXT("Saving Game"));
 	TArray<AActor*> FoundActors;
 	TArray<FBuildingSaveData> SavedBuildings;
 
 	if (UWorld* World = GetWorld())
 	{
+		UColonySave* CurrentSave = Cast<UColonySave>(UGameplayStatics::CreateSaveGameObject(UColonySave::StaticClass()));
+
+		//Get/Create a new save
 		if (CurrentSave)
 		{
 #pragma region Buildings
+			UE_LOG(SaveManager, Log, TEXT("Saving Buildings"));
 			UGameplayStatics::GetAllActorsWithInterface(World, USavableInterface::StaticClass(), FoundActors);
 
 			CurrentSave->SavedBuildables.Empty();
@@ -60,8 +66,9 @@ void USaveManager::SaveGame()
 				}
 			}
 #pragma endregion 
+
 #pragma region Player
-			if (!LocalPawnRef)
+			if (!LocalPawnRef.IsValid())
 			{
 				if (APawn* LocalPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
 				{
@@ -72,19 +79,44 @@ void USaveManager::SaveGame()
 				}
 			}
 
-			CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+			if (LocalPawnRef.IsValid())
+			{
+				UE_LOG(SaveManager, Log, TEXT("Saving Player Info"));
+				CurrentSave->PlayerSaveData = LocalPawnRef->GetSaveData();
+			}
 #pragma endregion 
-			UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
+
+#pragma region AI
+
+			TArray<AActor*> FoundVillagers;
+			UGameplayStatics::GetAllActorsOfClass(World, ABaseVillager::StaticClass(), FoundVillagers);
+
+			for (AActor* FoundVillager : FoundVillagers)
+			{
+				if (ABaseVillager* Villager = Cast<ABaseVillager>(FoundVillager))
+				{
+					CurrentSave->SavedVillagers.Add(Villager->GetSaveData());
+				}
+			}
+
+
+#pragma endregion 
+
+				UE_LOG(SaveManager, Log, TEXT("Saving data to file"));
+				UGameplayStatics::SaveGameToSlot(CurrentSave, USaveManager::SaveSlot, 0);
 		}
 	}
 }
 
 void USaveManager::StartAutosaveTimer()
 {
-	if (GetWorld() && AutosaveEnabled)
+	if (UWorld* World = GetWorld())
 	{
-		AutosaveHandle.Invalidate();
-		GetWorld()->GetTimerManager().SetTimer(AutosaveHandle, this, &USaveManager::SaveGame, AutosaveFrequency, true, 0.f);
+		if (AutosaveEnabled)
+		{
+			AutosaveHandle.Invalidate();
+			World->GetTimerManager().SetTimer(AutosaveHandle, this, &USaveManager::SaveGame, AutosaveFrequency, true, 0.f);
+		}
 	}
 }
 
@@ -96,25 +128,36 @@ void USaveManager::SetAutosaveFrequency(int32 InAutosaveFrequency)
 
 void USaveManager::LoadGame(UColonySave* SaveToLoad)
 {
-	if (SaveToLoad && GetWorld())
+	if (SaveToLoad)
 	{
-#pragma region Buildings
-		FActorSpawnParameters SpawnParams;
-
-		for (FBuildingSaveData SavedBuilding : SaveToLoad->SavedBuildables)
+		if (UWorld* World = GetWorld())
 		{
-			if (auto* NewBuilding = GetWorld()->SpawnActor<AActor>(SavedBuilding.BuildingClass, SavedBuilding.BuildingTransform, SpawnParams))
+			FActorSpawnParameters SpawnParams;
+
+			for (FBuildingSaveData& SavedBuilding : SaveToLoad->SavedBuildables)
 			{
-				ISavableInterface* SaveInterface = Cast<ISavableInterface>(NewBuilding);
-				SaveInterface->LoadBuildingSaveData(SavedBuilding);
+				if (auto* NewBuilding = GetWorld()->SpawnActor<AActor>(SavedBuilding.BuildingClass, SavedBuilding.BuildingTransform, SpawnParams))
+				{
+					ISavableInterface* SaveInterface = Cast<ISavableInterface>(NewBuilding);
+					SaveInterface->LoadBuildingSaveData(SavedBuilding);
+				}
+			}
+		
+			//Store player data because the Player hasnt spawned yet
+			CachedPlayerData = SaveToLoad->PlayerSaveData;
+
+			for (FVillagerSaveData& SavedVillagerData : SaveToLoad->SavedVillagers)
+			{
+				if (SavedVillagerData.PawnClass)
+				{
+					if (UVillagerManager* VillagerManager = GetManager<UVillagerManager>(World))
+					{
+						//Respawn the villagers from save
+						VillagerManager->CreateVillagerFromSavedata(SavedVillagerData);
+					}
+				}
 			}
 		}
-#pragma endregion
 	}
-}
 
-FPlayerSaveData USaveManager::GetPlayerSaveInfo()
-{
-	return CurrentSave->PlayerSaveData;
 }
-

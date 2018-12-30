@@ -28,7 +28,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Meshes")
 	UBoxComponent* GridBodyCollision;
+
+	FGuid BuildingID;
 	
+private:
 
 	//ISavableInterface
 	virtual FBuildingSaveData GetBuildingSaveData() override;

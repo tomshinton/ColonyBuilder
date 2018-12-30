@@ -2,22 +2,34 @@
 	"FileVersion": 3,
 	"EngineAssociation": "4.17",
 	"Category": "",
-  "Description": "",
-  "Modules": [
-    {
-      "Name": "ColonyBuilder",
-      "Type": "Runtime",
-      "LoadingPhase": "Default",
-      "AdditionalDependencies": [
-        "Engine",
-        "UMG",
-        "CoreUObject"
-      ]
-    },
-    {
-      "Name": "ColonyEditor",
-      "Type": "Editor",
-      "LoadingPhase":  "PostEngineInit"
-    }
-  ]
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "ColonyBuilder",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule",
+				"UMG",
+				"CoreUObject"
+			]
+		},
+		{
+			"Name": "ColonyEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "ColonyAI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule",
+				"ColonyBuilder",
+				"CoreUObject"
+			]
+		}
+	]
 }

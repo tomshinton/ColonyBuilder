@@ -29,6 +29,6 @@ public:
 
 private:
 
-	ISelectionInterface* HoveredInterface;
-	ISelectionInterface* SelectedInterface;
+	TScriptInterface<ISelectionInterface> HoveredInterface;
+	TScriptInterface<ISelectionInterface> SelectedInterface;
 };

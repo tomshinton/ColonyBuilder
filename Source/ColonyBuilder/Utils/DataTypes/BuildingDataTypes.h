@@ -15,6 +15,15 @@ enum class EConstructionMethod : uint8
 	Linear			UMETA(DisplayName = "Linear Construction")
 };
 
+UENUM(BlueprintType)
+enum class EConstructionStage : uint8
+{
+	AwaitingResources,
+	Construction,
+	Upgrading,
+	Finished
+};
+
 //By what means was this generated - linearly, or through the grid generation
 UENUM(BlueprintType)
 enum class EPointType : uint8
@@ -94,14 +103,7 @@ struct FSubBuilding
 	}
 };
 
-UENUM(BlueprintType)
-enum class EConstructionStage : uint8
-{
-	AwaitingResources,
-	Construction,
-	Upgrading,
-	Finished
-};
+
 
 UCLASS()
 class COLONYBUILDER_API UBuildingDataTypes : public UObject

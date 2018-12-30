@@ -8,7 +8,7 @@
 #include "ColonySave.h"
 
 #include "Kismet/GameplayStatics.h"
-
+#include "Utils/Libraries/ManagerUtils.h"
 
 // Sets default values
 APlayerPawn::APlayerPawn()
@@ -55,15 +55,9 @@ void APlayerPawn::BeginPlay()
 	SelectionComponent->SetEnabled(true);
 
 	//Load any saved data, if there is any
-	if (UColonyManager* Manager = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(this))->GetManagerByClass(USaveManager::StaticClass()))
+	if (USaveManager* SaveManager = GetManager<USaveManager>(this))
 	{
-		if (USaveManager* SaveManager = Cast<USaveManager>(Manager))
-		{
-			if (SaveManager->GetCurrentSave()->PlayerSaveData.IsValidSetting)
-			{
-				LoadSaveData(SaveManager->GetPlayerSaveInfo());
-			}
-		}
+		LoadSaveData(SaveManager->GetCachedPlayerData());
 	}
 }
 
@@ -95,12 +89,9 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::StartConfirm);
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Released, this, &APlayerPawn::EndConfirm);
 	PlayerInputComponent->BindAction(TEXT("Cancel"), IE_Pressed, this, &APlayerPawn::Cancel);
-
 }
 
-void APlayerPawn::RebindNavigationComponents()
-{
-
+void APlayerPawn::RebindNavigationComponents(){
 }
 
 #pragma region Binds
@@ -168,12 +159,20 @@ void APlayerPawn::Cancel()
 
 FPlayerSaveData APlayerPawn::GetSaveData()
 {
-	FPlayerSaveData NewData(true, GetActorTransform(), SpringArm->GetComponentTransform());
-	return NewData;
+	if (this)
+	{
+		FPlayerSaveData NewData(true, GetActorTransform(), SpringArm->GetComponentTransform());
+		return NewData;
+	}
+	
+	return FPlayerSaveData();
 }
 
 void APlayerPawn::LoadSaveData(const FPlayerSaveData& LoadedData)
 {
-	SetActorTransform(LoadedData.PlayerTransform);
-	SpringArm->SetWorldTransform(LoadedData.CameraTransform);
+	if (LoadedData.IsValidSetting)
+	{
+		SetActorTransform(LoadedData.PlayerTransform);
+		SpringArm->SetWorldTransform(LoadedData.CameraTransform);
+	}
 }

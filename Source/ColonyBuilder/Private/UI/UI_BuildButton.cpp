@@ -19,7 +19,6 @@ UUI_BuildButton::UUI_BuildButton()
 	OnClicked.AddDynamic(this, &UUI_BuildButton::BeginBuild);
 }
 
-#if WITH_EDITOR
 
 void UUI_BuildButton::BeginBuild()
 {
@@ -43,6 +42,8 @@ void UUI_BuildButton::BeginBuild()
 		}
 	}
 }
+
+#if WITH_EDITOR
 
 const FText UUI_BuildButton::GetPaletteCategory()
 {

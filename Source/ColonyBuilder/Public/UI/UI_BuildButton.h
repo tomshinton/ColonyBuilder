@@ -12,9 +12,6 @@ class UBuildComponent;
 class UBuildingData;
 class ARTSPlayerController;
 
-/**
- * 
- */
 UCLASS(DisplayName = "Build Button")
 class COLONYBUILDER_API UUI_BuildButton : public UButton
 {
@@ -29,6 +26,7 @@ public:
 
 	UBuildComponent* BuildComponentRef;
 	ARTSPlayerController* ControllerRef;
+
 	UFUNCTION()
 	void BeginBuild();
 

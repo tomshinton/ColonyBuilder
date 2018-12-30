@@ -5,6 +5,7 @@
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
 #include "Engine/EngineTypes.h"
+#include "Utils/Libraries/CollisionChannels.h"
 
 void USelectionComponent::SetEnabled(bool InEnabled)
 {
@@ -34,30 +35,34 @@ void USelectionComponent::HoverCheck(const FVector& PosUnderMouse, const FVector
 {
 	if (GetWorld())
 	{
-	
 		FHitResult HitResult;
-		OwningController->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+		OwningController->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(CC_SELECTION), true, HitResult);
 
-		if (!HitResult.Actor.Get() && HoveredInterface)
+		if (!HitResult.Actor.Get() && HoveredInterface.GetInterface())
 		{
 			HoveredInterface->OnEndHover();
 		}
 
-		if (ISelectionInterface* SelectionInterface = Cast<ISelectionInterface>(HitResult.Actor.Get()))
+		AActor* HitActor = HitResult.Actor.Get();
+
+		if (ISelectionInterface* SelectionInterface = Cast<ISelectionInterface>(HitActor))
 		{
-			if (SelectionInterface != HoveredInterface)
+			if (SelectionInterface != HoveredInterface.GetInterface())
 			{
 				SelectionInterface->OnReceiveHover();
-				if (HoveredInterface)
+
+				if (HoveredInterface.GetInterface())
 				{
 					HoveredInterface->OnEndHover();
 				}
-				HoveredInterface = SelectionInterface;
+
+				HoveredInterface.SetInterface(SelectionInterface);
+				HoveredInterface.SetObject(HitActor);
 			}
 		}
 		else
 		{
-			if (HoveredInterface)
+			if (HoveredInterface.GetObject())
 			{
 				HoveredInterface->OnEndHover();
 				HoveredInterface = nullptr;
@@ -68,12 +73,12 @@ void USelectionComponent::HoverCheck(const FVector& PosUnderMouse, const FVector
 
 void USelectionComponent::Select()
 {
-	if (!HoveredInterface || HoveredInterface != SelectedInterface)
+	if (!HoveredInterface.GetObject() || HoveredInterface != SelectedInterface)
 	{
 		CancelSelection();
 	}
 
-	if (HoveredInterface)
+	if (HoveredInterface.GetObject())
 	{
 		HoveredInterface->OnSelect();
 		SelectedInterface = HoveredInterface;
@@ -83,9 +88,12 @@ void USelectionComponent::Select()
 
 void USelectionComponent::CancelSelection()
 {
-	if (SelectedInterface)
+	if (SelectedInterface.GetObject())
 	{
 		SelectedInterface->OnEndSelect();
+
+		SelectedInterface.SetObject(nullptr);
+		SelectedInterface.SetInterface(nullptr);
 	}
 }
 

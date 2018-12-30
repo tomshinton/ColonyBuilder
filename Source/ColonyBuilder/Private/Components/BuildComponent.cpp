@@ -161,25 +161,8 @@ TArray<FSubBuilding> UBuildComponent::BuildLinearPoints()
 	int8 XDir;
 	int8 YDir;
 
-#pragma region Directions
-	if (XDeltaAsUnits >= 0)
-	{
-		XDir = 1;
-	}
-	else
-	{
-		XDir = -1;
-	}
-
-	if (YDeltaAsUnits >= 0)
-	{
-		YDir = 1;
-	}
-	else
-	{
-		YDir = -1;
-	}
-#pragma endregion Directions
+	XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
+	YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
 
 	FVector NewPoint = MouseLocationAtBuildingStart;
 
@@ -222,25 +205,8 @@ TArray<FSubBuilding> UBuildComponent::BuildGridPoints()
 	int8 XDir;
 	int8 YDir;
 
-#pragma region Directions
-	if (XDeltaAsUnits >= 0)
-	{
-		XDir = 1;
-	}
-	else
-	{
-		XDir = -1;
-	}
-
-	if (YDeltaAsUnits >= 0)
-	{
-		YDir = 1;
-	}
-	else
-	{
-		YDir = -1;
-	}
-#pragma endregion Directions
+	XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
+	YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
 
 	for(int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
 	{
@@ -372,6 +338,7 @@ void UBuildComponent::EndPlacement()
 			{
 				ABuildableBase* NewBuilding = GetWorld()->SpawnActor<ABuildableBase>(BuildingData->BuildingClass, CurrentGhostLoc, CurrentGhostRot);
 				NewBuilding->SubBuildings = SubBuildings;
+				NewBuilding->BuildingID = FGuid::NewGuid();
 				
 				SpawnedBuildings.Add(NewBuilding);
 			}

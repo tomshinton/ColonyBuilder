@@ -20,12 +20,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Managers")
 	void StartManager(TSubclassOf<UColonyManager> ManagerClass, FString ManagerName);
 
+	/*best BP implementation*/
 	UFUNCTION(BlueprintCallable, Category = "Managers")
-	UColonyManager* GetManagerByClass(TSubclassOf<UColonyManager> ManagerClass);
+	UColonyManager* GetManagerFromClass(TSubclassOf<UColonyManager> InManagerClass);
+
+	TArray<UColonyManager*> GetManagers() { return Managers; }
+
+#pragma region Templates
+
+#pragma endregion
 
 private:
 
 	UPROPERTY()
 	TArray<UColonyManager*> Managers;
-
 };

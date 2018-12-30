@@ -3,20 +3,23 @@
 #include "BuildableBase.h"
 #include "BuildingData.h"
 #include "UserWidget.h"
+#include "ConstructionComponent.h"
+#include <Components/StaticMeshComponent.h>
+#include <Components/SceneComponent.h>
+#include "GarrisonPoint.h"
 
-// Sets default values
 ABuildableBase::ABuildableBase()
+	: SceneRoot(CreateDefaultSubobject<USceneComponent>(TEXT("Building Root")))
+	, MeshComponent(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh")))
+	, ConstructionComponent(CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component")))
 {
-	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Building Root"));
 	RootComponent = SceneRoot;
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Static Mesh"));
-	MeshComponent->SetCollisionProfileName("BlockAllDynamic");
+	MeshComponent->SetCollisionProfileName("ConstructionSite");
 	MeshComponent->SetupAttachment(SceneRoot);
 	MeshComponent->bGenerateOverlapEvents = true;
 
-	ConstructionComponent = CreateDefaultSubobject<UConstructionComponent>(TEXT("Construction Component"));
-	ConstructionComponent->OnConstructionFinished.AddDynamic(this, &ABuildableBase::EnableBuilding);
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void ABuildableBase::OnConstruction(const FTransform& Transform)
@@ -24,27 +27,74 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 	if (BuildingData)
 	{
 		MeshComponent->SetStaticMesh(BuildingData->BuildingBaseMesh);
-
+#if WITH_EDITOR
 		SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
+#endif //WITH_EDITOR
+
+		SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
+		SelectionWidget->SetSelectedActor(this);
+
+		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget.Get(), &UUI_SelectionBox::OnConstructionUpdated);
 	}
 
-	SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
-	SelectionWidget->SetSelectedActor(this);
-
-	ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
-	ConstructionComponent->OnConstructionFinished.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionFinished);
+	CachedGarrisonPoint = Cast<UGarrisonPoint>(GetComponentByClass(UGarrisonPoint::StaticClass()));
 }
-
-#pragma region SavableInterface
 
 void ABuildableBase::EnableBuilding()
 {
+	if (SelectionWidget.IsValid())
+	{
+		SelectionWidget.Get()->OnConstructionFinished();
+	}
 
+	MeshComponent->SetCollisionProfileName("Building");
+}
+
+void ABuildableBase::AddEmployee(ABaseVillager* InVillager)
+{
+	RegisteredEmployees.AddUnique(InVillager->VillagerID);
+
+	InVillager->WorkplaceID = BuildingID;
+
+	if (BuildingData->Professions.Num() > 0)
+	{
+		InVillager->SetProfession(BuildingData->Professions[0]);
+	}
+}
+
+void ABuildableBase::AddResident(ABaseVillager* InVillager)
+{
+	RegisteredResidents.AddUnique(InVillager->VillagerID);
+	InVillager->ResidenceID = BuildingID;
+}
+
+bool ABuildableBase::HasVacancies() const
+{
+	if (RegisteredEmployees.Num() < BuildingData->MaxEmployees)
+	{
+		return true;
+	} 
+	else
+	{
+		return false;
+	}
+}
+
+bool ABuildableBase::HasBoardingRoom() const
+{
+	if (RegisteredResidents.Num() < BuildingData->MaxResidents)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 FBuildingSaveData ABuildableBase::GetBuildingSaveData()
 {
-	FBuildingSaveData NewData(GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData());
+	FBuildingSaveData NewData(BuildingID, GetClass(), BuildingData, GetActorTransform(), MeshComponent->GetStaticMesh(), ConstructionComponent->GetConstructionSaveData(), RegisteredEmployees, RegisteredResidents);
 	return NewData;
 }
 
@@ -52,10 +102,15 @@ void ABuildableBase::LoadBuildingSaveData(FBuildingSaveData LoadedData)
 {
 	MeshComponent->SetStaticMesh(LoadedData.BuildingMesh);
 	ConstructionComponent->SetConstructionLoadData(LoadedData.ConstructionData, BuildingData);
-}
-#pragma endregion SavableInterface
 
-#pragma region SelectionInterface
+	if (ConstructionComponent->GetCurrConstructionStage() == EConstructionStage::Finished)
+	{
+		EnableBuilding();
+	}
+
+	BuildingID = LoadedData.ID;
+}
+
 void ABuildableBase::OnReceiveHover()
 {
 	for (int8 i = 0; i <= MeshComponent->GetMaterials().Num(); i++)
@@ -74,19 +129,19 @@ void ABuildableBase::OnEndHover()
 
 void ABuildableBase::OnSelect()
 {
-	if (!IsSelected && SelectionWidget)
+	if (!IsSelected && SelectionWidget.IsValid())
 	{
-		SelectionWidget->AddToViewport(0);
+		SelectionWidget.Get()->AddToViewport(0);
 		IsSelected = true;
 	}
 }
 
 void ABuildableBase::OnEndSelect()
 {
-	if (IsSelected && SelectionWidget)
+	if (IsSelected && SelectionWidget.IsValid())
 	{
-		SelectionWidget->RemoveFromParent();
+		SelectionWidget.Get()->RemoveFromParent();
 		IsSelected = false;
 	}
 }
-#pragma endregion SelectionInterface
+

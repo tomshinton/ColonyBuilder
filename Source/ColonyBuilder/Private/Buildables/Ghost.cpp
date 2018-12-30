@@ -171,7 +171,6 @@ void AGhost::UpdateGridGhost()
 				BodyMeshes->AddInstanceWorldSpace(NewInstanceTrans);
 			}
 		}
-
 	}
 }
 
