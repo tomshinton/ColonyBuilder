@@ -2,7 +2,6 @@
 
 #include "BaseVillager.h"
 #include "Controllers/VillagerController.h"
-#include "PackedBlackboard.h"
 
 DEFINE_LOG_CATEGORY(VillagerLog);
 
@@ -15,17 +14,15 @@ ABaseVillager::ABaseVillager()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
+void ABaseVillager::BeginPlay()
+{
+	Plan = NewObject<UPlan>(this, TEXT("VillagerPlan"));
+}
+
 FVillagerSaveData ABaseVillager::GetSaveData()
 {
-	FPackedBlackboard PackedBlackboard = FPackedBlackboard();
 	FVillagerLocationData LocationData = FVillagerLocationData(ResidenceID, WorkplaceID);
-
-	if (AVillagerController* Controller = Cast<AVillagerController>(GetController()))
-	{
-		PackedBlackboard.Pack(Controller->BlackboardComp);
-	}
-
-	return FVillagerSaveData(VillagerID, GetClass(), GetTransform(), PackedBlackboard, LocationData, Profession);
+	return FVillagerSaveData(VillagerID, GetClass(), GetTransform(), LocationData, Profession);
 }
 
 void ABaseVillager::LoadVillagerSaveData(const FVillagerSaveData& InData)

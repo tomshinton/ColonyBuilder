@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "SelectionInterface.h"
+#include "Plan/Plan.h"
 
 #include "BaseVillager.generated.h"
 
@@ -22,6 +23,14 @@ UCLASS()
 class COLONYAI_API ABaseVillager : public ACharacter, public ISelectionInterface
 {
 	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintPure, Category = "AI")
+	UPlan* GetPlan() const { return Plan; };
+
+
+	virtual void BeginPlay() override;
 
 public:
 	ABaseVillager();
@@ -45,4 +54,7 @@ public:
 
 private:
 	TSubclassOf<UProfessionBase> Profession;
+
+	UPROPERTY()
+	UPlan* Plan;
 };

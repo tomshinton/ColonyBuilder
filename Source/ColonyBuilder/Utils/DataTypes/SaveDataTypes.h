@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "BuildingDataTypes.h"
-#include "Datatypes/PackedBlackboard.h"
 #include "Professions.h"
 
 #include "SaveDataTypes.generated.h"
@@ -156,17 +155,15 @@ struct FVillagerSaveData
 		: VillagerID()
 		, PawnClass()
 		, VillagerTransform(FTransform())
-		, PackedBlackboard()
 		, ImportantLocations()
 		, Profession(nullptr)
 	{}
 
 
-	FVillagerSaveData(FGuid InVillagerID, TSubclassOf<APawn> InPawnClass, const FTransform InTransform, const FPackedBlackboard InPackedBlackoboard, const FVillagerLocationData InImportantLocations, const TSubclassOf<UProfessionBase> InProfession)
+	FVillagerSaveData(FGuid InVillagerID, TSubclassOf<APawn> InPawnClass, const FTransform InTransform, const FVillagerLocationData InImportantLocations, const TSubclassOf<UProfessionBase> InProfession)
 		: VillagerID(InVillagerID)
 		, PawnClass(InPawnClass)
 		, VillagerTransform(InTransform)
-		, PackedBlackboard(InPackedBlackoboard)
 		, ImportantLocations(InImportantLocations)
 		, Profession(InProfession)
 	{}
@@ -179,9 +176,6 @@ struct FVillagerSaveData
 
 	UPROPERTY()
 	FTransform VillagerTransform;
-
-	UPROPERTY()
-	FPackedBlackboard PackedBlackboard;
 
 	UPROPERTY()
 	FVillagerLocationData ImportantLocations;

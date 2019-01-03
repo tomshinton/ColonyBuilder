@@ -16,14 +16,6 @@ void UVillagerManager::CreateVillagerFromSavedata(FVillagerSaveData& Savedata)
 		{
 			NewVillager->LoadVillagerSaveData(Savedata);
 			RegisterNewVillager(NewVillager);
-			
-			if (AAIController* NewController = Cast<AAIController>(NewVillager->GetController()))
-			{
-				if(UBlackboardComponent* NewBlackboard = NewController->GetBlackboardComponent())
-				{
-					Savedata.PackedBlackboard.Unpack(NewBlackboard);
-				}
-			}
 		}
 	}
 }
