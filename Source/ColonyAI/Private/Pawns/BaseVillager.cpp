@@ -8,7 +8,7 @@ DEFINE_LOG_CATEGORY(VillagerLog);
 // Sets default values
 ABaseVillager::ABaseVillager()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	AIControllerClass = AVillagerController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;

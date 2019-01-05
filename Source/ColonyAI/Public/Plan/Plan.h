@@ -7,6 +7,7 @@
 #include "Plan.generated.h"
 
 class UStage;
+class UVillagerManager;
 
 //////////////////////////////////////////////////////////////////////////
 // Base Plan for AI FiniteStateMachine
@@ -29,22 +30,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Plan")
 	void PushPlan(TArray<TSubclassOf<UStage>> InPlan);
 
-	UFUNCTION()
-	void Advance();
-
 protected:
 
 	void CreateCurrentStageInstance(TSubclassOf<UStage> InStageTemplate);
 
-private:
-
 	UFUNCTION()
-	void TickPlan(const float DeltaTime);
+	void Advance();
 
 	bool CanAdvance() const;
 
+	void QueueAdvance();
+
+	UPROPERTY()
+	UVillagerManager* CachedVillagerManager;
+
+	TFunction<void()> AdvancePtr;
+
 	FTimerHandle PlanTickHandle;
-	FOnPlanTick OnTick;
 
 	TArray<TSubclassOf<UStage>> CurrentPlan;
 	TArray<TArray<TSubclassOf<UStage>>> Plans;

@@ -3,14 +3,14 @@
 #include "Plan.h"
 #include "Plan/Stage.h"
 #include "Settings/ColonyAISettings.h"
+#include "VillagerManager.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 DEFINE_LOG_CATEGORY_STATIC(PlanLog, Log, All);
 
-DECLARE_CYCLE_STAT(TEXT("PlanAI Tick"), STAT_PlanAI_Tick, STATGROUP_PlanAI);
 DECLARE_CYCLE_STAT(TEXT("PlanAI AdvanceStage"), STAT_PlanAI_AdvanceStage, STATGROUP_PlanAI);
 DECLARE_CYCLE_STAT(TEXT("PlanAI CreateStage"), STAT_PlanAI_CreateStage, STATGROUP_PlanAI);
 DECLARE_CYCLE_STAT(TEXT("PlanAI CanAdvanceCheck"), STAT_PlanAI_CanAdvanceCheck, STATGROUP_PlanAI);
-
 
 UPlan::UPlan()
 	: IsPlanActive(false)
@@ -20,43 +20,40 @@ void UPlan::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	if (UColonyAISettings* AISettings = GetMutableDefault<UColonyAISettings>())
+	if (!CachedVillagerManager)
 	{
 		if (UWorld* World = GetOuter()->GetWorld())
 		{
-			const float PlanTickInterval = AISettings->PlanTickInterval;
-
-			FTimerDelegate PlanTickDelegate;
-			PlanTickDelegate.BindUFunction(this, FName("TickPlan"), PlanTickInterval);
-
-			World->GetTimerManager().SetTimer(PlanTickHandle, PlanTickDelegate, PlanTickInterval, true, 0.f);
+			if (UVillagerManager* Manager = GetManager<UVillagerManager>(World))
+			{
+				CachedVillagerManager = Manager;
+				AdvancePtr = [this](){ Advance(); };
+			}
 		}
-	}
-}
-
-void UPlan::TickPlan(const float DeltaTime)
-{
-	SCOPE_CYCLE_COUNTER(STAT_PlanAI_Tick);
-
-	OnTick.Broadcast(DeltaTime);
-
-	if (CanAdvance())
-	{
-		SCOPE_CYCLE_COUNTER(STAT_PlanAI_CanAdvanceCheck);
-		
-		Advance();
 	}
 }
 
 bool UPlan::CanAdvance() const
 {
 	return !CurrentStageInstance && (CurrentPlan.Num() > 0 || Plans.Num() > 0);
-	//return !IsPlanActive && (CurrentPlan.Num() >= || Plans.Num() <= 0);
+}
+
+void UPlan::QueueAdvance()
+{
+	if (CachedVillagerManager)
+	{
+		CachedVillagerManager->PushAdvance(AdvancePtr);
+	}
 }
 
 void UPlan::PushPlan(TArray<TSubclassOf<UStage>> InPlan)
 {
 	Plans.Add(InPlan);
+
+	if (CanAdvance())
+	{
+		QueueAdvance();
+	}
 }
 
 void UPlan::Advance()
@@ -66,7 +63,6 @@ void UPlan::Advance()
 	if (CurrentStageInstance)
 	{
 		CurrentStageInstance->OnStageCompleted.RemoveAll(this);
-		OnTick.RemoveDynamic(CurrentStageInstance, &UStage::OnPlanTick);
 		CurrentStageInstance = nullptr;
 	}
 
@@ -93,7 +89,7 @@ void UPlan::Advance()
 				CurrentPlan = Plans[0];
 				Plans.RemoveAt(0);
 			}
-			Advance();
+			QueueAdvance();
 			return;
 		}
 	}
@@ -107,7 +103,6 @@ void UPlan::CreateCurrentStageInstance(TSubclassOf<UStage> InStageTemplate)
 
 	if (CurrentStageInstance)
 	{
-		OnTick.AddDynamic(CurrentStageInstance, &UStage::OnPlanTick);
 		CurrentPlan.RemoveAt(0);
 	}
 }

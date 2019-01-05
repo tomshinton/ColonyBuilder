@@ -18,7 +18,7 @@ class COLONYAI_API UStage : public UObject
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Stage Flow")
-	void OnPlanTick(const float DeltaTime);
+	void OnStageTick(const float DeltaTime);
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStageCompleted);
 	UPROPERTY(BlueprintAssignable, Category = Callbacks)
@@ -38,8 +38,18 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Stage Flow")
 	bool GetIsActive() const { return IsActive; }
+	
+	virtual void PostInitProperties() override;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Tick")
+	float TickInterval;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Tick")
+	bool IsTickEnabled;
 
 private:
 
 	bool IsActive;
+	
+	FTimerHandle TickStageHandle;
 };

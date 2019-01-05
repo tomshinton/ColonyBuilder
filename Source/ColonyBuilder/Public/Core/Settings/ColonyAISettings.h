@@ -15,8 +15,8 @@ class COLONYBUILDER_API UColonyAISettings : public UObject
 
 public:
 
-	UPROPERTY(EditAnywhere, config, Category = "AI", meta = (ClampMin = "0", UIMin = "0"))
-	float PlanTickInterval;
+	UPROPERTY(EditAnywhere, config, Category = "Intervals", meta = (ClampMin = "0", UIMin = "0"))
+	float PlanAdvanceInterval;
 
 	/** Static stages are stages that are ran whenever the plan is ticked - they act as setup functions, e.g FindWork, FindHouse, etc etc*/
 	/** They do not get popped off the stack of stages in a plan*/
