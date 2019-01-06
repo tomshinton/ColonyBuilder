@@ -29,8 +29,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI")
 	UPlan* GetPlan() const { return Plan; };
 
-
 	virtual void BeginPlay() override;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Movement")
+	float MoveSpeed;
 
 public:
 	ABaseVillager();

@@ -7,6 +7,7 @@
 #include <GameFramework/Pawn.h>
 #include <ConstructorHelpers.h>
 #include "ColonyAISettings.h"
+#include "Plan.h"
 
 
 void UVillagerManager::PostInitProperties()
@@ -57,17 +58,15 @@ void UVillagerManager::RegisterNewVillager(ABaseVillager* InNewVillager)
 	SpawnedVillagers.Add(InNewVillager);
 }
 
-void UVillagerManager::PushAdvance(TFunction<void()> InFunc)
+void UVillagerManager::PushAdvance(TFunction<void()> InFunc, const bool IsCritical)
 {
-	AdvanceFuncArray.Add(InFunc);
-
-	if (UWorld* World = GetWorld())
+	if (IsCritical)
 	{
-		FTimerManager& TimerRef = World->GetTimerManager();
-		if (!TimerRef.IsTimerActive(TickPlanHandle))
-		{
-			//TimerRef.UnPauseTimer(TickPlanHandle);
-		}
+		AdvanceFuncArray.Insert(InFunc, 0);
+	}
+	else
+	{
+		AdvanceFuncArray.Add(InFunc);
 	}
 }
 
@@ -77,12 +76,5 @@ void UVillagerManager::TickPlanAdvance()
 	{
 		AdvanceFuncArray[0]();
 		AdvanceFuncArray.RemoveAt(0);
-	}
-	else
-	{
-		if (UWorld* World = GetWorld())
-		{
-			//World->GetTimerManager().PauseTimer(TickPlanHandle);
-		}
 	}
 }

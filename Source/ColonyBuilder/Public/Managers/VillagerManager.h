@@ -31,8 +31,10 @@ public:
 
 	void SetBaseVillagerClass(TSubclassOf<ABaseVillager> InBaseVillagerClass) { BaseVillagerClass = InBaseVillagerClass; }
 
-	void PushAdvance(TFunction<void()> InFunc);
+	void PushAdvance(TFunction<void()> InFunc, const bool IsCritical = false);
 	
+	int32 GetAdvanceQueueNum() const { return AdvanceFuncArray.Num(); };
+
 protected:
 
 	void TickPlanAdvance();

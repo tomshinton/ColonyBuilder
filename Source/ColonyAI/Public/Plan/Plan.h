@@ -17,6 +17,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlanTick, const float, DeltaTime)
 
 DECLARE_STATS_GROUP(TEXT("PlanAI"), STATGROUP_PlanAI, STATCAT_Advanced);
 
+UENUM()
+enum class EStageFinishReason : uint8
+{
+	Success,
+	Failed,
+	ShouldAbort
+};
+
 UCLASS()
 class COLONYAI_API UPlan : public UObject
 {
@@ -37,16 +45,17 @@ protected:
 	UFUNCTION()
 	void Advance();
 
-	bool CanAdvance() const;
-
+	UFUNCTION()
 	void QueueAdvance();
 
+	bool CanAdvance() const;
+	
 	UPROPERTY()
 	UVillagerManager* CachedVillagerManager;
 
-	TFunction<void()> AdvancePtr;
-
 	FTimerHandle PlanTickHandle;
+
+	TFunction<void()> AdvancePtr;
 
 	TArray<TSubclassOf<UStage>> CurrentPlan;
 	TArray<TArray<TSubclassOf<UStage>>> Plans;

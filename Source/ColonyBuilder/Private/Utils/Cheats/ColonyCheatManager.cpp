@@ -5,6 +5,8 @@
 #include "BaseVillager.h"
 #include "Plan.h"
 #include "Stage.h"
+#include "VillagerManager.h"
+#include "Utils/Libraries/ManagerUtils.h"
 
 void UColonyCheatManager::ToggleAIReadout()
 {
@@ -28,6 +30,8 @@ void UColonyCheatManager::ShowAIReadout() const
 	int32 VillagerCount = 0;
 	int32 PlanCount = 0;
 	int32 StageCount = 0;
+
+	const int32 AdvanceQueue = GetManager<UVillagerManager>(GetWorld())->GetAdvanceQueueNum();
 
 	for (TActorIterator<ABaseVillager> Itr(GetWorld()); Itr; ++Itr)
 	{
@@ -65,4 +69,6 @@ void UColonyCheatManager::ShowAIReadout() const
 		const FString WarningReadout = "More stages active than plans! " + FString::FromInt(StageCount) + " Active Stages over " + FString::FromInt(PlanCount) + " plans!";
 		GEngine->AddOnScreenDebugMessage(4, 1, FColorList::OrangeRed, FString::Printf(TEXT("%s"), *WarningReadout));
 	}
+
+	GEngine->AddOnScreenDebugMessage(5, 1, FColor::White, FString::Printf(TEXT("Advances queued: %i"), AdvanceQueue));
 }

@@ -12,6 +12,8 @@ ABaseVillager::ABaseVillager()
 
 	AIControllerClass = AVillagerController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	MoveSpeed = 10.f;
 }
 
 void ABaseVillager::BeginPlay()

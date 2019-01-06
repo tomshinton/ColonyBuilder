@@ -4,6 +4,9 @@
 
 #include "Stage.generated.h"
 
+enum class EStageFinishReason : uint8;
+class ABaseVillager;
+
 //////////////////////////////////////////////////////////////////////////
 // Base stage class for any action that could take place within a Plan.  Base class for both blueprintable ones, and async ones, as well as parallel
 //////////////////////////////////////////////////////////////////////////
@@ -13,12 +16,15 @@ class COLONYAI_API UStage : public UObject
 {
 	GENERATED_BODY()
 
-	UStage();
-
 public:
 
+	UStage();
+	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Stage Flow")
-	void OnStageTick(const float DeltaTime);
+	void StageTick(const float DeltaTime);
+
+	//Virtual implementation to account for cpp defined stages 
+	virtual void OnStageTick(const float DeltaTime);
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStageCompleted);
 	UPROPERTY(BlueprintAssignable, Category = Callbacks)
@@ -26,6 +32,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Stage Flow")
 	void Start();
+
+	//Virtual implementation to account for cpp defined stages
+	virtual void OnStart();
 
 	UFUNCTION(BlueprintCallable, Category = "Stage Flow")
 	void FinishExecute();
@@ -46,6 +55,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Tick")
 	bool IsTickEnabled;
+
+protected:
+
+	ABaseVillager* GetVillagerOuter() const;
 
 private:
 

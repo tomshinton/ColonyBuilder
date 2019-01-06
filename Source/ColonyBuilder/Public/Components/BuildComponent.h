@@ -27,7 +27,7 @@ public:
 	UBuildComponent();
 
 	//Setters//
-	virtual void SetEnabled(bool InEsnabled) override;
+	virtual void SetEnabled(bool InEnabled) override;
 
 	UFUNCTION()
 	void UpdateMouseCoords(const FVector& InCurrMouseCoords, const FVector& InRoundedMouseCoords);

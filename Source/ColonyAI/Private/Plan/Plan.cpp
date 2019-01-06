@@ -26,8 +26,8 @@ void UPlan::PostInitProperties()
 		{
 			if (UVillagerManager* Manager = GetManager<UVillagerManager>(World))
 			{
+				AdvancePtr = [&]() { Advance(); };
 				CachedVillagerManager = Manager;
-				AdvancePtr = [this](){ Advance(); };
 			}
 		}
 	}
@@ -73,24 +73,24 @@ void UPlan::Advance()
 	}
 	else
 	{
-		if (CurrentPlan.Num() > 0)
-		{
-			CreateCurrentStageInstance(CurrentPlan[0]);
-
-			CurrentStageInstance->OnStageCompleted.AddDynamic(this, &UPlan::Advance);
-			CurrentStageInstance->Start();
-
-			IsPlanActive = true;
-		}
-		else
+		if (CurrentPlan.Num() <= 0)
 		{
 			if (Plans.Num() > 0)
 			{
 				CurrentPlan = Plans[0];
 				Plans.RemoveAt(0);
 			}
-			QueueAdvance();
-			return;
+		}
+
+		//Do we have any new plans to carry on with, post swap?
+		if (CurrentPlan.Num() > 0)
+		{
+			CreateCurrentStageInstance(CurrentPlan[0]);
+
+			CurrentStageInstance->OnStageCompleted.AddDynamic(this, &UPlan::QueueAdvance);
+			CurrentStageInstance->Start();
+
+			IsPlanActive = true;
 		}
 	}
 }
