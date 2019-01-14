@@ -29,6 +29,9 @@ private:
 	UPROPERTY()	
 	USplineComponent* PathSpline;
 
+	FNavAgentProperties NavProperties;
+	FPathFindingQuery NavQuery;
+
 	bool ShouldPath;
 
 	float CurrentDistance;

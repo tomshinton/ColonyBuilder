@@ -17,9 +17,13 @@ UMoveTo::UMoveTo()
 	, ShouldPath(false)
 	, CurrentDistance(0.f)
 	, MaxDistance(0.f)
+	, NavProperties(ABaseVillager::AgentRadius, ABaseVillager::AgentHeight)
 {
 	TickInterval = SIXTY_FPS_AS_FLOAT;
 	IsTickEnabled = true;
+
+	NavProperties.bCanWalk = true;
+	NavProperties.bCanFly = false;
 }
 
 void UMoveTo::OnStart()
@@ -31,14 +35,7 @@ void UMoveTo::GetRoute()
 {
 	ShouldPath = false;
 
-	FNavAgentProperties NavAgentProps;
-	NavAgentProps.AgentHeight = 100.f;
-	NavAgentProps.AgentRadius = 50.f;
-	NavAgentProps.bCanWalk = true;
-	NavAgentProps.bCanFly = false;
-
 	FPathFindingQuery NavParams;
-
 	NavParams.StartLocation = GetVillagerOuter()->GetActorLocation();
 	NavParams.EndLocation = GetWorld()->GetNavigationSystem()->GetRandomPointInNavigableRadius(GetWorld(), NavParams.StartLocation, 20000);
 
@@ -48,7 +45,7 @@ void UMoveTo::GetRoute()
 	FNavPathQueryDelegate PathFoundDelegate;
 	PathFoundDelegate.BindUObject(this, &UMoveTo::OnRouteFound);
 	
-	GetWorld()->GetNavigationSystem()->FindPathAsync(NavAgentProps, NavParams, PathFoundDelegate, EPathFindingMode::Regular);
+	GetWorld()->GetNavigationSystem()->FindPathAsync(NavProperties, NavParams, PathFoundDelegate, EPathFindingMode::Regular);
 }
 
 void UMoveTo::OnRouteFound(uint32 PathId, ENavigationQueryResult::Type ResultType, FNavPathSharedPtr NavPointer)

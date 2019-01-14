@@ -67,6 +67,18 @@ void UStage::FinishExecute()
 	}
 }
 
+void UStage::AbortExecute(const EStageAbortReason InAbortReason)
+{
+	OnStageAborted.Broadcast(InAbortReason);
+
+	IsActive = false;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(TickStageHandle);
+	}
+}
+
 void UStage::StageCallback(const FString String, const float Duration, const bool PrintToScreen)
 {
 	if (!String.IsEmpty())

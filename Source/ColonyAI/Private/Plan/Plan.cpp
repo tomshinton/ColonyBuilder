@@ -38,12 +38,31 @@ bool UPlan::CanAdvance() const
 	return !CurrentStageInstance && (CurrentPlan.Num() > 0 || Plans.Num() > 0);
 }
 
+void UPlan::ClearCurrentStage()
+{
+	if (CurrentStageInstance)
+	{
+		CurrentStageInstance->OnStageCompleted.RemoveAll(this);
+		CurrentStageInstance->OnStageAborted.RemoveAll(this);
+		CurrentStageInstance = nullptr;
+	}
+}
+
 void UPlan::QueueAdvance()
 {
 	if (CachedVillagerManager)
 	{
 		CachedVillagerManager->PushAdvance(AdvancePtr);
 	}
+}
+
+void UPlan::AbortStage(const EStageFinishReason OnStageAborted)
+{
+	ClearCurrentStage();
+
+	CurrentPlan.Empty();
+
+	QueueAdvance();
 }
 
 void UPlan::PushPlan(TArray<TSubclassOf<UStage>> InPlan)
@@ -60,11 +79,7 @@ void UPlan::Advance()
 {
 	SCOPE_CYCLE_COUNTER(STAT_PlanAI_AdvanceStage);
 
-	if (CurrentStageInstance)
-	{
-		CurrentStageInstance->OnStageCompleted.RemoveAll(this);
-		CurrentStageInstance = nullptr;
-	}
+	ClearCurrentStage();
 
 	if (CurrentPlan.Num() <= 0 && Plans.Num() <= 0)
 	{
@@ -88,6 +103,7 @@ void UPlan::Advance()
 			CreateCurrentStageInstance(CurrentPlan[0]);
 
 			CurrentStageInstance->OnStageCompleted.AddDynamic(this, &UPlan::QueueAdvance);
+			CurrentStageInstance->OnStageAborted.AddDynamic(this, &UPlan::AbortStage);
 			CurrentStageInstance->Start();
 
 			IsPlanActive = true;

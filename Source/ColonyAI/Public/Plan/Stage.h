@@ -4,7 +4,7 @@
 
 #include "Stage.generated.h"
 
-enum class EStageFinishReason : uint8;
+enum class EStageAbortReason : uint8;
 class ABaseVillager;
 
 //////////////////////////////////////////////////////////////////////////
@@ -30,6 +30,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Callbacks)
 	FOnStageCompleted OnStageCompleted;
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageAborted, const EStageAbortReason, AbortReason);
+	UPROPERTY(BlueprintAssignable, Category = Callbacks)
+	FOnStageAborted OnStageAborted;
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Stage Flow")
 	void Start();
 
@@ -38,6 +42,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stage Flow")
 	void FinishExecute();
+
+	UFUNCTION(BlueprintCallable, Category = "Stage Flow")
+	void AbortExecute(const EStageAbortReason InAbortReason);
 
 	UFUNCTION(BlueprintCallable, Category = "Debug")
 	void StageCallback(const FString String, const float Duration, const bool PrintToScreen);

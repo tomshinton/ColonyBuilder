@@ -32,9 +32,6 @@ void UConstructionComponent::BeginPlay()
 			if (UConstructionSiteComponent* NewSite = Cast<UConstructionSiteComponent>(FoundComponent))
 			{
 				FoundConstructionSites.AddUnique(NewSite);
-
-				NewSite->OnNewBuilder.AddDynamic(this, &UConstructionComponent::NewLocalBuilder);
-				NewSite->OnBuilderLeft.AddDynamic(this, &UConstructionComponent::LocalBuilderLeft);
 			}
 		}
 

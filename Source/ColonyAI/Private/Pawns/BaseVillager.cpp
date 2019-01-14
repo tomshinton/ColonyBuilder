@@ -1,17 +1,31 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
 #include "BaseVillager.h"
-#include "Controllers/VillagerController.h"
+
+#include <Components/CapsuleComponent.h>
+#include <Components/SkeletalMeshComponent.h>
+#include <Components/StaticMeshComponent.h>
 
 DEFINE_LOG_CATEGORY(VillagerLog);
 
+const float ABaseVillager::AgentRadius(50.f);
+const float ABaseVillager::AgentHeight(100.f);
+
 // Sets default values
 ABaseVillager::ABaseVillager()
+: Capsule(CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp")))
+, SkelMeshComp(CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp")))
+, StaticMeshComponent(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp")))
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	AIControllerClass = AVillagerController::StaticClass();
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	Capsule->SetCapsuleHalfHeight(AgentHeight);
+	Capsule->SetCapsuleRadius(AgentHeight);
+
+	RootComponent = Capsule;
+
+	SkelMeshComp->SetupAttachment(Capsule);
+	StaticMeshComponent->SetupAttachment(Capsule);
 
 	MoveSpeed = 10.f;
 }

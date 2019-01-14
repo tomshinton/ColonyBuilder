@@ -8,6 +8,7 @@
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "SelectionInterface.h"
 #include "Plan/Plan.h"
+#include "Journal.h"
 
 #include "BaseVillager.generated.h"
 
@@ -15,21 +16,38 @@
 // Base class for all Villagers in the colony
 //////////////////////////////////////////////////////////////////////////
 
-class AAIController;
+class UCapsuleComponent;
+class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(VillagerLog, All, All)
 
 UCLASS()
-class COLONYAI_API ABaseVillager : public ACharacter, public ISelectionInterface
+class COLONYAI_API ABaseVillager : public AActor, public ISelectionInterface
 {
 	GENERATED_BODY()
 
 public:
 
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Collision")
+	UCapsuleComponent* Capsule;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Collision")
+	USkeletalMeshComponent* SkelMeshComp;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Collision")
+	UStaticMeshComponent* StaticMeshComponent;
+
 	UFUNCTION(BlueprintPure, Category = "AI")
 	UPlan* GetPlan() const { return Plan; };
 
+	UFUNCTION(BlueprintPure, Category = "AI")
+	FJournal& GetJournal() { return Journal; }
+
 	virtual void BeginPlay() override;
+
+	static const float AgentRadius;
+	static const float AgentHeight;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Movement")
 	float MoveSpeed;
@@ -59,4 +77,7 @@ private:
 
 	UPROPERTY()
 	UPlan* Plan;
+
+	UPROPERTY()
+	FJournal Journal;
 };

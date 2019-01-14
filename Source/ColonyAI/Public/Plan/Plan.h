@@ -18,11 +18,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlanTick, const float, DeltaTime)
 DECLARE_STATS_GROUP(TEXT("PlanAI"), STATGROUP_PlanAI, STATCAT_Advanced);
 
 UENUM()
-enum class EStageFinishReason : uint8
+enum class EStageAbortReason : uint8
 {
-	Success,
-	Failed,
-	ShouldAbort
+	Failure
 };
 
 UCLASS()
@@ -48,6 +46,9 @@ protected:
 	UFUNCTION()
 	void QueueAdvance();
 
+	UFUNCTION()
+	void AbortStage(const EStageAbortReason OnStageAborted);
+
 	bool CanAdvance() const;
 	
 	UPROPERTY()
@@ -64,4 +65,8 @@ protected:
 	UStage* CurrentStageInstance;
 
 	bool IsPlanActive;
+
+private:
+
+	void ClearCurrentStage();
 };

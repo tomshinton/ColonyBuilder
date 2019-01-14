@@ -14,8 +14,6 @@ UConstructionSiteComponent::UConstructionSiteComponent()
 	CollisionComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, NAME_None);
 	CollisionComponent->SetBoxExtent(FVector(200, 200, 200), true);
 	CollisionComponent->SetCollisionProfileName("OverlapAllDynamic");
-	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &UConstructionSiteComponent::OnEnterConstructionSite);
-	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &UConstructionSiteComponent::OnLeaveConstructionSite);
 
 	Sprite = CreateDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
 	Sprite->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, NAME_None);
@@ -25,21 +23,5 @@ UConstructionSiteComponent::UConstructionSiteComponent()
 	if (SpriteTextureRef.Object)
 	{
 		Sprite->Sprite = SpriteTextureRef.Object;
-	}
-}
-
-void UConstructionSiteComponent::OnEnterConstructionSite(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-	if (ABaseVillager* LeavingVillager = Cast<ABaseVillager>(OtherActor))
-	{
-		OnNewBuilder.Broadcast(LeavingVillager->GetController());
-	}
-}
-
-void UConstructionSiteComponent::OnLeaveConstructionSite(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (ABaseVillager* LeavingVillager = Cast<ABaseVillager>(OtherActor))
-	{
-		OnBuilderLeft.Broadcast(LeavingVillager->GetController());
 	}
 }
