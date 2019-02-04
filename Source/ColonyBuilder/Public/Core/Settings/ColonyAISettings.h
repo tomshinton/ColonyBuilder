@@ -20,6 +20,9 @@ public:
 
 	/** Static stages are stages that are ran whenever the plan is ticked - they act as setup functions, e.g FindWork, FindHouse, etc etc*/
 	/** They do not get popped off the stack of stages in a plan*/
-	UPROPERTY(EditAnywhere, config, Category = "Stages")
-	TArray<TSubclassOf<UStage>> StaticStages;
+	UPROPERTY(EditAnywhere, config, Category = "Recursive Stages")
+	TArray<TSubclassOf<UStage>> RecusiveStages;
+
+	UPROPERTY(EditAnywhere, config, Category = "Recursive Stages")
+	float RecursivePlanFrequency;
 };

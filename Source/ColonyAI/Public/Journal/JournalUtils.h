@@ -40,19 +40,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Journal | Setters")
 	static void SetKeyAsGuid(ABaseVillager* InVillager, const FName InKeyName, const FGuid InGuid) { PushKey(GetVillagerJournal(InVillager), FJournalKey(InGuid, InKeyName)); };
 
-
-
-
-
-
-
-
-
-
-
-
 	static FJournal& GetVillagerJournal(ABaseVillager* InVillager);
 	static void PushKey(FJournal& InJournal, const FJournalKey InKey);
 	static FJournalKey GetKey(FJournal& InJournal, const FName InName, const EKeyType InKeyType);
+
+	static bool KeyExists(FJournal& InJournal, const FName InName, const EKeyType InKeyType);
 };
 

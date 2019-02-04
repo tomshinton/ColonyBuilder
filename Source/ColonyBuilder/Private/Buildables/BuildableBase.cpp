@@ -34,7 +34,7 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 		SelectionWidget = CreateWidget<UUI_SelectionBox>(GetWorld(), BuildingData->SelectionWidget);
 		SelectionWidget->SetSelectedActor(this);
 
-		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget.Get(), &UUI_SelectionBox::OnConstructionUpdated);
+		ConstructionComponent->OnConstructionUpdated.AddDynamic(SelectionWidget, &UUI_SelectionBox::OnConstructionUpdated);
 	}
 
 	CachedGarrisonPoint = Cast<UGarrisonPoint>(GetComponentByClass(UGarrisonPoint::StaticClass()));
@@ -42,9 +42,9 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 
 void ABuildableBase::EnableBuilding()
 {
-	if (SelectionWidget.IsValid())
+	if (SelectionWidget)
 	{
-		SelectionWidget.Get()->OnConstructionFinished();
+		SelectionWidget->OnConstructionFinished();
 	}
 
 	MeshComponent->SetCollisionProfileName("Building");
@@ -129,18 +129,18 @@ void ABuildableBase::OnEndHover()
 
 void ABuildableBase::OnSelect()
 {
-	if (!IsSelected && SelectionWidget.IsValid())
+	if (!IsSelected && SelectionWidget)
 	{
-		SelectionWidget.Get()->AddToViewport(0);
+		SelectionWidget->AddToViewport(0);
 		IsSelected = true;
 	}
 }
 
 void ABuildableBase::OnEndSelect()
 {
-	if (IsSelected && SelectionWidget.IsValid())
+	if (IsSelected && SelectionWidget)
 	{
-		SelectionWidget.Get()->RemoveFromParent();
+		SelectionWidget->RemoveFromParent();
 		IsSelected = false;
 	}
 }

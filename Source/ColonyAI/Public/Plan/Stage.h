@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Keys.h"
+
 #include "Stage.generated.h"
 
 enum class EStageAbortReason : uint8;
@@ -72,4 +74,6 @@ private:
 	bool IsActive;
 	
 	FTimerHandle TickStageHandle;
+
+	TArray<FJournalKey> BoundKeys;
 };

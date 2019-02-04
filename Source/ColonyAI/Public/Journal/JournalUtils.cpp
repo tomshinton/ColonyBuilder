@@ -42,6 +42,30 @@ FJournalKey UJournalUtils::GetKey(FJournal& InJournal, const FName InName, const
 	return FJournalKey();
 }
 
+bool UJournalUtils::KeyExists(FJournal& InJournal, const FName InName, const EKeyType InKeyType)
+{
+	if (InName == "")
+	{
+		return false;
+	}
+
+	const int32 KeyNum = InJournal.Keys.Num();
+	if (KeyNum)
+	{
+		const FJournalKey* FoundKey = InJournal.Keys.FindByPredicate([&](const FJournalKey& Key)
+		{
+			return Key.KeyName == InName && Key.KeyType == InKeyType;
+		});
+
+		if (FoundKey)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 FJournal& UJournalUtils::GetVillagerJournal(ABaseVillager* InVillager)
 {
 	check(InVillager);

@@ -8,6 +8,14 @@
 // All key types - allows for custom types to be stored, that would otherwise be lost in a blackboard
 //////////////////////////////////////////////////////////////////////////
 
+//Static key names defined here - ones we dont want to define in terms of inline TEXT creations, keep them uniform across the board
+namespace StaticKeys
+{
+	static const FName MoveToKey = FName("MoveTo");
+	static const FName WorkplaceID = FName("WorkplaceID");
+	static const FName ResidenceID = FName("ResidenceID");
+}
+
 UENUM()
 enum class EKeyType : uint8
 {

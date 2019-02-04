@@ -104,7 +104,7 @@ public:
 	bool IsSelected;
 
 	UPROPERTY()
-	TWeakObjectPtr<UUI_SelectionBox> SelectionWidget;
+	UUI_SelectionBox* SelectionWidget;
 //ISelectionInterface
 
 };

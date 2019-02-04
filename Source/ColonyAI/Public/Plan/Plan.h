@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include <UniquePtr.h>
 #include "Plan.generated.h"
 
 class UStage;
@@ -67,6 +68,9 @@ protected:
 	bool IsPlanActive;
 
 private:
+
+	//Plans that should be run all the time, or should happen ambiently.  This is essentially housekeeping, like "find a new job", or "find somewhere to live".
+	TArray<TSubclassOf<UStage>> RecursiveStages;
 
 	void ClearCurrentStage();
 };

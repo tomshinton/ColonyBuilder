@@ -37,7 +37,7 @@ void UConstructionManager::PostInitProperties()
 	}
 }
 
-bool UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
+FGuid UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
 {
 	//Current implementation assigns pawn to first available vacancy
 	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
@@ -47,15 +47,15 @@ bool UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)
 			if (BuildingPtr->HasVacancies())
 			{
 				BuildingPtr->AddEmployee(InVillager);
-				return true;
+				return BuildingPtr->BuildingID;
 			}
 		}
 	}
 
-	return false;
+	return FGuid(0, 0, 0, 0);
 }
 
-bool UConstructionManager::AssignPawnToResidence(ABaseVillager* InVillager)
+FGuid UConstructionManager::AssignPawnToResidence(ABaseVillager* InVillager)
 {
 	for (TWeakObjectPtr<ABuildableBase> FinishedBuilding : FinishedBuildings)
 	{
@@ -64,12 +64,12 @@ bool UConstructionManager::AssignPawnToResidence(ABaseVillager* InVillager)
 			if (BuildingPtr->HasBoardingRoom())
 			{
 				BuildingPtr->AddResident(InVillager);
-				return true;
+				return BuildingPtr->BuildingID;
 			}
 		}
 	}
 
-	return false;
+	return FGuid(0, 0, 0, 0);
 }
 
 void UConstructionManager::TickComponents()
@@ -117,18 +117,18 @@ void UConstructionManager::TickComponents()
 
 UConstructionComponent* UConstructionManager::ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite)
 {
-	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
-	{
-		if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
-		{
-			if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
-			{
-				RegisteredComponent->RegisterNewBuilder(VillagerController);
-				ConstructionSite = RegisteredComponent->GetRandomConstructionSite();
-				return RegisteredComponent.Get();
-			}
-		}
-	}
+	//for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
+	//{
+	//	if (RegisteredComponent->CanAcceptAnyMoreBuilders(RequestingController))
+	//	{
+	//		if (AVillagerController* VillagerController = Cast<AVillagerController>(RequestingController))
+	//		{
+	//			//RegisteredComponent->RegisterNewBuilder(VillagerController);
+	//			ConstructionSite = RegisteredComponent->GetRandomConstructionSite();
+	//			return RegisteredComponent.Get();
+	//		}
+	//	}
+	//}
 	return nullptr;
 }
 
@@ -154,33 +154,33 @@ bool UConstructionManager::IsComponentRegistered(UConstructionComponent* InCompo
 	}
 }
 
-bool UConstructionManager::IsControllerOnActiveComponent(AVillagerController* InController) const
+bool UConstructionManager::IsControllerOnActiveComponent(AController* InController) const
 {
 	bool IsRegistered = false;
 
 	for (TWeakObjectPtr<UConstructionComponent> RegisteredComponent : RegisteredComponents)
 	{
-		if(RegisteredComponent.Get()->GetRegisteredBuilders().Contains(InController))
-		{
-			return true;
-		}
+//		if(RegisteredComponent.Get()->GetRegisteredBuilders().Contains(InController))
+		//{
+		//	return true;
+		//}
 	}
 
 	return false;
 }
 
-bool UConstructionManager::IsControllerOnPendingFinishComponent(AVillagerController* InController) const
+bool UConstructionManager::IsControllerOnPendingFinishComponent(AController* InController) const
 {
 	bool IsRegistered = false;
-
-	for (TWeakObjectPtr<UConstructionComponent> PendingComponent : PendingFinishedComponents)
-	{
-		if (PendingComponent.Get()->GetRegisteredBuilders().Contains(InController))
+	/*
+		for (TWeakObjectPtr<UConstructionComponent> PendingComponent : PendingFinishedComponents)
 		{
-			return true;
+			if (PendingComponent.Get()->GetRegisteredBuilders().Contains(InController))
+			{
+				return true;
+			}
 		}
-	}
-
+	*/
 	return false;
 }
 
@@ -240,22 +240,19 @@ bool UConstructionManager::IsPawnGarrisoned(ABaseVillager* InVillager) const
 	return false;
 }
 
-void UConstructionManager::UngarrisonPawn(ABaseVillager* InVillager) const
+void UConstructionManager::UngarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding)
 {
-	for (ABuildableBase* FinishedBuilding : FinishedBuildings)
+	if (ABuildableBase* FoundBuilding = GetBuildingFromId(GarrisonBuilding))
 	{
-		TArray<UActorComponent*> ActorComps = FinishedBuilding->GetComponentsByClass(UGarrisonPoint::StaticClass());
-		for (UActorComponent* ActorComp : ActorComps)
-		{
-			if (UGarrisonPoint* GarrisonPoint = Cast<UGarrisonPoint>(ActorComp))
-			{
-				if (GarrisonPoint->IsPawnGarrisoned(InVillager))
-				{
-					GarrisonPoint->Ungarrison(InVillager);
-					break;
-				}
-			}
-		}
+		FoundBuilding->GetGarrisonPoint()->Ungarrison(InVillager);
+	}
+}
+
+void UConstructionManager::GarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding)
+{
+	if (ABuildableBase* FoundBuilding = GetBuildingFromId(GarrisonBuilding))
+	{
+		FoundBuilding->GetGarrisonPoint()->Garrison(InVillager);
 	}
 }
 

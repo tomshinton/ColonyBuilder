@@ -5,6 +5,7 @@
 #include "Settings/ColonyAISettings.h"
 #include "VillagerManager.h"
 #include "Utils/Libraries/ManagerUtils.h"
+#include <DrawDebugHelpers.h>
 
 DEFINE_LOG_CATEGORY_STATIC(PlanLog, Log, All);
 
@@ -29,6 +30,29 @@ void UPlan::PostInitProperties()
 				AdvancePtr = [&]() { Advance(); };
 				CachedVillagerManager = Manager;
 			}
+
+			if (UColonyAISettings* AISettings = GetMutableDefault<UColonyAISettings>())
+			{
+				if (AISettings->RecusiveStages.Num() > 0 && !FMath::IsNearlyZero(AISettings->RecursivePlanFrequency))
+				{
+					RecursiveStages = AISettings->RecusiveStages;
+
+					FTimerDelegate RecursiveStageCallback;
+					FTimerHandle Handle;
+					RecursiveStageCallback.BindLambda(
+						[&]
+					{
+						if (AActor* OuterActor = Cast<AActor>(GetOuter()))
+						{
+							DrawDebugString(GetOuter()->GetWorld(), FVector(0,0,0), TEXT("Ambient plan pushed"), OuterActor, FColorList::HunterGreen, 1.f);
+						}
+
+						PushPlan(RecursiveStages);
+					});
+
+					World->GetTimerManager().SetTimer(Handle, RecursiveStageCallback, AISettings->RecursivePlanFrequency, true, 0.f);
+				}
+			}
 		}
 	}
 }
@@ -44,6 +68,12 @@ void UPlan::ClearCurrentStage()
 	{
 		CurrentStageInstance->OnStageCompleted.RemoveAll(this);
 		CurrentStageInstance->OnStageAborted.RemoveAll(this);
+
+		if (UWorld* World = GetOuter()->GetWorld())
+		{
+			CurrentStageInstance->ConditionalBeginDestroy();
+		}
+
 		CurrentStageInstance = nullptr;
 	}
 }
@@ -56,7 +86,7 @@ void UPlan::QueueAdvance()
 	}
 }
 
-void UPlan::AbortStage(const EStageFinishReason OnStageAborted)
+void UPlan::AbortStage(const EStageAbortReason OnStageAborted)
 {
 	ClearCurrentStage();
 

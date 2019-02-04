@@ -30,18 +30,19 @@ public:
 	void RegisterNewConstructionComponent(UConstructionComponent* NewComponent);
 	bool IsComponentRegistered(UConstructionComponent* InComponent);
 
-	bool IsControllerOnActiveComponent(AVillagerController* InController) const;
-	bool IsControllerOnPendingFinishComponent(AVillagerController* InController) const;
+	bool IsControllerOnActiveComponent(AController* InController) const;
+	bool IsControllerOnPendingFinishComponent(AController* InController) const;
 
 	TWeakObjectPtr<ABuildableBase> IsPawnRegisteredAsEmployee(ABaseVillager* InVillager) const;
 	TWeakObjectPtr<ABuildableBase> IsPawnRegistedAsResident(ABaseVillager* InVillager) const;
 	bool IsPawnGarrisoned(ABaseVillager* InVillager) const;
-	void UngarrisonPawn(ABaseVillager* InVillager) const;
+	void UngarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding);
+	void GarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding);
 
 	virtual void PostInitProperties() override;
 
-	bool AssignPawnToWorkplace(ABaseVillager* InVillager);
-	bool AssignPawnToResidence(ABaseVillager* InVillager);
+	FGuid AssignPawnToWorkplace(ABaseVillager* InVillager);
+	FGuid AssignPawnToResidence(ABaseVillager* InVillager);
 
 	UConstructionComponent* ProcessNewConstructionRequest(AController* RequestingController, TWeakObjectPtr<UConstructionSiteComponent>& ConstructionSite);
 

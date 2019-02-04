@@ -30,6 +30,7 @@ void UColonyCheatManager::ShowAIReadout() const
 	int32 VillagerCount = 0;
 	int32 PlanCount = 0;
 	int32 StageCount = 0;
+	int32 TotalStageCount = 0;
 
 	const int32 AdvanceQueue = GetManager<UVillagerManager>(GetWorld())->GetAdvanceQueueNum();
 
@@ -53,6 +54,8 @@ void UColonyCheatManager::ShowAIReadout() const
 	{
 		if (UStage* Stage = *Itr)
 		{
+			TotalStageCount++;
+
 			if (Stage->GetIsActive())
 			{
 				StageCount++;
@@ -60,6 +63,7 @@ void UColonyCheatManager::ShowAIReadout() const
 		}
 	}
 
+	GEngine->AddOnScreenDebugMessage(4, 1, FColor::White, FString::Printf(TEXT("Total Stages: %i"), TotalStageCount));
 	GEngine->AddOnScreenDebugMessage(1, 1, FColor::White, FString::Printf(TEXT("Active Stages: %i"), StageCount));
 	GEngine->AddOnScreenDebugMessage(2, 1, FColor::White, FString::Printf(TEXT("Plans: %i"), PlanCount));
 	GEngine->AddOnScreenDebugMessage(3, 1, FColor::White, FString::Printf(TEXT("Villagers: %i"), VillagerCount));
