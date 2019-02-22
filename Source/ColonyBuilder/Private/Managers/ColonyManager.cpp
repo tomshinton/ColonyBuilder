@@ -4,12 +4,10 @@
 
 DEFINE_LOG_CATEGORY(ColonyManagerLog);
 
-void UColonyManager::PostInitProperties()
+void UColonyManager::Init(const TFunction<void()> InitCallback)
 {
-	Super::PostInitProperties();
-
-	FString ManagerStartedText = GetName() + " started";
-	UE_LOG(ColonyManagerLog, Log, TEXT("%s"), *ManagerStartedText);
+	UE_LOG(ColonyManagerLog, Log, TEXT("%s Started"), *GetName());
+	InitCallback();
 }
 
 class UWorld* UColonyManager::GetWorld() const

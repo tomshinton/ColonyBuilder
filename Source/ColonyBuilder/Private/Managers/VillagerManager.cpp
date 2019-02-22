@@ -2,10 +2,28 @@
 
 #include "VillagerManager.h"
 #include "BaseVillager.h"
-#include <AIController.h>
-#include "BehaviorTree/BlackboardComponent.h"
 #include <GameFramework/Pawn.h>
 #include <ConstructorHelpers.h>
+#include "ColonyAISettings.h"
+#include "Plan.h"
+
+UVillagerManager::UVillagerManager()
+{
+	ManagerName = "Villager Manager";
+}
+
+void UVillagerManager::Init(const TFunction<void()> InitCallback)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (UColonyAISettings* AISettings = GetMutableDefault<UColonyAISettings>())
+		{
+			World->GetTimerManager().SetTimer(TickPlanHandle, this, &UVillagerManager::TickPlanAdvance, AISettings->PlanAdvanceInterval, true, 0.f);
+		}
+	}
+
+	Super::Init(InitCallback);
+}
 
 void UVillagerManager::CreateVillagerFromSavedata(FVillagerSaveData& Savedata)
 {
@@ -16,14 +34,6 @@ void UVillagerManager::CreateVillagerFromSavedata(FVillagerSaveData& Savedata)
 		{
 			NewVillager->LoadVillagerSaveData(Savedata);
 			RegisterNewVillager(NewVillager);
-			
-			if (AAIController* NewController = Cast<AAIController>(NewVillager->GetController()))
-			{
-				if(UBlackboardComponent* NewBlackboard = NewController->GetBlackboardComponent())
-				{
-					Savedata.PackedBlackboard.Unpack(NewBlackboard);
-				}
-			}
 		}
 	}
 }
@@ -50,3 +60,23 @@ void UVillagerManager::RegisterNewVillager(ABaseVillager* InNewVillager)
 	SpawnedVillagers.Add(InNewVillager);
 }
 
+void UVillagerManager::PushAdvance(TFunction<void()> InFunc, const bool IsCritical)
+{
+	if (IsCritical)
+	{
+		AdvanceFuncArray.Insert(InFunc, 0);
+	}
+	else
+	{
+		AdvanceFuncArray.Add(InFunc);
+	}
+}
+
+void UVillagerManager::TickPlanAdvance()
+{
+	if (AdvanceFuncArray.Num() > 0)
+	{
+		AdvanceFuncArray[0]();
+		AdvanceFuncArray.RemoveAt(0);
+	}
+}

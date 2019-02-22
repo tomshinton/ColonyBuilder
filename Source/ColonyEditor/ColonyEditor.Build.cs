@@ -6,11 +6,13 @@ public class ColonyEditor : ModuleRules
 {
 	public ColonyEditor(ReadOnlyTargetRules Target) : base(Target)
     {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
         PublicIncludePaths.AddRange(new string[] { "ColonyEditor/Public" });
 
         PrivateIncludePaths.AddRange(new string[] { "ColonyEditor/Private" });
 
-        PublicDependencyModuleNames.AddRange(new string[] { "ColonyBuilder", "Core", "CoreUObject", "Engine", "InputCore" });
+        PublicDependencyModuleNames.AddRange(new string[] { "ColonyBuilder", "ColonyAI", "Core", "CoreUObject", "Engine", "InputCore"});
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
     }

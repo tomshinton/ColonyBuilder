@@ -1,31 +1,44 @@
 // ColonyBuilder Project, personal project by Tom Shinton
 
 #include "BaseVillager.h"
-#include "Controllers/VillagerController.h"
-#include "PackedBlackboard.h"
+
+#include <Components/CapsuleComponent.h>
+#include <Components/SkeletalMeshComponent.h>
+#include <Components/StaticMeshComponent.h>
 
 DEFINE_LOG_CATEGORY(VillagerLog);
 
+const float ABaseVillager::AgentRadius(50.f);
+const float ABaseVillager::AgentHeight(100.f);
+
 // Sets default values
 ABaseVillager::ABaseVillager()
+: Capsule(CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp")))
+, SkelMeshComp(CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp")))
+, StaticMeshComponent(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp")))
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
-	AIControllerClass = AVillagerController::StaticClass();
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	Capsule->SetCapsuleHalfHeight(AgentHeight);
+	Capsule->SetCapsuleRadius(AgentHeight);
+
+	RootComponent = Capsule;
+
+	SkelMeshComp->SetupAttachment(Capsule);
+	StaticMeshComponent->SetupAttachment(Capsule);
+
+	MoveSpeed = 10.f;
+}
+
+void ABaseVillager::BeginPlay()
+{
+	Plan = NewObject<UPlan>(this, TEXT("VillagerPlan"));
 }
 
 FVillagerSaveData ABaseVillager::GetSaveData()
 {
-	FPackedBlackboard PackedBlackboard = FPackedBlackboard();
 	FVillagerLocationData LocationData = FVillagerLocationData(ResidenceID, WorkplaceID);
-
-	if (AVillagerController* Controller = Cast<AVillagerController>(GetController()))
-	{
-		PackedBlackboard.Pack(Controller->BlackboardComp);
-	}
-
-	return FVillagerSaveData(VillagerID, GetClass(), GetTransform(), PackedBlackboard, LocationData, Profession);
+	return FVillagerSaveData(VillagerID, GetClass(), GetTransform(), LocationData, Profession);
 }
 
 void ABaseVillager::LoadVillagerSaveData(const FVillagerSaveData& InData)

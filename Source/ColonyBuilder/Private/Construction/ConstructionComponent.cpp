@@ -7,7 +7,6 @@
 #include "BuildingData.h"
 #include "ConstructionManager.h"
 #include "Utils/DataTypes/BuildingDataTypes.h"
-#include "VillagerController.h"
 #include "BaseVillager.h"
 #include "Utils/Libraries/ManagerUtils.h"
 
@@ -32,9 +31,6 @@ void UConstructionComponent::BeginPlay()
 			if (UConstructionSiteComponent* NewSite = Cast<UConstructionSiteComponent>(FoundComponent))
 			{
 				FoundConstructionSites.AddUnique(NewSite);
-
-				NewSite->OnNewBuilder.AddDynamic(this, &UConstructionComponent::NewLocalBuilder);
-				NewSite->OnBuilderLeft.AddDynamic(this, &UConstructionComponent::LocalBuilderLeft);
 			}
 		}
 
@@ -48,7 +44,7 @@ void UConstructionComponent::BeginPlay()
 
 FConstructionCallback UConstructionComponent::GetTickCallbackInfo()
 {
-	FConstructionCallback NewCallback(true, LocalBuilders.Num());
+	FConstructionCallback NewCallback(true, 0);
 	return NewCallback;
 }
 
@@ -73,8 +69,9 @@ TWeakObjectPtr<UConstructionSiteComponent> UConstructionComponent::GetRandomCons
 	return nullptr;
 }
 
-void UConstructionComponent::GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders)
+void UConstructionComponent::GetBuilders(TArray<AController*>& OutLocalBuilders, TArray<AController*>& OutRegisteredBuilders)
 {
+	/*
 	for (const AVillagerController* VillagerController : LocalBuilders)
 	{
 		OutLocalBuilders.Add(const_cast<AVillagerController*>(VillagerController));
@@ -84,6 +81,7 @@ void UConstructionComponent::GetBuilders(TArray<AVillagerController*>& OutLocalB
 	{
 		OutRegisteredBuilders.Add(const_cast<AVillagerController*>(VillagerController));
 	}
+	*/
 }
 
 bool UConstructionComponent::RegisterNewConstruction()
@@ -105,19 +103,21 @@ bool UConstructionComponent::RegisterNewConstruction()
 bool UConstructionComponent::CanAcceptAnyMoreBuilders(AController* RequestingController)
 {
 	//Has this controller already been registered here? Ideally gate it off so we're not double assigning
-	if (RegisteredBuilders.Contains(RequestingController))
-	{
-		return true;
-	}
+	//if (RegisteredBuilders.Contains(RequestingController))
+	//{
+	//	return true;
+	//}
 
-	if (RegisteredBuilders.Num() < BuildingData->MaxBuilders && (CurrStage == EConstructionStage::Construction || CurrStage == EConstructionStage::Upgrading))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	//if (RegisteredBuilders.Num() < BuildingData->MaxBuilders && (CurrStage == EConstructionStage::Construction || CurrStage == EConstructionStage::Upgrading))
+	//{
+	//	return true;
+	//}
+	//else
+	//{
+	//	return false;
+	//}
+
+	return false;
 }
 
 bool UConstructionComponent::CanFinish() const
@@ -140,24 +140,24 @@ bool UConstructionComponent::CanFinish() const
 
 void UConstructionComponent::NewLocalBuilder(const AController* NewBuilder)
 {
-	if (const AVillagerController* NewController = Cast<AVillagerController>(NewBuilder))
-	{
-		if (RegisteredBuilders.Contains(NewController))
-		{
-			LocalBuilders.AddUnique(NewController);
-		}
-	}
+	//if (const AVillagerController* NewController = Cast<AVillagerController>(NewBuilder))
+	//{
+	//	if (RegisteredBuilders.Contains(NewController))
+	//	{
+	//		LocalBuilders.AddUnique(NewController);
+	//	}
+	//}
 }
 
 void UConstructionComponent::LocalBuilderLeft(const AController* LeavingBuilder)
 {
-	if (const AVillagerController* LeavingController = Cast<AVillagerController>(LeavingBuilder))
+	if (const AController* LeavingController = Cast<AController>(LeavingBuilder))
 	{
 		LocalBuilders.Remove(LeavingController);
 	}
 }
 
-void UConstructionComponent::RegisterNewBuilder(AVillagerController* RegisteredController)
+void UConstructionComponent::RegisterNewBuilder(AController* RegisteredController)
 {
 	RegisteredBuilders.AddUnique(RegisteredController);
 }

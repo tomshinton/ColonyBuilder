@@ -18,7 +18,10 @@
 		{
 			"Name": "ColonyEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "PostEngineInit",
+			"AdditionalDependencies": [
+				"UnrealEd"
+			]
 		},
 		{
 			"Name": "ColonyAI",

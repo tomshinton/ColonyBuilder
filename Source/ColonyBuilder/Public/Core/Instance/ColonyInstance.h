@@ -13,25 +13,19 @@ UCLASS()
 class COLONYBUILDER_API UColonyInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
+
+	UColonyInstance();
+
 public:
 	virtual void Init() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Managers")
-	void StartManager(TSubclassOf<UColonyManager> ManagerClass, FString ManagerName);
-
-	/*best BP implementation*/
-	UFUNCTION(BlueprintCallable, Category = "Managers")
-	UColonyManager* GetManagerFromClass(TSubclassOf<UColonyManager> InManagerClass);
-
-	TArray<UColonyManager*> GetManagers() { return Managers; }
-
-#pragma region Templates
-
-#pragma endregion
+	UColonyManager* GetManager(TSubclassOf<UColonyManager> Manager);
 
 private:
 
+	UFUNCTION()
+	void StartManager();
+
 	UPROPERTY()
-	TArray<UColonyManager*> Managers;
+	TMap<TSubclassOf<UColonyManager>, UColonyManager*> Managers;
+	TArray<TSubclassOf<UColonyManager>> ManagerClasses;
 };

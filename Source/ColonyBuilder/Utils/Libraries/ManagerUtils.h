@@ -9,23 +9,13 @@ M* GetManager(UObject* Context)
 {
 	if (UColonyInstance* GameInst = Cast<UColonyInstance>(UGameplayStatics::GetGameInstance(Context)))
 	{
-		for (UColonyManager* Manager : GameInst->GetManagers())
+		if (UColonyManager* FoundManager = GameInst->GetManager(M::StaticClass()))
 		{
-			if (Manager->IsA(M::StaticClass()))
-			{
-				M* ReturnManager = Cast<M>(Manager);
-				return ReturnManager;
-			}
+			return Cast<M>(FoundManager);
 		}
 	}
-
 	return nullptr;
 }
-
-
-
-
-
 
 
 

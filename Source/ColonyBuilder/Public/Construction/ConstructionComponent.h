@@ -7,7 +7,6 @@
 #include "ConstructionInterface.h"
 #include "Utils/DataTypes/SaveDataTypes.h"
 #include "ConstructionSiteComponent.h"
-#include "VillagerController.h"
 
 #include "ConstructionComponent.generated.h"
 
@@ -62,10 +61,10 @@ public:
 	void SetCurrConstructionStage(const EConstructionStage InNewContrustionStage) { CurrStage = InNewContrustionStage; }
 
 	UFUNCTION(BlueprintCallable, Category = Construction)
-	void GetBuilders(TArray<AVillagerController*>& OutLocalBuilders, TArray<AVillagerController*>& OutRegisteredBuilders);
+	void GetBuilders(TArray<AController*>& OutLocalBuilders, TArray<AController*>& OutRegisteredBuilders);
 
-	TArray<const AVillagerController*> const GetRegisteredBuilders() { return RegisteredBuilders; };
-	TArray<const AVillagerController*> const GetLocalBuilders() { return LocalBuilders; };
+	TArray<const AController*> const GetRegisteredBuilders() { return RegisteredBuilders; };
+	TArray<const AController*> const GetLocalBuilders() { return LocalBuilders; };
 
 	UPROPERTY(BlueprintAssignable, Category = Construction)
 	FOnConstructionUpdated OnConstructionUpdated;
@@ -88,7 +87,7 @@ public:
 	UFUNCTION()
 	void LocalBuilderLeft(const AController* LeavingBuilder);
 
-	void RegisterNewBuilder(AVillagerController* RegisteredController);
+	void RegisterNewBuilder(AController* RegisteredController);
 
 
 	//IConstructionInterface
@@ -109,6 +108,6 @@ private:
 
 	FConstructionSaveData SaveData;
 
-	TArray<const AVillagerController*> RegisteredBuilders;
-	TArray<const AVillagerController*> LocalBuilders;
+	TArray<const AController*> RegisteredBuilders;
+	TArray<const AController*> LocalBuilders;
 };

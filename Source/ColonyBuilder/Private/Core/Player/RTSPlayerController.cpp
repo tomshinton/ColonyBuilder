@@ -7,6 +7,7 @@
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 #include "PlayerPawn.h"
+#include "Utils/Cheats/ColonyCheatManager.h"
 
 
 ARTSPlayerController::ARTSPlayerController()
@@ -14,6 +15,8 @@ ARTSPlayerController::ARTSPlayerController()
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
+
+	CheatClass = UColonyCheatManager::StaticClass();
 }
 
 void ARTSPlayerController::BeginPlay()
@@ -105,5 +108,4 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 
 	PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
 	OnMouseMoved.Broadcast(PosUnderMouse, PosUnderMouseRounded);
-
 }

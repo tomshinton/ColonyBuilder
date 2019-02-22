@@ -26,6 +26,8 @@ class USaveManager : public UColonyManager
 
 	static const FString SaveSlot;
 
+	virtual void Init(const TFunction<void() > InitCallback) override;
+
 	UFUNCTION(BlueprintCallable, Category = "Auto Save")
 	void SetAutosaveFrequency(int32 InAutosaveFrequency);
 	UFUNCTION(BlueprintPure, Category = "Auto Save")
@@ -38,9 +40,7 @@ class USaveManager : public UColonyManager
 	
 	
 public:
-	virtual void PostInitProperties() override;
-
-	UFUNCTION(BlueprintPure, Category = "Save Ga me")
+	UFUNCTION(BlueprintPure, Category = "Save Game")
 	FPlayerSaveData GetCachedPlayerData() { return CachedPlayerData; }
 
 	int32 AutosaveFrequency;
