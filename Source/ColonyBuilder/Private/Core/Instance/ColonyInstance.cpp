@@ -8,16 +8,18 @@
 #include "Managers/VillagerManager.h"
 #include <Kismet/GameplayStatics.h>
 #include <Algo/IntroSort.h>
+#include "ColonyManagers.h"
 
 
 DEFINE_LOG_CATEGORY(ColonyInstanceLog);
 
 UColonyInstance::UColonyInstance()
 {
-	//Add classes here, with most critical manager later
-	ManagerClasses.Emplace(UConstructionManager::StaticClass());
-	ManagerClasses.Emplace(UVillagerManager::StaticClass());
-	ManagerClasses.Emplace(USaveManager::StaticClass());
+	//Add classes here, with most critical manager later.  Pull from Editor
+	if (UColonyManagers* ColonyManagers = GetMutableDefault<UColonyManagers>())
+	{
+		ManagerClasses = ColonyManagers->Managers;
+	}
 }
 
 void UColonyInstance::Init()

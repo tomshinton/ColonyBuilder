@@ -8,6 +8,7 @@
 #include "Settings/ColonyAISettings.h"
 #include <ISettingsSection.h>
 #include "MoveTo.h"
+#include "ColonyManagers.h"
 
 IMPLEMENT_MODULE(FColonyEditorModule, ColonyEditor);
 DEFINE_LOG_CATEGORY(ColonyEditorLog)
@@ -46,13 +47,13 @@ void FColonyEditorModule::RegisterUnmutableSettings()
 
 		SettingsContainer->DescribeCategory("Colony Settings", FText::FromString("Colony Settings"), FText::FromString("Base settings for all Colony specific settings"));
 
-		ISettingsSectionPtr AISection = SettingsModule->RegisterSettings("Project", "Colony Settings", "General", FText::FromString("Colony AI Settings"), FText::FromString("Base settings for all Colony AI"), GetMutableDefault<UColonyAISettings>());
+		ISettingsSectionPtr AISection = SettingsModule->RegisterSettings("Project", "Colony Settings", "AI", FText::FromString("Colony AI Settings"), FText::FromString("Base settings for all Colony AI"), GetMutableDefault<UColonyAISettings>());
+		ISettingsSectionPtr ManagerSection = SettingsModule->RegisterSettings("Project", "Colony Settings", "Managers", FText::FromString("Colony Managers"), FText::FromString("Managers to spin up on GameInstant Init - put dependant managers as late as possible in array"), GetMutableDefault<UColonyManagers>());
 
-		if (AISection.IsValid())
+		if (AISection.IsValid() && ManagerSection.IsValid())
 		{
 			AISection->OnModified().BindRaw(this, &FColonyEditorModule::HandleSaved);
 		}
-
 	}
 }
 
@@ -60,14 +61,18 @@ void FColonyEditorModule::UnregisterUnmutableSettings()
 {
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
-		SettingsModule->UnregisterSettings("Project", "Colony Settings", "General");
+		SettingsModule->UnregisterSettings("Project", "Colony Settings", "AI");
+		SettingsModule->UnregisterSettings("Project", "Colony Settings", "Managers");
 	}
 }
 
 bool FColonyEditorModule::HandleSaved()
 {
-	UColonyAISettings* Settings = GetMutableDefault<UColonyAISettings>();
-	Settings->SaveConfig();
+	UColonyAISettings* AISettings = GetMutableDefault<UColonyAISettings>();
+	AISettings->SaveConfig();
+
+	UColonyManagers* ColonyManagers = GetMutableDefault<UColonyManagers>();
+	ColonyManagers->SaveConfig();
 
 	return true;
 }
