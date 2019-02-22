@@ -20,81 +20,19 @@ DEFINE_LOG_CATEGORY(BuildCompLogError);
 
 // Sets default values for this component's properties
 UBuildComponent::UBuildComponent()
+	: Super()
+	, SpawnedGhost(nullptr)
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	SpawnedGhost = nullptr;
-
-	ComponentType = EComponentFunctionType::Function;
-}
-
-void UBuildComponent::SetEnabled(bool InEnabled)
-{
-	Super::SetEnabled(InEnabled);
-
-	if (IsEnabled)
-	{
-
-		if (OwningController)
-		{
-			OwningController->OnMouseMoved.AddDynamic(this, &UBuildComponent::UpdateMouseCoords);
-		}
-
-		OwningPawn->OnStartConfirmAction.AddDynamic(this, &UBuildComponent::StartPlacement);
-		OwningPawn->OnEndConfirmAction.AddDynamic(this, &UBuildComponent::EndPlacement);
-		OwningPawn->OnCancelAction.AddDynamic(this, &UBuildComponent::CancelBuild);
-		OwningPawn->OnRotatePlacement.BindUObject(this, &UBuildComponent::RotatePlacement);
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().ClearTimer(BuildIntermediatePosTimer);
-		SubBuildings.Empty();
-		HasStartedBuilding = false;
-
-		if (OwningController && OwningController->OnMouseMoved.IsBound()) //General cleanup, dont want this running if its not needed
-		{
-			OwningController->OnMouseMoved.RemoveDynamic(this, &UBuildComponent::UpdateMouseCoords);
-
-			if (SpawnedGhost)
-			{
-				SpawnedGhost->Destroy();
-				SpawnedGhost = nullptr;
-			}
-		}
-
-		OwningPawn->OnStartConfirmAction.RemoveDynamic(this, &UBuildComponent::StartPlacement);
-		OwningPawn->OnEndConfirmAction.RemoveDynamic(this, &UBuildComponent::EndPlacement);
-		OwningPawn->OnCancelAction.RemoveDynamic(this, &UBuildComponent::CancelBuild);
-		OwningPawn->OnRotatePlacement.Unbind();
-	}
-}
-
-void UBuildComponent::UpdateMouseCoords(const FVector& InCurrMouseCoords, const FVector& InRoundedMouseCoords)
-{
-	CurrMouseCoords = InCurrMouseCoords;
-	CurrRoundedMouseCoords = InRoundedMouseCoords;
-
-	UpdateGhost();
 }
 
 void UBuildComponent::RotatePlacement()
 {
-	if (SpawnedGhost)
-	{
-		FRotator NewRotation = SpawnedGhost->GetActorRotation();
-		NewRotation.Yaw += RotationRate;
-		SpawnedGhost->SetActorRotation(NewRotation);
-	}
+
 }
 
 void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 {
-	if (IsEnabled)
-	{
-		SetEnabled(false);
-	}
-
-	SetEnabled(true);
-
 	BuildingData = InBuildingData;
 
 	if (BuildingData)
@@ -384,14 +322,13 @@ void UBuildComponent::EndPlacement()
 			}
 		}
 
-		SetEnabled(false);
 		SubBuildings.Empty();
 	}
 }
 
 void UBuildComponent::CancelBuild()
 {	
-	SetEnabled(false);
+	
 }
 
 void UBuildComponent::UpdateGhost()

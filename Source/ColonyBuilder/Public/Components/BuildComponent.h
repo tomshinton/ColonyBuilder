@@ -26,11 +26,6 @@ public:
 	// Sets default values for this component's properties
 	UBuildComponent();
 
-	//Setters//
-	virtual void SetEnabled(bool InEsnabled) override;
-
-	UFUNCTION()
-	void UpdateMouseCoords(const FVector& InCurrMouseCoords, const FVector& InRoundedMouseCoords);
 	void RotatePlacement();
 
 	void StartBuildingFromClass(UBuildingData* BuildingData);

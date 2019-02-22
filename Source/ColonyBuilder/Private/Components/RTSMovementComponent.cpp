@@ -7,44 +7,52 @@
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
 
-
 DEFINE_LOG_CATEGORY(MovementLog);
 
 const FName URTSMovementComponent::FloorTag("Floor");
+const float URTSMovementComponent::CamBlendFrequency(0.02);
 
-// Sets default values for this component's properties
 URTSMovementComponent::URTSMovementComponent()
+	: Super()
+	, IsUsingStaticZ(true)
+	, StaticZHeight(0)
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-	IsUsingStaticZ = true;
-	StaticZHeight = 0;
 }
 
 void URTSMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, 0.02, true);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CamBlendFrequency, true);
+	}
+
+	if (OwningPawn)
+	{
+		Bind();
+	}
 }
 
-void URTSMovementComponent::SetEnabled(bool InEnabled)
+void URTSMovementComponent::Bind()
 {
-	Super::SetEnabled(InEnabled);
+	//OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
 
-	if (IsEnabled)
+	OwningPawn->OnMoveForward.CreateLambda([this](const float InStrength)
 	{
-		OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
-		OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
-		OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
-		OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
-		OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
-		OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
-		OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
+		MoveForwards(InStrength);
+	});
 
-		OwningPawn->OnMouseMoved.RemoveDynamic(this, &URTSMovementComponent::MouseMoved);
-		OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
-	}
+	OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
+	OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
+	OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
+	OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
+	OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
+	OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
+
+	OwningPawn->OnMouseMoved.RemoveDynamic(this, &URTSMovementComponent::MouseMoved);
+	OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
 }
 
 void URTSMovementComponent::BuildEdgeBands()
