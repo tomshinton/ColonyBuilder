@@ -2,18 +2,18 @@
 
 #include "VillagerManager.h"
 #include "BaseVillager.h"
-#include <AIController.h>
-#include "BehaviorTree/BlackboardComponent.h"
 #include <GameFramework/Pawn.h>
 #include <ConstructorHelpers.h>
 #include "ColonyAISettings.h"
 #include "Plan.h"
 
-
-void UVillagerManager::PostInitProperties()
+UVillagerManager::UVillagerManager()
 {
-	Super::PostInitProperties();
+	ManagerName = "Villager Manager";
+}
 
+void UVillagerManager::Init(const TFunction<void()> InitCallback)
+{
 	if (UWorld* World = GetWorld())
 	{
 		if (UColonyAISettings* AISettings = GetMutableDefault<UColonyAISettings>())
@@ -21,6 +21,8 @@ void UVillagerManager::PostInitProperties()
 			World->GetTimerManager().SetTimer(TickPlanHandle, this, &UVillagerManager::TickPlanAdvance, AISettings->PlanAdvanceInterval, true, 0.f);
 		}
 	}
+
+	Super::Init(InitCallback);
 }
 
 void UVillagerManager::CreateVillagerFromSavedata(FVillagerSaveData& Savedata)

@@ -10,16 +10,19 @@ DEFINE_LOG_CATEGORY(ConstructionManagerLog)
 
 const float UConstructionManager::ConstructionTickRate(0.01);
 
-void UConstructionManager::PostInitProperties()
+UConstructionManager::UConstructionManager()
 {
-	Super::PostInitProperties();
+	ManagerName = "Construction Manager";
+}
 
+void UConstructionManager::Init(const TFunction<void() > InitCallback)
+{
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(TickComponentsHandle, this, &UConstructionManager::TickComponents, ConstructionTickRate, true, ConstructionTickRate);
 
 		//Grab all preplaced-buildings and enable them as finished buildings
-		for(TActorIterator<ABuildableBase> Itr(GetWorld()); Itr; ++Itr)
+		for (TActorIterator<ABuildableBase> Itr(GetWorld()); Itr; ++Itr)
 		{
 			ABuildableBase* PreplacedBuilding = *Itr;
 
@@ -35,6 +38,8 @@ void UConstructionManager::PostInitProperties()
 			}
 		}
 	}
+
+	Super::Init(InitCallback);
 }
 
 FGuid UConstructionManager::AssignPawnToWorkplace(ABaseVillager* InVillager)

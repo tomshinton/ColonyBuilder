@@ -20,15 +20,14 @@ const FString USaveManager::SaveSlot(TEXT("Dev Slot"));
 DEFINE_LOG_CATEGORY(SaveManager);
 
 USaveManager::USaveManager()
+	: AutosaveFrequency(5.f)
+	, AutosaveEnabled(false)
 {
-	AutosaveFrequency = 5.f;
-	AutosaveEnabled = false;
+	ManagerName = "Save Manager";
 }
 
-void USaveManager::PostInitProperties()
+void USaveManager::Init(const TFunction<void() > InitCallback)
 {
-	Super::PostInitProperties();
-
 	if (UColonySave* CurrentSave = Cast<UColonySave>(UGameplayStatics::LoadGameFromSlot(USaveManager::SaveSlot, 0)))
 	{
 		LoadGame(CurrentSave);
@@ -38,6 +37,8 @@ void USaveManager::PostInitProperties()
 	{
 		StartAutosaveTimer();
 	}
+
+	Super::Init(InitCallback);
 }
 
 void USaveManager::SaveGame()

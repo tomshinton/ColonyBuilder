@@ -27,6 +27,8 @@ class COLONYBUILDER_API UConstructionManager : public UColonyManager
 
 public:
 
+	UConstructionManager();
+
 	void RegisterNewConstructionComponent(UConstructionComponent* NewComponent);
 	bool IsComponentRegistered(UConstructionComponent* InComponent);
 
@@ -39,8 +41,6 @@ public:
 	void UngarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding);
 	void GarrisonPawn(ABaseVillager* InVillager, const FGuid GarrisonBuilding);
 
-	virtual void PostInitProperties() override;
-
 	FGuid AssignPawnToWorkplace(ABaseVillager* InVillager);
 	FGuid AssignPawnToResidence(ABaseVillager* InVillager);
 
@@ -51,6 +51,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = Construction)
 	TArray<UConstructionComponent*> GetOnGoingConstructs() const { return RegisteredComponents; }
 	
+
+	virtual void Init(const TFunction<void() > InitCallback) override;
+
 private:
 
 	void TickComponents();

@@ -19,7 +19,9 @@ class COLONYBUILDER_API UVillagerManager : public UColonyManager
 
 public:
 
-	virtual void PostInitProperties() override;
+	UVillagerManager();
+
+	virtual void Init(const TFunction<void()> InitCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = Spawning)
 	void CreateVillagerFromSavedata(FVillagerSaveData& Savedata);

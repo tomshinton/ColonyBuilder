@@ -11,16 +11,19 @@ DECLARE_LOG_CATEGORY_EXTERN(ColonyManagerLog, Log, All);
 UCLASS()
 class COLONYBUILDER_API UColonyManager : public UObject
 {
-	GENERATED_BODY()	
+	GENERATED_BODY()
 
-public:
-	void SetManagerName(FString InManagerName) { ManagerName = InManagerName; }
-	FString GetManagerName() { return ManagerName; }
-	
-	virtual void PostInitProperties() override;
-
+public:	
+	virtual void Init(const TFunction<void()> InitCallback);
 	virtual class UWorld* GetWorld() const override;
 
-private:
+	FString GetManagerName() const { return ManagerName; };
+
+protected:
+
 	FString ManagerName;
+
+private:
+
+	TFunction<void()> InitFinishedCallback;
 };
