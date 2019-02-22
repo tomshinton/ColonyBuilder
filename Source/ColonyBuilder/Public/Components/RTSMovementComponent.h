@@ -129,8 +129,9 @@ private:
 	FTimerHandle MiddleMouseMoveTimer;
 	FTimerHandle BlendCameraZoomTimer;
 
+private:
 
-public:
-	virtual void SetEnabled(bool InEnabled) override;
+	void Bind();
 
+	static const float CamBlendFrequency;
 };

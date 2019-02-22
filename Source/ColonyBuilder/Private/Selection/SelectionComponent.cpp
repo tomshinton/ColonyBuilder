@@ -7,27 +7,26 @@
 #include "Engine/EngineTypes.h"
 #include "Utils/Libraries/CollisionChannels.h"
 
-void USelectionComponent::SetEnabled(bool InEnabled)
+void USelectionComponent::PostInitProperties()
 {
-	Super::SetEnabled(InEnabled);
+	Super::PostInitProperties();
 
-	if (InEnabled)
+	if (UWorld* World = GetOuter()->GetWorld())
 	{
-		OwningController->OnMouseMoved.AddDynamic(this, &USelectionComponent::HoverCheck);
-
-		if (!OwningPawn->OnEndConfirmAction.IsBound())
+		if (OwningController)
 		{
-			OwningPawn->OnEndConfirmAction.AddDynamic(this, &USelectionComponent::Select);
-		}
+			OwningController->OnMouseMoved.AddDynamic(this, &USelectionComponent::HoverCheck);
 
-		if (!OwningPawn->OnCancelAction.IsBound())
-		{
-			OwningPawn->OnCancelAction.AddDynamic(this, &USelectionComponent::CancelSelection);
+			if (!OwningPawn->OnEndConfirmAction.IsBound())
+			{
+				OwningPawn->OnEndConfirmAction.AddDynamic(this, &USelectionComponent::Select);
+			}
+
+			if (!OwningPawn->OnCancelAction.IsBound())
+			{
+				OwningPawn->OnCancelAction.AddDynamic(this, &USelectionComponent::CancelSelection);
+			}
 		}
-	}
-	else
-	{
-		OwningController->OnMouseMoved.RemoveDynamic(this, &USelectionComponent::HoverCheck);
 	}
 }
 
@@ -96,4 +95,5 @@ void USelectionComponent::CancelSelection()
 		SelectedInterface.SetInterface(nullptr);
 	}
 }
+
 

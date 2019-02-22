@@ -16,7 +16,8 @@ class COLONYBUILDER_API USelectionComponent : public URTSBaseComp
 	GENERATED_BODY()
 
 public:
-	virtual void SetEnabled(bool InEnabled) override;
+
+	virtual void PostInitProperties() override;
 
 	UFUNCTION()
 	void HoverCheck(const FVector& PosUnderMouse, const FVector& PosUnderMouseRounded);

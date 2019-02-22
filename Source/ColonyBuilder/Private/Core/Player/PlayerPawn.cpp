@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// ColonyBuilder Project, personal project by Tom Shinton
 
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
@@ -10,61 +10,42 @@
 #include "Kismet/GameplayStatics.h"
 #include "Utils/Libraries/ManagerUtils.h"
 
-// Sets default values
 APlayerPawn::APlayerPawn()
+	: PawnRoot(CreateDefaultSubobject<USphereComponent>(TEXT("PlayerPawnRoot")))
+	, SpringArm(CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm")))
+	, PlayerCamera(CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component")))
+	, MovementComp(CreateDefaultSubobject<URTSMovementComponent>(TEXT("RTS Movement Component")))
+	, BuildComponent(CreateDefaultSubobject<UBuildComponent>(TEXT("Build Component")))
+	, SelectionComponent(CreateDefaultSubobject<USelectionComponent>(TEXT("Selection Component")))
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
-	PawnRoot = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Root Component"));
 	PawnRoot->SetCollisionProfileName("NoCollision");
 	RootComponent = PawnRoot;
 
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArm->SetupAttachment(PawnRoot);
 	SpringArm->SetRelativeRotation(FRotator(-45, 0, 0));
 	SpringArm->TargetArmLength = 10000;
 	SpringArm->bDoCollisionTest = false;
 
-	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
 	PlayerCamera->SetupAttachment(SpringArm);
 
-	MovementComp = CreateDefaultSubobject<URTSMovementComponent>(TEXT("RTS Movement Component"));
-	MovementComp->SetOwningPlayer(this);
 	MovementComp->MoveSpeed = 35;
 	MovementComp->RotateSpeed = 12;
 	MovementComp->HeightOffset = PawnRoot->GetScaledSphereRadius();
 
 	MovementComp->CameraArm = SpringArm;
-
-	BuildComponent = CreateDefaultSubobject<UBuildComponent>(TEXT("Build Component"));
-	BuildComponent->SetOwningPlayer(this);
-
-	SelectionComponent = CreateDefaultSubobject<USelectionComponent>(TEXT("Selection Component"));
-	SelectionComponent->SetOwningPlayer(this);
 }
 
-// Called when the game starts or when spawned
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	RebindNavigationComponents();
-
-	MovementComp->SetEnabled(true);
-	SelectionComponent->SetEnabled(true);
 
 	//Load any saved data, if there is any
 	if (USaveManager* SaveManager = GetManager<USaveManager>(this))
 	{
 		LoadSaveData(SaveManager->GetCachedPlayerData());
 	}
-}
-
-// Called every frame
-void APlayerPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -89,9 +70,6 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Pressed, this, &APlayerPawn::StartConfirm);
 	PlayerInputComponent->BindAction(TEXT("Confirm"), IE_Released, this, &APlayerPawn::EndConfirm);
 	PlayerInputComponent->BindAction(TEXT("Cancel"), IE_Pressed, this, &APlayerPawn::Cancel);
-}
-
-void APlayerPawn::RebindNavigationComponents(){
 }
 
 #pragma region Binds
