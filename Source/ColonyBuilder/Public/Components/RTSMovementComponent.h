@@ -10,11 +10,37 @@
 
 #include "RTSMovementComponent.generated.h"
 
+//////////////////////////////////////////////////////////////////////////
+// RTS Movement class, controls how the pawn moves, zooms, and scrolls around the viewport
+//////////////////////////////////////////////////////////////////////////
+
 USTRUCT(BlueprintType)
 struct FScreenEdge
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
+	FScreenEdge()
+		: XLoc(0.f)
+		, YLoc(0.f)
+		, Width(0.f)
+		, Height(0.f)
+		, Strength(0.f)
+	{}
+
+	FScreenEdge(const float InXLoc, const float InYLoc, const float InWidth, const float InHeight)
+		: XLoc(InXLoc)
+		, YLoc(InYLoc)
+		, Width(InWidth)
+		, Height(InHeight)
+		, Strength(0.f)
+	{}
+
+public:
+
+	void SetStrength(const float InStrength) { Strength = InStrength; };
+	float GetStrength() const { return Strength; };
+
+private:
 	float XLoc;
 	float YLoc;
 
@@ -22,13 +48,6 @@ struct FScreenEdge
 	float Height;
 
 	float Strength;
-
-	void DrawBand(UWorld* WorldContext)
-	{
-		FLinearColor BandColour = FLinearColor(1, 0, 0, Strength);
-		AHUD* DebugHud = Cast<AHUD>((WorldContext)->GetFirstPlayerController()->GetHUD());;
-		DebugHud->DrawRect(BandColour, XLoc, YLoc, Width, Height);
-	}
 };
 
 USTRUCT(BlueprintType)
@@ -36,18 +55,11 @@ struct FEdgeBands
 {
 	GENERATED_BODY()
 
+public:
 	FScreenEdge TopBand;
 	FScreenEdge BottomBand;
 	FScreenEdge RightBand;
 	FScreenEdge LeftBand;
-
-	void DrawBands(UWorld* WorldContext)
-	{
-		TopBand.DrawBand(WorldContext);
-		BottomBand.DrawBand(WorldContext);
-		RightBand.DrawBand(WorldContext);
-		LeftBand.DrawBand(WorldContext);
-	}
 };
 
 DECLARE_LOG_CATEGORY_EXTERN(MovementLog, Log, All);
@@ -61,77 +73,66 @@ public:
 	// Sets default values for this component's properties
 	URTSMovementComponent();
 
-static const FName FloorTag;
-
-protected:
-	// Called when the game starts
 	void BeginPlay() override;
 
-	void BuildEdgeBands();
-	float GetAppropriateZ(FVector InLocation);
-
-	//Delta time, useful for printing
-	float CDT;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	//Getters//
-	FEdgeBands GetEdgeBands() {	return EdgeBands; }
+	FEdgeBands GetEdgeBands() { return EdgeBands; }
 
 	void MoveForwards(float InAxis);
 	void MoveRight(float InAxis);
 	void Turn(float InAxis);
+
 	UFUNCTION()
 	void MouseMoved(float InAxis);
+
+	UPROPERTY()
 	USpringArmComponent* CameraArm;
 
-	float RotateSpeed;
+	float EdgePadding_Major;
+	float EdgePadding_Bottom;
+
+	float MaxEdgeMoveStrength;
+	float MiddleMouseButtonMoveStrength;
+
+	float MaxArmLength;
+	float MinArmLength;
+	float ArmZoomRate;
+	float CameraZoomSpeed;
+	float TargetArmLength;
+
 	float MoveSpeed;
+	float RotateSpeed;
 	float HeightOffset;
-	
-	float EdgePadding_Major = 20;
-	float EdgePadding_Bottom = 10;
-
-	float MaxEdgeMoveStrength = 1.f;
-	float MiddleMouseButtonMoveStrength = 1.f;
-
-	float MaxArmLength = 10000;
-	float MinArmLength = 1000;
-	float ArmZoomRate = 1000;
-	float CameraZoomSpeed = 2;
-	float TargetArmLength = MaxArmLength;
-
-	bool IsUsingStaticZ;
-	float StaticZHeight;
-
-	void StoreMouseCoords();
-	void ClearMouseCoords();
 
 	void ZoomIn();
 	void ZoomOut();
-
+	
 private:
 
-	void RotateCamera();
+	void Bind();
+	void EdgeMove();
+
+	UFUNCTION()
+	void RotateCamera(const float InRotationDelta);
+
 	void MiddleMouseButtonMove();
 	void BlendCameraZoom();
+
+	void SetViewportSize(const FVector2D InNewViewportSize);
 
 	float TargetYaw;
 
 	FVector2D CurrMousePos;
 	FVector2D StoredMousePos;
+	FVector2D ViewportSize;
 	bool UsingMiddleMouseMovement;
 
 	FEdgeBands EdgeBands;
-
+	
+	FTimerHandle RotateCameraHandle;
+	FTimerHandle EdgeMoveHandle;
+	FTimerHandle ZoomCameraHandle;
 	FTimerHandle MiddleMouseMoveTimer;
-	FTimerHandle BlendCameraZoomTimer;
 
-private:
-
-	void Bind();
-
-	static const float CamBlendFrequency;
+	static const float MoveFrequency;
+	static const float StaticZHeight;
 };

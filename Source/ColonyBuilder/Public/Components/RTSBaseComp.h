@@ -18,6 +18,8 @@ class COLONYBUILDER_API URTSBaseComp : public UActorComponent
 public:	
 
 	URTSBaseComp();
+
+	virtual void BeginPlay() override;
 	
 protected:
 

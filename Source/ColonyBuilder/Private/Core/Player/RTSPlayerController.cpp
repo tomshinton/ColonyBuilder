@@ -9,6 +9,7 @@
 #include "PlayerPawn.h"
 #include "Utils/Cheats/ColonyCheatManager.h"
 
+const FName ARTSPlayerController::FloorTag("Floor");
 
 ARTSPlayerController::ARTSPlayerController()
 {
@@ -28,20 +29,24 @@ void ARTSPlayerController::BeginPlay()
 
 	for (TActorIterator<AActor> Itr(GetWorld()); Itr; ++Itr)
 	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AActor *Ref = *Itr;
-		if (Ref->ActorHasTag(URTSMovementComponent::FloorTag))
+		if (AActor* Ref = *Itr)
 		{
-			ReferenceActor = Ref;
-			break;
+			if (Ref->ActorHasTag(ARTSPlayerController::FloorTag))
+			{
+				ReferenceActor = Ref;
+				break;
+			}
 		}
 	}
 
-	GM = Cast<AColonyBuilderGameModeBase>(GetWorld()->GetAuthGameMode());
-
-	if (APlayerPawn* OwningPawn = Cast<APlayerPawn>(GetPawn()))
+	if (UWorld* World = GetWorld())
 	{
-		OwningPawn->OnMouseMoved.AddDynamic(this, &ARTSPlayerController::UpdateMousePositions);
+		GM = Cast<AColonyBuilderGameModeBase>(GetWorld()->GetAuthGameMode());
+
+		if (APlayerPawn* OwningPawn = Cast<APlayerPawn>(GetPawn()))
+		{
+			OwningPawn->OnMouseMoved.AddDynamic(this, &ARTSPlayerController::UpdateMousePositions);
+		}
 	}
 }
 

@@ -6,9 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "RTSPlayerController.generated.h"
 
-//////////////////////////////////////////////////////////////////////////
-// Base controller for RTS Player Pawn, controls mouse based tracing mostly
-//////////////////////////////////////////////////////////////////////////
+/**
+ * 
+ */
 
 class AColonyBuilderGameModeBase;
 

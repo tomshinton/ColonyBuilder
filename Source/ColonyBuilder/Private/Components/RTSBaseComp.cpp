@@ -6,10 +6,14 @@
 
 #include "Utils/Libraries/DebugUtils.h"
 
-// Sets default values for this component's properties
 URTSBaseComp::URTSBaseComp()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void URTSBaseComp::BeginPlay()
+{
+	Super::BeginPlay();
 
 	OwningPawn = Cast<APlayerPawn>(GetOwner());
 

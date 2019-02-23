@@ -2,20 +2,29 @@
 
 #include "RTSMovementComponent.h"
 
-#include "HUD/RTSHUD.h"
-
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
 
 DEFINE_LOG_CATEGORY(MovementLog);
 
-const FName URTSMovementComponent::FloorTag("Floor");
-const float URTSMovementComponent::CamBlendFrequency(0.02);
+const float URTSMovementComponent::MoveFrequency(0.01);
+const float URTSMovementComponent::StaticZHeight(0.f);
 
 URTSMovementComponent::URTSMovementComponent()
 	: Super()
-	, IsUsingStaticZ(true)
-	, StaticZHeight(0)
+	, CameraArm(nullptr)
+	, EdgePadding_Major(20.f) // Edge padding pixels on right, left and top
+	, EdgePadding_Bottom(10.f) //Edge padding pixels on the bottom
+	, MaxEdgeMoveStrength(1.f)
+	, MiddleMouseButtonMoveStrength(1.f)
+	, MaxArmLength(10000.f)
+	, MinArmLength(1000.f)
+	, ArmZoomRate(1000.f)
+	, CameraZoomSpeed(2.f)
+	, TargetArmLength(MaxArmLength)
+	, MoveSpeed(1.f)
+	, RotateSpeed(1.f)
+	, HeightOffset(0.f)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -26,152 +35,131 @@ void URTSMovementComponent::BeginPlay()
 
 	if (UWorld* World = GetWorld())
 	{
-		World->GetTimerManager().SetTimer(BlendCameraZoomTimer, this, &URTSMovementComponent::BlendCameraZoom, CamBlendFrequency, true);
+		FTimerDelegate RotateDelegate;
+		RotateDelegate.BindUFunction(this, FName("RotateCamera"), MoveFrequency);
+
+		World->GetTimerManager().SetTimer(EdgeMoveHandle, this, &URTSMovementComponent::EdgeMove, MoveFrequency, true);
+		World->GetTimerManager().SetTimer(ZoomCameraHandle, this, &URTSMovementComponent::BlendCameraZoom, MoveFrequency, true);
+		World->GetTimerManager().SetTimer(RotateCameraHandle, RotateDelegate, MoveFrequency, true);
 	}
 
 	if (OwningPawn)
 	{
 		Bind();
 	}
+
+	if (FViewport* Viewport = GEngine->GameViewport->Viewport)
+	{
+		SetViewportSize(Viewport->GetSizeXY());
+
+		Viewport->ViewportResizedEvent.AddLambda([this](FViewport* ResizedViewport, uint32)
+		{
+			SetViewportSize(ResizedViewport->GetSizeXY());
+		});
+	}
+
+	EdgeBands.TopBand = FScreenEdge(0.f, 0.f, ViewportSize.X, ViewportSize.Y);
+	EdgeBands.BottomBand = FScreenEdge(0.f, ViewportSize.Y - EdgePadding_Bottom, ViewportSize.X, EdgePadding_Bottom);
+	EdgeBands.RightBand = FScreenEdge(ViewportSize.X - EdgePadding_Major, 0, EdgePadding_Major, ViewportSize.Y);
+	EdgeBands.LeftBand = FScreenEdge(0.f, 0.f, EdgePadding_Major, ViewportSize.Y);
+}
+
+void URTSMovementComponent::SetViewportSize(const FVector2D InNewViewportSize)
+{
+	ViewportSize = InNewViewportSize;
 }
 
 void URTSMovementComponent::Bind()
 {
-	//OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
+	UWorld* World = GetWorld();
 
-	OwningPawn->OnMoveForward.CreateLambda([this](const float InStrength)
+	if(!World)
 	{
-		MoveForwards(InStrength);
-	});
+		return;
+	}
 
+	OwningPawn->OnMoveForward.BindUObject(this, &URTSMovementComponent::MoveForwards);
 	OwningPawn->OnMoveRight.BindUObject(this, &URTSMovementComponent::MoveRight);
 	OwningPawn->OnTurn.BindUObject(this, &URTSMovementComponent::Turn);
-	OwningPawn->OnMouseLocationStored.BindUObject(this, &URTSMovementComponent::StoreMouseCoords);
-	OwningPawn->OnMouseLocationCleared.BindUObject(this, &URTSMovementComponent::ClearMouseCoords);
+
+	OwningPawn->OnMouseLocationStored.BindLambda([this, World = World]() 
+	{
+		StoredMousePos = CurrMousePos;
+		UsingMiddleMouseMovement = true;
+		World->GetTimerManager().SetTimer(MiddleMouseMoveTimer, this, &URTSMovementComponent::MiddleMouseButtonMove, MoveFrequency, true);
+	});
+
+	OwningPawn->OnMouseLocationCleared.BindLambda([this, World = World]()
+	{
+		UsingMiddleMouseMovement = false;
+		GetWorld()->GetTimerManager().ClearTimer(MiddleMouseMoveTimer);
+	});
+
 	OwningPawn->OnScrollDown.BindUObject(this, &URTSMovementComponent::ZoomIn);
 	OwningPawn->OnScrollUp.BindUObject(this, &URTSMovementComponent::ZoomOut);
 
-	OwningPawn->OnMouseMoved.RemoveDynamic(this, &URTSMovementComponent::MouseMoved);
 	OwningPawn->OnMouseMoved.AddDynamic(this, &URTSMovementComponent::MouseMoved);
 }
 
-void URTSMovementComponent::BuildEdgeBands()
+void URTSMovementComponent::EdgeMove()
 {
-	FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-
-	EdgeBands.TopBand.Height = EdgePadding_Major;
-	EdgeBands.TopBand.Width = VPSize.X;
-	EdgeBands.TopBand.XLoc = 0;
-	EdgeBands.TopBand.YLoc = 0;
-	
-	EdgeBands.BottomBand.Height = EdgePadding_Bottom;
-	EdgeBands.BottomBand.Width = VPSize.X;
-	EdgeBands.BottomBand.XLoc = 0;
-	EdgeBands.BottomBand.YLoc = VPSize.Y - EdgePadding_Bottom;
-
-	EdgeBands.RightBand.Height = VPSize.Y;
-	EdgeBands.RightBand.Width = EdgePadding_Major;
-	EdgeBands.RightBand.XLoc = VPSize.X - EdgePadding_Major;
-	EdgeBands.RightBand.YLoc = 0;
-
-	EdgeBands.LeftBand.Height = VPSize.Y;
-	EdgeBands.LeftBand.Width = EdgePadding_Major;
-	EdgeBands.LeftBand.XLoc = 0;
-	EdgeBands.LeftBand.YLoc = 0;
-
-	EdgeBands.TopBand.Strength = MaxEdgeMoveStrength * FMath::Clamp((1 - (CurrMousePos.Y / EdgePadding_Major)), 0.f, 1.f);
-	EdgeBands.BottomBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.Y - (VPSize.Y - EdgePadding_Bottom)) / EdgePadding_Bottom), 0.f, 1.f);
-	EdgeBands.RightBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.X - (VPSize.X - EdgePadding_Major)) / EdgePadding_Major), 0.f, 1.f);;
-	EdgeBands.LeftBand.Strength = MaxEdgeMoveStrength * FMath::Clamp(1 - (CurrMousePos.X / EdgePadding_Major), 0.f, 1.f);
+	EdgeBands.TopBand.SetStrength(MaxEdgeMoveStrength * FMath::Clamp((1 - (CurrMousePos.Y / EdgePadding_Major)), 0.f, 1.f));
+	EdgeBands.BottomBand.SetStrength(MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.Y - (ViewportSize.Y - EdgePadding_Bottom)) / EdgePadding_Bottom), 0.f, 1.f));
+	EdgeBands.RightBand.SetStrength(MaxEdgeMoveStrength * FMath::Clamp(((CurrMousePos.X - (ViewportSize.X - EdgePadding_Major)) / EdgePadding_Major), 0.f, 1.f));
+	EdgeBands.LeftBand.SetStrength(MaxEdgeMoveStrength * FMath::Clamp(1 - (CurrMousePos.X / EdgePadding_Major), 0.f, 1.f));
 
 	if (!UsingMiddleMouseMovement)
 	{
-		MoveForwards(EdgeBands.TopBand.Strength);
-		MoveForwards(-EdgeBands.BottomBand.Strength);
-		MoveRight(EdgeBands.RightBand.Strength);
-		MoveRight(-EdgeBands.LeftBand.Strength);
+		MoveForwards(EdgeBands.TopBand.GetStrength());
+		MoveForwards(-EdgeBands.BottomBand.GetStrength());
+		MoveRight(EdgeBands.RightBand.GetStrength());
+		MoveRight(-EdgeBands.LeftBand.GetStrength());
 	}
-	
 }
 
-void URTSMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void URTSMovementComponent::RotateCamera(const float InRotateDelta)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	CDT = DeltaTime;
+	if (OwningPawn)
+	{
+		const float CurrYaw = GetOwner()->GetActorRotation().Yaw;
+		const float NewYaw = UKismetMathLibrary::FInterpTo(CurrYaw, TargetYaw, InRotateDelta, 5);
 
-	BuildEdgeBands();
-	RotateCamera();
-
-	/*DEBUG*/
-
-	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
-	DebugHud->SetEdgeBands(EdgeBands);
-}
-
-void URTSMovementComponent::RotateCamera()
-{
-	float CurrYaw = GetOwner()->GetActorRotation().Yaw;
-	float NewYaw = UKismetMathLibrary::FInterpTo(CurrYaw, TargetYaw, CDT, 5);
-
-	FRotator NewRot = GetOwner()->GetActorRotation();
-	NewRot.Yaw = NewYaw;
-
-	GetOwner()->SetActorRotation(NewRot);
-}
-
-void URTSMovementComponent::StoreMouseCoords()
-{
-	StoredMousePos = CurrMousePos;
-	UsingMiddleMouseMovement = true;
-	GetWorld()->GetTimerManager().SetTimer(MiddleMouseMoveTimer, this, &URTSMovementComponent::MiddleMouseButtonMove, CDT, true);
-}
-
-void URTSMovementComponent::ClearMouseCoords()
-{
-	UsingMiddleMouseMovement = false;
-	GetWorld()->GetTimerManager().ClearTimer(MiddleMouseMoveTimer);
-
-	//DEBUG
-	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
-	DebugHud->SetStoredMousePos(StoredMousePos, false);
+		const FRotator CurrRotation = OwningPawn->GetActorRotation();
+		const FRotator NewRotation = FRotator(CurrRotation.Pitch, NewYaw, CurrRotation.Roll);
+		OwningPawn->SetActorRotation(NewRotation);
+	}
 }
 
 void URTSMovementComponent::MiddleMouseButtonMove()
 {
-	FVector2D VPSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-
-	float XDelta;
-	float YDelta;
-
-	XDelta = ((StoredMousePos.X - CurrMousePos.X) / VPSize.X) * MiddleMouseButtonMoveStrength;
-	YDelta = ((StoredMousePos.Y - CurrMousePos.Y) / VPSize.Y) * MiddleMouseButtonMoveStrength;
-
-	MoveForwards(YDelta);
-	MoveRight(-XDelta);
-
-	ARTSHUD* DebugHud = Cast<ARTSHUD>((GetWorld())->GetFirstPlayerController()->GetHUD());;
-	DebugHud->SetStoredMousePos(StoredMousePos, true);
+	MoveRight(-(((StoredMousePos.X - CurrMousePos.X) / ViewportSize.X) * MiddleMouseButtonMoveStrength));
+	MoveForwards(((StoredMousePos.Y - CurrMousePos.Y) / ViewportSize.Y) * MiddleMouseButtonMoveStrength);
 }
 
 void URTSMovementComponent::MoveForwards(float InAxis)
 {
-	FVector NewXY = GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * (MoveSpeed * InAxis));
-	NewXY.Z = GetAppropriateZ(NewXY);
-
-	GetOwner()->SetActorLocation(NewXY);
+	if (OwningPawn)
+	{
+		const FVector2D NewXY(OwningPawn->GetActorLocation() + (OwningPawn->GetActorForwardVector() * (MoveSpeed * InAxis)));
+		OwningPawn->SetActorLocation(FVector(NewXY, StaticZHeight));
+	}
 }
 
 void URTSMovementComponent::MoveRight(float InAxis)
 {
-	FVector NewXY = GetOwner()->GetActorLocation() + (GetOwner()->GetActorRightVector() * (MoveSpeed * InAxis));
-	NewXY.Z = GetAppropriateZ(NewXY);
-
-	GetOwner()->SetActorLocation(NewXY);
+	if (OwningPawn)
+	{
+		const FVector2D NewXY(OwningPawn->GetActorLocation() + (OwningPawn->GetActorRightVector() * (MoveSpeed * InAxis)));
+		OwningPawn->SetActorLocation(FVector(NewXY, StaticZHeight));
+	}
 }
 
 void URTSMovementComponent::Turn(float InAxis)
 {
-	TargetYaw = GetOwner()->GetActorRotation().Yaw + RotateSpeed*InAxis;
+	if (OwningPawn)
+	{
+		TargetYaw = OwningPawn->GetActorRotation().Yaw + RotateSpeed*InAxis;
+	}
 }
 
 void URTSMovementComponent::MouseMoved(float InAxis)
@@ -184,84 +172,20 @@ void URTSMovementComponent::MouseMoved(float InAxis)
 	CurrMousePos.Y = MouseY;
 }
 
-float URTSMovementComponent::GetAppropriateZ(FVector InLocation)
-{
-	AActor* ReferenceActor = nullptr;
-	float CurrZ = GetOwner()->GetActorLocation().Z;
-	float OutZ = 0;
-	TArray<FHitResult> HitRes;
-	FCollisionShape SphereSweep = FCollisionShape::MakeSphere(50);
-
-	FCollisionQueryParams TraceParams;
-	TraceParams.TraceTag = "GetZ";
-	TraceParams.bTraceComplex = true;
-
-	TraceParams.AddIgnoredActor(GetOwner());
-	FVector TraceStart = InLocation + FVector(0, 0, 200);
-	FVector TraceEnd = InLocation - FVector(0, 0, 100000);
-
-	GetWorld()->SweepMultiByChannel(HitRes, TraceStart, TraceEnd, FQuat::Identity, ECC_Visibility, SphereSweep);
-
-#if WITH_EDITOR
-
-	GetWorld()->DebugDrawTraceTag = "GetZ";
-
-#endif //WITH_EDITOR
-
-	for (FHitResult result : HitRes)
-	{
-		ReferenceActor = result.Actor.Get();
-		if (result.Actor->ActorHasTag(URTSMovementComponent::FloorTag))
-		{
-			if (result.ImpactPoint.Z + HeightOffset > 0)
-			{
-				OutZ = result.ImpactPoint.Z + HeightOffset;
-				break;
-			}
-			else
-			{
-				OutZ = 0;
-			}
-		}
-	}
-
-	if (ReferenceActor && !IsUsingStaticZ)
-	{
-		return OutZ;
-	}
-	else
-	{
-		return StaticZHeight;
-	}
-
-}
-
 void URTSMovementComponent::ZoomIn()
 {
-	float CurrSpringArmLength = TargetArmLength;
-
-	if ((CurrSpringArmLength - ArmZoomRate) >= MinArmLength)
-	{
-		TargetArmLength = CurrSpringArmLength - ArmZoomRate;
-	}
+	TargetArmLength = FMath::Clamp<float>(TargetArmLength - ArmZoomRate, MinArmLength, MaxArmLength);
 }
 
 void URTSMovementComponent::ZoomOut()
 {
-	float CurrSpringArmLength = TargetArmLength;
-
-	if ((CurrSpringArmLength + ArmZoomRate) <= MaxArmLength)
-	{
-		TargetArmLength = CurrSpringArmLength + ArmZoomRate;
-	}
+	TargetArmLength = FMath::Clamp<float>(TargetArmLength + ArmZoomRate, MinArmLength, MaxArmLength);
 }
 
 void URTSMovementComponent::BlendCameraZoom()
 {
-	float NewArmLength;
-	float CurrentLength = CameraArm->TargetArmLength;
+	const float CurrentLength = CameraArm->TargetArmLength;
 
-	NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, CDT, CameraZoomSpeed);
+	const float NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, MoveFrequency, CameraZoomSpeed);
 	CameraArm->TargetArmLength = NewArmLength;
 }
-
