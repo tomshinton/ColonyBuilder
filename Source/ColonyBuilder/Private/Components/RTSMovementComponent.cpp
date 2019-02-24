@@ -4,6 +4,7 @@
 
 #include "PlayerPawn.h"
 #include "RTSPlayerController.h"
+#include <DrawDebugHelpers.h>
 
 DEFINE_LOG_CATEGORY(MovementLog);
 
@@ -25,6 +26,8 @@ URTSMovementComponent::URTSMovementComponent()
 	, MoveSpeed(1.f)
 	, RotateSpeed(1.f)
 	, HeightOffset(0.f)
+	, XLimit()
+	, YLimit()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -46,6 +49,11 @@ void URTSMovementComponent::BeginPlay()
 	if (OwningPawn)
 	{
 		Bind();
+
+		if (OwningController)
+		{
+			SetMovementLimits(*OwningController->GetReferenceActor());
+		}
 	}
 
 	if (FViewport* Viewport = GEngine->GameViewport->Viewport)
@@ -117,6 +125,19 @@ void URTSMovementComponent::EdgeMove()
 	}
 }
 
+void URTSMovementComponent::SetMovementLimits(const AActor& ReferenceActor)
+{
+	FVector Origin;
+	FVector Bounds;
+
+	ReferenceActor.GetActorBounds(true, Origin, Bounds);
+
+	XLimit = FVector2D(Origin.X - Bounds.X, Origin.X + Bounds.X);
+	YLimit = FVector2D(Origin.Y - Bounds.Y, Origin.Y + Bounds.Y);
+
+	DrawDebugBox(GetWorld(), Origin, Bounds, FQuat(ReferenceActor.GetActorRotation()), FColorList::HunterGreen, true);
+}
+
 void URTSMovementComponent::RotateCamera(const float InRotateDelta)
 {
 	if (OwningPawn)
@@ -141,7 +162,7 @@ void URTSMovementComponent::MoveForwards(float InAxis)
 	if (OwningPawn)
 	{
 		const FVector2D NewXY(OwningPawn->GetActorLocation() + (OwningPawn->GetActorForwardVector() * (MoveSpeed * InAxis)));
-		OwningPawn->SetActorLocation(FVector(NewXY, StaticZHeight));
+		SetLimitedActorLocation(FVector(NewXY, StaticZHeight));
 	}
 }
 
@@ -150,7 +171,7 @@ void URTSMovementComponent::MoveRight(float InAxis)
 	if (OwningPawn)
 	{
 		const FVector2D NewXY(OwningPawn->GetActorLocation() + (OwningPawn->GetActorRightVector() * (MoveSpeed * InAxis)));
-		OwningPawn->SetActorLocation(FVector(NewXY, StaticZHeight));
+		SetLimitedActorLocation(FVector(NewXY, StaticZHeight));
 	}
 }
 
@@ -189,3 +210,13 @@ void URTSMovementComponent::BlendCameraZoom()
 	const float NewArmLength = FMath::FInterpTo(CurrentLength, TargetArmLength, MoveFrequency, CameraZoomSpeed);
 	CameraArm->TargetArmLength = NewArmLength;
 }
+
+void URTSMovementComponent::SetLimitedActorLocation(const FVector& NewLocation)
+{
+	if (OwningPawn)
+	{
+		const FVector ClampedLocation(FMath::Clamp(NewLocation.X, XLimit.X, XLimit.Y), FMath::Clamp(NewLocation.Y, YLimit.X, YLimit.Y), NewLocation.Z);
+		OwningPawn->SetActorLocation(ClampedLocation);
+	}
+}
+

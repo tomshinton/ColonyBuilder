@@ -111,6 +111,8 @@ private:
 	void Bind();
 	void EdgeMove();
 
+	void SetPlayerLocation();
+
 	UFUNCTION()
 	void RotateCamera(const float InRotationDelta);
 
@@ -118,6 +120,12 @@ private:
 	void BlendCameraZoom();
 
 	void SetViewportSize(const FVector2D InNewViewportSize);
+	void SetMovementLimits(const AActor& ReferenceActor);
+
+	void SetLimitedActorLocation(const FVector& NewLocation);
+
+	FVector2D YLimit;
+	FVector2D XLimit;
 
 	float TargetYaw;
 
