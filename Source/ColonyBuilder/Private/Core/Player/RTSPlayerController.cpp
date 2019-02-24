@@ -8,8 +8,12 @@
 #include "EngineUtils.h"
 #include "PlayerPawn.h"
 #include "Utils/Cheats/ColonyCheatManager.h"
+#include "Utils/Libraries/CollisionChannels.h"
+
+DEFINE_LOG_CATEGORY(RTSControllerLog);
 
 const FName ARTSPlayerController::FloorTag("Floor");
+const float ARTSPlayerController::ScreenTraceDepth(50000.f);
 
 ARTSPlayerController::ARTSPlayerController()
 {
@@ -39,6 +43,11 @@ void ARTSPlayerController::BeginPlay()
 		}
 	}
 
+	if (!ReferenceActor)
+	{
+		UE_LOG(RTSControllerLog, Error, TEXT("Could not find Floor actor in BeginPlay of RTSController!"));
+	}
+
 	if (UWorld* World = GetWorld())
 	{
 		GM = Cast<AColonyBuilderGameModeBase>(GetWorld()->GetAuthGameMode());
@@ -52,65 +61,51 @@ void ARTSPlayerController::BeginPlay()
 
 void ARTSPlayerController::UpdateMousePositions(float InAxis)
 {
-	FVector PosUnderMouseRaw;
-	DeprojectMousePositionToWorld(PosUnderMouseRaw, DirUnderMouse);
-
-	FHitResult HitRes;
-
-	FVector TraceStart = PosUnderMouseRaw;
-	FCollisionQueryParams TraceParams;
-	FVector TraceEnd = PosUnderMouseRaw + (DirUnderMouse * 50000);
-
-	ReferenceActor->ActorLineTraceSingle(HitRes, TraceStart, TraceEnd, ECC_Camera, TraceParams);
-
-	if(HitRes.Actor.Get())
+	if (UWorld* World = GetWorld())
 	{
-		PosUnderMouse = HitRes.Location;
-	}
+		FVector PosUnderMouseRaw;
+		FVector DirUnderMouse;
+		DeprojectMousePositionToWorld(PosUnderMouseRaw, DirUnderMouse);
 
-	//Rounding
-	//X
-	int32 XIn = FMath::Abs(FMath::RoundToInt(PosUnderMouse.X));
-	int32 XDif = FMath::Abs(XIn%AColonyBuilderGameModeBase::GridSize);
-	float XOut;
-	if (XDif < AColonyBuilderGameModeBase::GridSize / 2)
-	{
-		XOut = XIn - XDif;
-	}
-	else
-	{
-		XOut = XIn + (AColonyBuilderGameModeBase::GridSize - XDif);
-	}
+		const FVector StartPoint = PosUnderMouseRaw;
+		const FVector EndPoint = PosUnderMouseRaw + (DirUnderMouse * ScreenTraceDepth);
+		FHitResult HitRes;
 
-	int32 YIn = FMath::Abs(FMath::RoundToInt(PosUnderMouse.Y));
-	int32 YDif = FMath::Abs(YIn%AColonyBuilderGameModeBase::GridSize);
-	float YOut;
-	if (YDif < AColonyBuilderGameModeBase::GridSize / 2)
-	{
-		YOut = YIn - YDif;
-	}
-	else
-	{
-		YOut = YIn + (AColonyBuilderGameModeBase::GridSize - YDif);
-	}
+		FCollisionQueryParams QueryParams;
+		QueryParams.bTraceAsyncScene = true;
 
-	if (PosUnderMouse.Y <= 0)
-	{
-		YOut *= -1;
-	}
-	if (PosUnderMouse.X <= 0)
-	{
-		XOut *= -1;
-	}
+		FCollisionResponseParams ResponseParams;
+		World->AsyncLineTraceByChannel(EAsyncTraceType::Single, StartPoint, EndPoint, CC_GROUND, QueryParams, ResponseParams, &OnTraceCompleteDelegate);
 
-	float ZOut = PosUnderMouse.Z;
-	ReferenceActor->ActorLineTraceSingle(HitRes, FVector(XOut, YOut, 10000), FVector(XOut, YOut, -1000), ECC_Camera, TraceParams);
+		OnTraceCompleteDelegate.BindLambda([this](const FTraceHandle& InHandle, FTraceDatum& InData)
+		{
+			if (InData.OutHits.Num() > 0)
+			{
+				FHitResult& CurrHit = InData.OutHits[0];
 
-	if (HitRes.Actor.Get())
-	{
-		ZOut = HitRes.Location.Z;
+				if (AActor* HitActor = CurrHit.Actor.Get())
+				{
+					if (HitActor == ReferenceActor)
+					{
+						RoundHitResult(CurrHit.Location);
+					}
+				}
+			}
+		});
 	}
-
-	PosUnderMouseRounded = FVector(XOut, YOut, ZOut);
-	OnMouseMoved.Broadcast(PosUnderMouse, PosUnderMouseRounded);
 }
+
+void ARTSPlayerController::RoundHitResult(const FVector HitLocation)
+{
+	const int32 XIn = FMath::Abs(FMath::RoundToInt(HitLocation.X));
+	const int32 XDif = FMath::Abs(XIn%AColonyBuilderGameModeBase::GridSize);
+	const float XOut = (XDif < AColonyBuilderGameModeBase::GridSize * 0.5f ? XIn - XDif : XIn + (AColonyBuilderGameModeBase::GridSize - XDif)) * FMath::Sign<float>(HitLocation.X);
+
+	const int32 YIn = FMath::Abs(FMath::RoundToInt(HitLocation.Y));
+	const int32 YDif = FMath::Abs(YIn%AColonyBuilderGameModeBase::GridSize);
+	const float YOut = (YDif < AColonyBuilderGameModeBase::GridSize * 0.5f ? YIn - YDif :  YIn + (AColonyBuilderGameModeBase::GridSize - YDif)) * FMath::Sign<float>(HitLocation.Y);
+
+	PosUnderMouseRounded = FVector(XOut, YOut, HitLocation.Z);
+	OnMouseMoved.Broadcast(HitLocation, PosUnderMouseRounded);
+}
+

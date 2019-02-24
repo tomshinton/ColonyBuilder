@@ -12,7 +12,8 @@
 
 class AColonyBuilderGameModeBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseCoordsChanged, const FVector&, MouseCoordsRaw, const FVector&, MouseCoordsRounded);
+
+DECLARE_LOG_CATEGORY_EXTERN(RTSControllerLog, Log, All);
 
 UCLASS()
 class COLONYBUILDER_API ARTSPlayerController : public APlayerController
@@ -24,29 +25,30 @@ class COLONYBUILDER_API ARTSPlayerController : public APlayerController
 	void BeginPlay();
 
 public:
+
 	UFUNCTION()
 	void UpdateMousePositions(float InAxis);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMouseCoordsChanged, const FVector&, GroundLocationUnderMouse, const FVector&, RoundedGroundLocationUnderMouse);
 	FOnMouseCoordsChanged OnMouseMoved;
 
-#pragma region Utils
-	//Getters
-	FVector GetPositionUnderMouse() { return PosUnderMouse; }
 	FVector GetPositionUnderMouseRounded() { return PosUnderMouseRounded; }
 	AActor* GetReferenceActor() { return ReferenceActor; }
 
-	//Setters
-
-#pragma endregion Utils
-
 private:
 
-	FVector PosUnderMouse;
-	FVector DirUnderMouse;
+	void RoundHitResult(const FVector HitLocation);
+
 	FVector PosUnderMouseRounded;
 
+	UPROPERTY()
 	AActor* ReferenceActor;
+
+	UPROPERTY()
 	AColonyBuilderGameModeBase* GM;
 
 	static const FName FloorTag;
+	static const float ScreenTraceDepth;
 
+	FTraceDelegate OnTraceCompleteDelegate;
 };

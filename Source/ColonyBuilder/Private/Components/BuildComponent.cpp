@@ -41,6 +41,7 @@ void UBuildComponent::StartBuildingFromClass(UBuildingData* InBuildingData)
 		{
 			SpawnedGhost->Destroy();
 		}
+
 		FActorSpawnParameters SpawnParams;
 		SpawnedGhost = GetWorld()->SpawnActor<AGhost>(CurrRoundedMouseCoords, FRotator::ZeroRotator, SpawnParams);
 		SpawnedGhost->SetGhostInfo(BuildingData);
