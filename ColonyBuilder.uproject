@@ -5,10 +5,11 @@
 	"Description": "",
 	"Modules": [
 		{
-			"Name": "ColonyBuilder",
+			"Name": "ColonyCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
+			"AdditionalDependencies": 
+			[
 				"Engine",
 				"AIModule",
 				"UMG",
@@ -21,17 +22,6 @@
 			"LoadingPhase": "PostEngineInit",
 			"AdditionalDependencies": [
 				"UnrealEd"
-			]
-		},
-		{
-			"Name": "ColonyAI",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine",
-				"AIModule",
-				"ColonyBuilder",
-				"CoreUObject"
 			]
 		}
 	]

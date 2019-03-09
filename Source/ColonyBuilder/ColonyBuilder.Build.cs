@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 using UnrealBuildTool;
 
 public class ColonyBuilder : ModuleRules
@@ -9,8 +7,8 @@ public class ColonyBuilder : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "Landscape" });
-        PublicDependencyModuleNames.AddRange(new string[] { "ColonyAI" });
 
+		PublicDependencyModuleNames.AddRange(new string[] { "ColonyCore", "CoreUObject", "Engine", "InputCore", "UMG", "Landscape" });
 
         PrivateDependencyModuleNames.AddRange(new string[] {});
 

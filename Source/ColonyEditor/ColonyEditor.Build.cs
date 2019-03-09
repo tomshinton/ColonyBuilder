@@ -12,7 +12,7 @@ public class ColonyEditor : ModuleRules
 
         PrivateIncludePaths.AddRange(new string[] { "ColonyEditor/Private" });
 
-        PublicDependencyModuleNames.AddRange(new string[] { "ColonyBuilder", "ColonyAI", "Core", "CoreUObject", "Engine", "InputCore"});
+        PublicDependencyModuleNames.AddRange(new string[] { "ColonyBuilder", "ColonyCore", "Core", "CoreUObject", "Engine", "InputCore"});
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
     }

@@ -1,14 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ColonyEditorModule.h"
-#include "Plan/Stage.h"
+
 #include <KismetEditorUtilities.h>
 #include <ISettingsModule.h>
 #include <ISettingsContainer.h>
-#include "Settings/ColonyAISettings.h"
 #include <ISettingsSection.h>
-#include "MoveTo.h"
-#include "ColonyManagers.h"
+#include "Core/Settings/ColonyAISettings.h"
+#include "Core/Settings/ColonyManagers.h"
+#include "AI/Plan/Stage.h"
+#include "AI/Stages/MoveTo.h"
 
 IMPLEMENT_MODULE(FColonyEditorModule, ColonyEditor);
 DEFINE_LOG_CATEGORY(ColonyEditorLog)
