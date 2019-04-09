@@ -20,13 +20,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Defaults)
 	TSubclassOf<ABaseVillager> VillagerClass;
 
-	static const int32 GridSize;
 	static const bool SaveOnExit;
 	
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-
 protected:
 	virtual void BeginPlay() override;
-
 };

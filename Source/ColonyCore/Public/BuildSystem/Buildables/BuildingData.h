@@ -9,6 +9,7 @@ class AGridBodyBase;
 class ABuildableBase;
 class UUI_SelectionBox;
 class UPointValidationRules;
+class AGhost;
 
 #include "BuildingData.generated.h"
 
@@ -35,9 +36,6 @@ public:
 #pragma endregion 
 	
 #pragma region Rendering
-
-	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
-	UStaticMesh* BuildingBaseMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Rendering | Meshes")
 	TMap<ESubBuildingType, UStaticMesh*> SubBuildingMeshes;
@@ -83,6 +81,9 @@ public:
 	TSubclassOf<ABuildableBase> BuildingClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning | Classes")
+	TSubclassOf<AGhost> GhostClass;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning | Classes")
 	TSubclassOf<AGridBodyBase> BodyClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning | Dimensions")
@@ -115,6 +116,9 @@ public:
 	int32 MaxResidents;
 #pragma endregion
 	
+
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
 public:
 	FString GetFullCategoryAsString();
 };

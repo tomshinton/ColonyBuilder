@@ -5,10 +5,9 @@
 #include "Utils/DataTypes/BuildingDataTypes.h"
 #include "Core/Player/RTSPlayerController.h"
 #include "GhostBase.h"
+#include "BuildingData.h"
 
 #include "BuildAction.generated.h"
-
-class UBuildingData;
 
 //////////////////////////////////////////////////////////////////////////
 // Base class for all Build actions
@@ -24,23 +23,35 @@ class COLONYCORE_API UBuildAction : public UObject
 
 public:
 
-	virtual void OnBuild() {};
+	virtual void OnBuild() 
+	{
+
+	};
+
 	virtual void RotatePlacement() {};
 
-	virtual void StartAction() { IsBuilding = true; };
-	virtual void CompleteAction() { IsBuilding = false; };
+	virtual void StartAction() 
+	{
+		IsBuilding = true;
+	};
+
+	virtual void CompleteAction() 
+	{
+		IsBuilding = false;
+	};
 
 	virtual void SpawnGhost()
 	{
-		if (!SpawnedGhost)
+		if (!SpawnedGhost && BuildingData)
 		{
 			if (UWorld* World = GetWorld())
 			{
 				FActorSpawnParameters GhostSpawnParams;
-				SpawnedGhost = World->SpawnActor<AGhost>(RoundedLocUnderMouse, FRotator(0.f, 0.f, 0.f), GhostSpawnParams);
+				SpawnedGhost = World->SpawnActor<AGhost>(BuildingData->GhostClass, RoundedLocUnderMouse, FRotator(0.f, 0.f, 0.f), GhostSpawnParams);
 				if (SpawnedGhost)
 				{
 					SpawnedGhost->SetGhostInfo(BuildingData);
+					SpawnedGhost->GhostStart();
 				}
 			}
 		}
@@ -62,10 +73,13 @@ public:
 			ConditionalBeginDestroy();
 		}
 	};
+
+	virtual void UpdateGhost(const FVector& InRoundedLocUnderMouse) {};
 	
 public:
 
 	void SetBuildingData(UBuildingData* InBuildingData) { BuildingData = InBuildingData; };
+
 	virtual class UWorld* GetWorld() const override
 	{
 		Super::GetWorld();
@@ -77,6 +91,7 @@ public:
 
 		return nullptr;
 	}
+
 	virtual void PostInitProperties() override
 	{
 		Super::PostInitProperties();
@@ -96,6 +111,11 @@ public:
 	{
 		LocUnderMouse = InLocUnderMouse;
 		RoundedLocUnderMouse = InRoundedLocUnderMouse;
+
+		if (SpawnedGhost)
+		{
+			UpdateGhost(InRoundedLocUnderMouse);
+		}
 	}
 
 protected:

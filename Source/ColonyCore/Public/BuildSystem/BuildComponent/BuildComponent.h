@@ -35,7 +35,6 @@ public:
 	void AlignAndOrientate();
 	void ValidatePointTypesToUnique();
 	
-	TArray<FSubBuilding> BuildFFPoints();
 	TArray<FSubBuilding> BuildLinearPoints();
 	TArray<FSubBuilding> BuildGridPoints();
 

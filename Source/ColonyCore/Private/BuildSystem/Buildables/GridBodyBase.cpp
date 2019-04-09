@@ -2,6 +2,7 @@
 
 #include "GridBodyBase.h"
 #include "Core/GameMode/ColonyBuilderGameModeBase.h"
+#include "ColonyGridSettings.h"
 
 const FName AGridBodyBase::MeshName = FName("MeshName");
 
@@ -26,5 +27,10 @@ AGridBodyBase::AGridBodyBase()
 
 	GridBodyCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Body Collision"));
 	GridBodyCollision->SetupAttachment(SceneRoot);
-	GridBodyCollision->SetBoxExtent(FVector(AColonyBuilderGameModeBase::GridSize / 2, AColonyBuilderGameModeBase::GridSize / 2, AColonyBuilderGameModeBase::GridSize / 2), true);
+
+	if (UColonyGridSettings* GridSettings = GetMutableDefault<UColonyGridSettings>())
+	{
+		const int32 GridSize = GridSettings->GridSize;
+		GridBodyCollision->SetBoxExtent(FVector(GridSize *0.5f, GridSize *0.5f, GridSize *0.5f), true);
+	}
 }

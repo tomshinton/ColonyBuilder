@@ -26,7 +26,7 @@ public:
 	virtual void SpawnGhost() override;
 
 	UFUNCTION()
-	void UpdateGhost(const FVector& InLocUnderMouse, const FVector& InRoundedLocUnderMouse);
+	void UpdateGhost(const FVector& InRoundedLocUnderMouse);
 
 	void RotatePlacement();
 

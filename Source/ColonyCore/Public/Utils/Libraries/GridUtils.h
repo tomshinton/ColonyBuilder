@@ -11,20 +11,6 @@ class UBuildingData;
 
 #include "GridUtils.generated.h"
 
-UENUM(BlueprintType)
-enum class EInvalidReason : uint8
-{
-	NoPointRules	UMETA(DisplayName = "No Display Rules"),
-	PointIsTooHigh	UMETA(DisplayName = "Point it too high"),
-	PointIsTooLow	UMETA(DisplayName = "Point is too low"),
-	GridIsTooBig	UMETA(DisplayName = "Grid is too big"),
-	GridIsTooSmall	UMETA(DisplayName = "Grid is too small"),
-	SurfaceTooSteep	UMETA(DisplayName = "Surface is too steep"),
-	NoWorldContext	UMETA(DisplayName = "No World Context"),
-	IllegalOverlap	UMETA(DisplayName = "Illegal Overlap at Point"),
-	LegalOverlap	UMETA(DisplayName = "Legal Overlap at Point")
-};
-
 UCLASS()
 class UGridUtils : public UObject 
 {
@@ -66,38 +52,7 @@ public:
 		//is overlapping
 		const FName TraceTag("Point Overlap Trace");
 
-		TArray<FHitResult> OverlapsAtPoint;
-		FCollisionQueryParams TraceParams(FName(TEXT("BoxTrace at point")));
-		TraceParams.TraceTag = TraceTag;
-
-		const FVector& StartPoint = InPoint.Location + FVector(0, 0, 1000);
-		const FVector& EndPoint = InPoint.Location + FVector(0, 0, -100);
-		FCollisionShape Box = FCollisionShape::MakeBox(FVector(AColonyBuilderGameModeBase::GridSize / 2.1, AColonyBuilderGameModeBase::GridSize / 2.1, 1.f));
-		WorldContext->GetWorld()->SweepMultiByChannel(OverlapsAtPoint, StartPoint, EndPoint, FRotator::ZeroRotator.Quaternion(), CC_PLACEMENT, Box, TraceParams);
-
-		for (int32 i = OverlapsAtPoint.Num() - 1; i >= 0; i--)
-		{
-			AActor* OverlappedActor = OverlapsAtPoint[i].Actor.Get();
-				
-			for (UClass* Class : PointRules->AllowedOverlapClasses)
-			{
-				if ((OverlappedActor->GetClass())->IsChildOf(Class))
-				{
-					OverlapsAtPoint.RemoveAt(i);
-					continue;
-				}
-				else if (PointRules->AllowSameTypeOverlaps)
-				{
-					if (OverlappedActor->GetClass() == BuildingData->BodyClass || OverlappedActor->GetClass() == BuildingData->BuildingClass)
-					{
-						Reasons.AddUnique(EInvalidReason::LegalOverlap);
-						continue;
-					}
-				}
-			}
-		}
-
-		if (OverlapsAtPoint.Num() > 0 && !Reasons.Contains(EInvalidReason::LegalOverlap))
+		if (/*OverlapsAtPoint.Num() > 0 &&*/ !Reasons.Contains(EInvalidReason::LegalOverlap))
 		{
 			Reasons.AddUnique(EInvalidReason::IllegalOverlap);
 		}

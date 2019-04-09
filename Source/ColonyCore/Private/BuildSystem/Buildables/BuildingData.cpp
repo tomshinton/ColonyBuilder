@@ -2,10 +2,11 @@
 
 #include "BuildingData.h"
 #include "ConstructorHelpers.h"
+#include "GhostBase.h"
+#include "GhostFF.h"
 
-UBuildingData::UBuildingData() :
-	MaxBuilders(5)
-
+UBuildingData::UBuildingData() 
+	: MaxBuilders(5)
 {
 	ConstructorHelpers::FObjectFinder<UMaterialInterface> ValidGhostRef(TEXT("MaterialInstanceConstant'/Game/Materials/PROTO/Ghosts/M_ValidGHost.M_ValidGhost'"));
 	if (ValidGhostRef.Object)
@@ -17,14 +18,25 @@ UBuildingData::UBuildingData() :
 	{
 		InvalidGhostMaterial = InvalidGhostRef.Object;
 	}
+}
 
-	if (ConstructionMethod == EConstructionMethod::Grid || ConstructionMethod == EConstructionMethod::Linear)
+void UBuildingData::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	switch (ConstructionMethod)
 	{
-		ShouldHideBaseMeshOnStartPlacement = true;
-	}
-	else
-	{
+	case EConstructionMethod::FireAndForget:
+		GhostClass = AGhostFF::StaticClass();
 		ShouldHideBaseMeshOnStartPlacement = false;
+		break;
+	case EConstructionMethod::Grid:
+		GhostClass = AGhost::StaticClass();
+		ShouldHideBaseMeshOnStartPlacement = true;
+		break;
+	case EConstructionMethod::Linear:
+		GhostClass = AGhost::StaticClass();
+		ShouldHideBaseMeshOnStartPlacement = true;
 	}
 }
 

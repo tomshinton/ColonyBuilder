@@ -10,7 +10,6 @@
 #include "../Player/PlayerPawn.h"
 #include "Save/SaveManager.h"
 
-const int32 AColonyBuilderGameModeBase::GridSize(256);
 const bool AColonyBuilderGameModeBase::SaveOnExit(true);
 
 AColonyBuilderGameModeBase::AColonyBuilderGameModeBase()

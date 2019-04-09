@@ -53,143 +53,92 @@ void UBuildComponent::BuildIntermediatePositions()
 
 }
 
+//REFACTOR
 TArray<FSubBuilding> UBuildComponent::BuildLinearPoints()
 {
 	TArray<FSubBuilding> OutPoints;
 
-	float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
-	float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
-
-	int32 XDeltaAsUnits = XDelta / AColonyBuilderGameModeBase::GridSize;
-	int32 YDeltaAsUnits = YDelta / AColonyBuilderGameModeBase::GridSize;
-
-	int8 XDir;
-	int8 YDir;
-
-	XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
-	YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
-
-	FVector NewPoint = MouseLocationAtBuildingStart;
-
-	if (FMath::Abs(XDeltaAsUnits) > FMath::Abs(YDeltaAsUnits))
+	if (UColonyGridSettings* GridSettings = GetMutableDefault<UColonyGridSettings>())
 	{
-		//Generate the points along the X
-		for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
-		{
-			NewPoint.X = MouseLocationAtBuildingStart.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
-			FSubBuilding NewLocation(NewPoint, FVector2D(XDir, 0), EPointType::LinearPoint, ESubBuildingType::LinearBody);
+		const int32 GridSize = GridSettings->GridSize;
 
-			OutPoints.AddUnique(NewLocation);
+		float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
+		float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
+
+		int32 XDeltaAsUnits = XDelta / GridSize;
+		int32 YDeltaAsUnits = YDelta / GridSize;
+
+		int8 XDir;
+		int8 YDir;
+
+		XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
+		YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
+
+		FVector NewPoint = MouseLocationAtBuildingStart;
+
+		if (FMath::Abs(XDeltaAsUnits) > FMath::Abs(YDeltaAsUnits))
+		{
+			//Generate the points along the X
+			for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
+			{
+				NewPoint.X = MouseLocationAtBuildingStart.X + (GridSize * (x*XDir));
+				FSubBuilding NewLocation(NewPoint, FVector2D(XDir, 0), EPointType::LinearPoint, ESubBuildingType::LinearBody);
+
+				OutPoints.AddUnique(NewLocation);
+			}
 		}
-	}
-	else
-	{
-		//Generate the points along the Y
-		for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
+		else
 		{
-			NewPoint.Y = MouseLocationAtBuildingStart.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
+			//Generate the points along the Y
+			for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
+			{
+				NewPoint.Y = MouseLocationAtBuildingStart.Y + (GridSize * (y*YDir));
 
-			FSubBuilding NewLocation(NewPoint, FVector2D(0, YDir), EPointType::LinearPoint, ESubBuildingType::LinearBody);
-			OutPoints.AddUnique(NewLocation);
+				FSubBuilding NewLocation(NewPoint, FVector2D(0, YDir), EPointType::LinearPoint, ESubBuildingType::LinearBody);
+				OutPoints.AddUnique(NewLocation);
+			}
 		}
 	}
 
 	return OutPoints;
 }
 
+//REFACTOR
 TArray<FSubBuilding> UBuildComponent::BuildGridPoints()
 {
 	TArray<FSubBuilding> OutPoints;
 
-	float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
-	float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
-
-	int32 XDeltaAsUnits = XDelta / AColonyBuilderGameModeBase::GridSize;
-	int32 YDeltaAsUnits = YDelta / AColonyBuilderGameModeBase::GridSize;
-
-	int8 XDir;
-	int8 YDir;
-
-	XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
-	YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
-
-	for(int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
+	if (UColonyGridSettings* GridSettings = GetMutableDefault<UColonyGridSettings>())
 	{
-		for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
+		const int32 GridSize = GridSettings->GridSize;
+
+		float XDelta = CurrRoundedMouseCoords.X - MouseLocationAtBuildingStart.X;
+		float YDelta = CurrRoundedMouseCoords.Y - MouseLocationAtBuildingStart.Y;
+
+		int32 XDeltaAsUnits = XDelta / GridSize;
+		int32 YDeltaAsUnits = YDelta / GridSize;
+
+		int8 XDir;
+		int8 YDir;
+
+		XDeltaAsUnits >= 0 ? XDir = 1 : XDir = -1;
+		YDeltaAsUnits >= 0 ? YDir = 1 : YDir = -1;
+
+		for (int32 x = 0; x <= FMath::Abs(XDeltaAsUnits); x++)
 		{
-			FVector NewPoint = MouseLocationAtBuildingStart;
-
-			NewPoint.X  =  NewPoint.X + (AColonyBuilderGameModeBase::GridSize * (x*XDir));
-			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * (y*YDir));
-
-			FSubBuilding NewLocation(NewPoint, EPointType::GridPoint, ESubBuildingType::Body, FVector2D(FMath::Abs(x), FMath::Abs(y)), FVector2D(FMath::Abs(XDeltaAsUnits), FMath::Abs(YDeltaAsUnits)));
-			OutPoints.AddUnique(NewLocation);
-		}
-	}
-
-	return OutPoints;
-}
-
-TArray<FSubBuilding> UBuildComponent::BuildFFPoints()
-{
-	TArray<FSubBuilding> OutPoints;
-	const FVector& CachedBounds = SpawnedGhost->GetCachedGhostBounds();
-	float Higherbounds;
-	int32 BoundsToUnits;
-
-	CachedBounds.X > CachedBounds.Y ? Higherbounds = CachedBounds.X : Higherbounds = CachedBounds.Y;
-	BoundsToUnits = FMath::Abs(FMath::CeilToInt(FMath::Abs(Higherbounds) / AColonyBuilderGameModeBase::GridSize) + 5);
-
-	for (int32 x = -BoundsToUnits/2; x <= BoundsToUnits/2; x++)
-	{
-		for (int32 y = -BoundsToUnits / 2; y <= BoundsToUnits / 2; y++)
-		{
-			FVector NewPoint = SpawnedGhost->GetActorLocation();
-
-			NewPoint.X = NewPoint.X + (AColonyBuilderGameModeBase::GridSize * x);
-			NewPoint.Y = NewPoint.Y + (AColonyBuilderGameModeBase::GridSize * y);
-
-			FSubBuilding NewLocation(NewPoint, EPointType::BuildingPoint);
-			OutPoints.AddUnique(NewLocation);
-		}
-	}
-
-	SpawnedGhost->SetActorEnableCollision(true);
-
-	for (int32 i = OutPoints.Num() - 1; i >= 0; i--)
-	{
-		bool HitGhost = false;
-		const FSubBuilding& CurrPoint = OutPoints[i];
-
-		//is overlapping
-		const FName TraceTag("Point Overlap Trace");
-
-		TArray<FHitResult> OverlapsAtPoint;
-		FCollisionQueryParams TraceParams(FName(TEXT("BoxTrace at point")));
-		TraceParams.TraceTag = TraceTag;
-
-		const FVector& StartPoint = CurrPoint.Location + FVector(0, 0, 1000);
-		const FVector& EndPoint = CurrPoint.Location + FVector(0, 0, -100);
-		FCollisionShape Box = FCollisionShape::MakeBox(FVector(AColonyBuilderGameModeBase::GridSize / 2.1, AColonyBuilderGameModeBase::GridSize / 2.1, 1.f));
-		GetWorld()->SweepMultiByChannel(OverlapsAtPoint, StartPoint, EndPoint, FRotator::ZeroRotator.Quaternion(), ECC_Visibility, Box, TraceParams);
-
-		for (int32 i = OverlapsAtPoint.Num() - 1; i >= 0; i--)
-		{
-			AActor* OverlappedActor = OverlapsAtPoint[i].Actor.Get();
-			if (Cast<AGhost>(OverlappedActor))
+			for (int32 y = 0; y <= FMath::Abs(YDeltaAsUnits); y++)
 			{
-				HitGhost = true;
-				break;
+				FVector NewPoint = MouseLocationAtBuildingStart;
+
+				NewPoint.X = NewPoint.X + (GridSize * (x*XDir));
+				NewPoint.Y = NewPoint.Y + (GridSize * (y*YDir));
+
+				FSubBuilding NewLocation(NewPoint, EPointType::GridPoint, ESubBuildingType::Body, FVector2D(FMath::Abs(x), FMath::Abs(y)), FVector2D(FMath::Abs(XDeltaAsUnits), FMath::Abs(YDeltaAsUnits)));
+				OutPoints.AddUnique(NewLocation);
 			}
 		}
-
-		if (!HitGhost)
-		{
-			OutPoints.RemoveAt(i);
-		}
 	}
 
-	SpawnedGhost->SetActorEnableCollision(false);
 	return OutPoints;
 }
 

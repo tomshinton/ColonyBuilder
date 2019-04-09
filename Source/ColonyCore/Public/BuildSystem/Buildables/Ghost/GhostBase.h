@@ -9,21 +9,23 @@ class USplineComponent;
 class UBuildingData;
 
 #include "Utils/DataTypes/BuildingDataTypes.h"
+#include "ValidationRunner.h"
 #include "GhostBase.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(GhostLog, Log, All);
 
-UCLASS()
+UCLASS(abstract)
 class COLONYCORE_API AGhost : public AActor
 {
 	GENERATED_BODY()
 
+public:
 	AGhost();
 
-	USceneComponent* GhostRoot;
+	virtual void GhostStart(){};
+	virtual void BuildTestPoints(){};
 
-	UStaticMeshComponent* MeshComp;
-	UBoxComponent* BoundsComp;
+	USceneComponent* GhostRoot;
 
 	UHierarchicalInstancedStaticMeshComponent* BodyMeshes;
 	UHierarchicalInstancedStaticMeshComponent* UniqueMeshes;
@@ -37,11 +39,6 @@ public:
 	void SetValid(bool InValidState);
 	void SetGhostMaterial(UMaterialInterface* NewMaterial);
 	bool GetIsValid() { return IsValid; }
-
-	void SetBaseGhostVisibility(bool NewHidden) { MeshComp->SetVisibility(NewHidden); }
-
-	FVector GetCachedGhostBounds() { return CachedGhostBounds; }
-	FRotator GetMeshCompRotation() const { return MeshComp->GetComponentRotation(); }
 		
 	void SetGhostInfo(UBuildingData* InBuildingData);
 	UBuildingData* BuildingData;
@@ -57,7 +54,10 @@ public:
 	void UpdateLinearGhost();
 
 	TArray<FSubBuilding> SubBuildings;
-	
+
+protected:
+	TUniquePtr<FValidationRunner> ValidationRunner;
+
 private:
 	bool IsValid;
 

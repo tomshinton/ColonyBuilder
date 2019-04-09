@@ -17,23 +17,19 @@
 
 DEFINE_LOG_CATEGORY(GhostLog);
 
-// Sets default values
 AGhost::AGhost()
 	: GhostRoot(CreateDefaultSubobject<USceneComponent>(TEXT("Ghost Root")))
-	, MeshComp(CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh Comp")))
 	, BodyMeshes(CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Body Meshes")))
 	, UniqueMeshes(CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Unique Meshes")))
 	, LinkMeshes(CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Link Meshes")))
 	, TerminatorMeshes(CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Terminator Meshes")))
+	, ValidationRunner(new FValidationRunner(this))
 {
 	PrimaryActorTick.bCanEverTick = false;
-	SetActorEnableCollision(false);
+	SetActorEnableCollision(true);
 
 	GhostRoot->SetMobility(EComponentMobility::Movable);
 	RootComponent = GhostRoot;
-
-	MeshComp->SetupAttachment(GhostRoot);
-	MeshComp->SetCollisionProfileName(TEXT("OverlapAll"));
 
 	BodyMeshes->SetupAttachment(GhostRoot);
 	UniqueMeshes->SetupAttachment(GhostRoot);
@@ -49,7 +45,6 @@ AGhost::AGhost()
 void AGhost::SetGhostInfo(UBuildingData* InBuildingData)
 {
 	BuildingData = InBuildingData;
-	MeshComp->SetStaticMesh(BuildingData->BuildingBaseMesh);
 }
 
 void AGhost::CheckPlacement()
@@ -98,12 +93,6 @@ void AGhost::SetValid(bool InValidState)
 
 void AGhost::SetGhostMaterial(UMaterialInterface* NewMaterial)
 {
-	//Base Meshes, like stand alones
-	for (int8 MatID = 0; MatID <= MeshComp->GetMaterials().Num() - 1; MatID++)
-	{
-		MeshComp->SetMaterial(MatID, NewMaterial);
-	}
-
 	for (UHierarchicalInstancedStaticMeshComponent* InstancedMeshComp : InstancedMeshes)
 	{
 		if (InstancedMeshComp->GetStaticMesh())
@@ -118,24 +107,11 @@ void AGhost::SetGhostMaterial(UMaterialInterface* NewMaterial)
 
 void AGhost::UpdateGhost(const FVector& NewLocation, const TArray<FSubBuilding>& InSubBuildings)
 {
-	if (NewLocation != GetActorLocation())
-	{
-		SetActorLocation(NewLocation);
-	}
+	SetActorLocation(NewLocation);
 
 	SubBuildings = InSubBuildings;
 
-	switch (BuildingData->ConstructionMethod)
-	{
-	case EConstructionMethod::FireAndForget:
-		break;
-	case EConstructionMethod::Grid:
-		UpdateGridGhost();
-		break;
-	case EConstructionMethod::Linear:
-		UpdateLinearGhost();
-		break;
-	}
+	BuildTestPoints();
 }
 
 void AGhost::UpdateGridGhost()

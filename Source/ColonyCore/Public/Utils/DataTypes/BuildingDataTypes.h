@@ -2,7 +2,23 @@
 
 #pragma once
 
+class FValidationRunner;
+
 #include "BuildingDataTypes.generated.h"
+
+UENUM(BlueprintType)
+enum class EInvalidReason : uint8
+{
+	NoPointRules	UMETA(DisplayName = "No Display Rules"),
+	PointIsTooHigh	UMETA(DisplayName = "Point it too high"),
+	PointIsTooLow	UMETA(DisplayName = "Point is too low"),
+	GridIsTooBig	UMETA(DisplayName = "Grid is too big"),
+	GridIsTooSmall	UMETA(DisplayName = "Grid is too small"),
+	SurfaceTooSteep	UMETA(DisplayName = "Surface is too steep"),
+	NoWorldContext	UMETA(DisplayName = "No World Context"),
+	IllegalOverlap	UMETA(DisplayName = "Illegal Overlap at Point"),
+	LegalOverlap	UMETA(DisplayName = "Legal Overlap at Point")
+};
 
 //What kind of method a building this construction uses - used for telling what mode the component should run in
 UENUM(BlueprintType)
@@ -48,31 +64,48 @@ enum class ESubBuildingType : uint8
 USTRUCT(BlueprintType)
 struct FSubBuilding
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
-	FSubBuilding() {}
+	FSubBuilding(){}
 
-	FSubBuilding(FVector Location, EPointType PointType) :
-		Location(Location)
-		, PointType(PointType)
+	FSubBuilding(const FVector& InLocation, const EPointType& InPointType) :
+		Location(InLocation)
+		, PointType(InPointType)
 	{}
 
 	//For linear points
-	FSubBuilding(FVector Location, FVector2D Direction, EPointType PointType, ESubBuildingType SubBuildingType) :
-	Location(Location)
-	, Direction(Direction)
-	, PointType(PointType)
-	, SubBuildingType(SubBuildingType)
+	FSubBuilding(const FVector& InLocation, const FVector2D& InDirection, const EPointType& InPointType, const ESubBuildingType& InSubBuildingType) :
+	Location(InLocation)
+	, Direction(InDirection)
+	, PointType(InPointType)
+	, SubBuildingType(InSubBuildingType)
 	{}
 
 	//For grid points
-	FSubBuilding(FVector Location, EPointType PointType, ESubBuildingType SubBuildingType, FVector2D CurrCoord, FVector2D MaxCoord) :
-		Location(Location)
-		, PointType(PointType)
-		, SubBuildingType(SubBuildingType)
-		, CurrCoord(CurrCoord)
-		, MaxCoord(MaxCoord)
+	FSubBuilding(const FVector& InLocation, const EPointType& InPointType, const ESubBuildingType& InSubBuildingType, const FVector2D& InCurrCoord, const FVector2D& InMaxCoord) :
+		Location(InLocation)
+		, PointType(InPointType)
+		, SubBuildingType(InSubBuildingType)
+		, CurrCoord(InCurrCoord)
+		, MaxCoord(InMaxCoord)
 	{}
+	
+public: 
+
+	void SetHitResult(const FHitResult& InHitResult)
+	{
+		HitResult = InHitResult;
+	}
+
+	bool IsValidSubBuilding() const 
+	{
+		return HitResult.IsSet();
+	}
+
+	void AddFailureReason(const EInvalidReason& InNewReason)
+	{
+		PlacementFailureReasons.AddUnique(InNewReason);
+	}
 
 	FVector Location;
 	FVector2D Direction;
@@ -87,21 +120,15 @@ struct FSubBuilding
 	EPointType PointType;
 	ESubBuildingType SubBuildingType;
 
-	UClass* SurfaceReference;
+	TOptional<FHitResult> HitResult;
+
+	TArray<EInvalidReason> PlacementFailureReasons;
 
 	bool operator==(const FSubBuilding& OtherLocation) const
 	{
 		return Location == OtherLocation.Location;
 	}
-
-	FString ToStringFromInts()
-	{
-		FString OutString = "X: " + FString::FromInt(FMath::CeilToInt(Location.X)) + ", Y: " + FString::FromInt(FMath::CeilToInt(Location.Y));
-		return OutString;
-	}
 };
-
-
 
 UCLASS()
 class UBuildingDataTypes : public UObject

@@ -45,6 +45,8 @@ private:
 	UPROPERTY()
 	AColonyBuilderGameModeBase* GM;
 
+	int32 CachedGridSize;
+	
 	static const FName FloorTag;
 	static const float ScreenTraceDepth;
 

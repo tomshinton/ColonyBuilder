@@ -25,8 +25,6 @@ void ABuildableBase::OnConstruction(const FTransform& Transform)
 	{
 		if (BuildingData)
 		{
-			MeshComponent->SetStaticMesh(BuildingData->BuildingBaseMesh);
-
 #if WITH_EDITOR
 			SetFolderPath(FName(*BuildingData->GetFullCategoryAsString()));
 #endif //WITH_EDITOR

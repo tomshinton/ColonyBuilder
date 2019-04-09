@@ -10,6 +10,7 @@
 #include "Core/Settings/ColonyManagers.h"
 #include "AI/Plan/Stage.h"
 #include "AI/Stages/MoveTo.h"
+#include "ColonyGridSettings.h"
 
 IMPLEMENT_MODULE(FColonyEditorModule, ColonyEditor);
 DEFINE_LOG_CATEGORY(ColonyEditorLog)
@@ -50,6 +51,7 @@ void FColonyEditorModule::RegisterUnmutableSettings()
 
 		ISettingsSectionPtr AISection = SettingsModule->RegisterSettings("Project", "Colony Settings", "AI", FText::FromString("Colony AI Settings"), FText::FromString("Base settings for all Colony AI"), GetMutableDefault<UColonyAISettings>());
 		ISettingsSectionPtr ManagerSection = SettingsModule->RegisterSettings("Project", "Colony Settings", "Managers", FText::FromString("Colony Managers"), FText::FromString("Managers to spin up on GameInstant Init - put dependant managers as late as possible in array"), GetMutableDefault<UColonyManagers>());
+		ISettingsSectionPtr GridSection = SettingsModule->RegisterSettings("Project", "Colony Settings", "Grid", FText::FromString("Colony Grid"), FText::FromString("Settings pertaining to the Colony Building Grid, and how it is rendered"), GetMutableDefault<UColonyGridSettings>());
 
 		if (AISection.IsValid() && ManagerSection.IsValid())
 		{
@@ -64,6 +66,7 @@ void FColonyEditorModule::UnregisterUnmutableSettings()
 	{
 		SettingsModule->UnregisterSettings("Project", "Colony Settings", "AI");
 		SettingsModule->UnregisterSettings("Project", "Colony Settings", "Managers");
+		SettingsModule->UnregisterSettings("Project", "Colony Settings", "Grid");
 	}
 }
 
@@ -74,6 +77,9 @@ bool FColonyEditorModule::HandleSaved()
 
 	UColonyManagers* ColonyManagers = GetMutableDefault<UColonyManagers>();
 	ColonyManagers->SaveConfig();
+
+	UColonyGridSettings* ColonyGridSettings = GetMutableDefault<UColonyGridSettings>();
+	ColonyGridSettings->SaveConfig();
 
 	return true;
 }

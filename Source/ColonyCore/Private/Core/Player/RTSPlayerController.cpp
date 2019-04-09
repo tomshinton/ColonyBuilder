@@ -20,6 +20,11 @@ ARTSPlayerController::ARTSPlayerController()
 	bEnableMouseOverEvents = true;
 
 	CheatClass = UColonyCheatManager::StaticClass();
+
+	if (UColonyGridSettings* GridSettings = GetMutableDefault<UColonyGridSettings>())
+	{
+		CachedGridSize = GridSettings->GridSize;
+	}
 }
 
 void ARTSPlayerController::BeginPlay()
@@ -96,12 +101,12 @@ void ARTSPlayerController::UpdateMousePositions(float InAxis)
 void ARTSPlayerController::RoundHitResult(const FVector HitLocation)
 {
 	const int32 XIn = FMath::Abs(FMath::RoundToInt(HitLocation.X));
-	const int32 XDif = FMath::Abs(XIn%AColonyBuilderGameModeBase::GridSize);
-	const float XOut = (XDif < AColonyBuilderGameModeBase::GridSize * 0.5f ? XIn - XDif : XIn + (AColonyBuilderGameModeBase::GridSize - XDif)) * FMath::Sign<float>(HitLocation.X);
+	const int32 XDif = FMath::Abs(XIn%CachedGridSize);
+	const float XOut = (XDif < CachedGridSize * 0.5f ? XIn - XDif : XIn + (CachedGridSize - XDif)) * FMath::Sign<float>(HitLocation.X);
 
 	const int32 YIn = FMath::Abs(FMath::RoundToInt(HitLocation.Y));
-	const int32 YDif = FMath::Abs(YIn%AColonyBuilderGameModeBase::GridSize);
-	const float YOut = (YDif < AColonyBuilderGameModeBase::GridSize * 0.5f ? YIn - YDif :  YIn + (AColonyBuilderGameModeBase::GridSize - YDif)) * FMath::Sign<float>(HitLocation.Y);
+	const int32 YDif = FMath::Abs(YIn%CachedGridSize);
+	const float YOut = (YDif < CachedGridSize * 0.5f ? YIn - YDif :  YIn + (CachedGridSize - YDif)) * FMath::Sign<float>(HitLocation.Y);
 
 	PosUnderMouseRounded = FVector(XOut, YOut, HitLocation.Z);
 	OnMouseMoved.Broadcast(HitLocation, PosUnderMouseRounded);
